@@ -1,25 +1,9 @@
 # DuelList — Project Plan
 
-> **Project Name**: DuelList
 > **Created**: April 21, 2026
-> **Repo**: duel-list
+> **Repo**: [elvismercado/duel-list](https://github.com/elvismercado/duel-list)
 
-## Overview
-
-DuelList is a personal list-ranking web app that turns the impossible task of sorting a long list into a simple daily habit: pick A or B. Over days and weeks of quick "duels," a definitive ranking emerges naturally.
-
-**One-liner:** "Rank anything — one duel at a time."
-
-**The problem:** Manually sorting a list of 100+ items is overwhelming. You can't compare everything at once. DuelList breaks it into the smallest possible decision — "which of these two is better?" — and does the math to produce a full ranking.
-
-**Key insight:** Ranking is a *process*, not a one-time task. Your tastes change. New items get added. DuelList treats ranking as an ongoing, low-effort habit rather than a chore you do once.
-
-### Core Concepts
-
-- **The Duel**: A single A-vs-B comparison. Two items shown side by side. User picks the winner, declares a tie, or skips. Each card shows: item name, current rank (e.g., "#7 of 120"), and comparison count (e.g., "Compared 12 times").
-- **The Session**: A configurable batch of duels. Default ~10 per session (quick daily burst). User can set session length or go unlimited. Progress bar shows remaining duels.
-- **The Ranking**: The evolving full list from #1 to last. Updated after every duel via ELO (invisible to user). Users see clean ordinal ranks. Always "in progress" — improves with every duel.
-- **The List**: A markdown file of items to rank. Create from scratch, import, add items over time, export ranked. Multiple independent lists supported.
+See [README.md](../README.md) for project overview, core concepts, and file format.
 
 ---
 
