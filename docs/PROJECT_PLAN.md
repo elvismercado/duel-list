@@ -2,60 +2,81 @@
 
 > **Project Name**: DuelList
 > **Created**: April 21, 2026
-> **Repo**: list-ranker
+> **Repo**: duel-list
 
 ## Overview
 
-DuelList is a web app that lets users rank items in a list through pairwise comparisons. The user maintains a list (e.g., every anime they've watched), and the app periodically shows two items, asking "which is better?" Over time, these repeated A-vs-B choices produce a definitive ranking from best to worst.
+DuelList is a personal list-ranking web app that turns the impossible task of sorting a long list into a simple daily habit: pick A or B. Over days and weeks of quick "duels," a definitive ranking emerges naturally.
 
-### Core Concept
+**One-liner:** "Rank anything — one duel at a time."
 
-- **Pairwise comparison ranking**: Instead of manually sorting a list, the user just picks a winner between two items repeatedly
-- **Two comparison modes**: Swipe (Tinder-style) and Side-by-side (click-to-pick)
-- **Markdown-based lists**: Lists are stored as simple markdown files for portability and human-readability
-- **Cloud sync**: Lists can be synced with Nextcloud (via WebDAV), with support for other cloud storage in the future
-- **Local-first**: Works entirely offline; no backend required for Phase 1
+**The problem:** Manually sorting a list of 100+ items is overwhelming. You can't compare everything at once. DuelList breaks it into the smallest possible decision — "which of these two is better?" — and does the math to produce a full ranking.
+
+**Key insight:** Ranking is a *process*, not a one-time task. Your tastes change. New items get added. DuelList treats ranking as an ongoing, low-effort habit rather than a chore you do once.
+
+### Core Concepts
+
+- **The Duel**: A single A-vs-B comparison. Two items shown side by side. User picks the winner, declares a tie, or skips. Each card shows: item name, current rank (e.g., "#7 of 120"), and comparison count (e.g., "Compared 12 times").
+- **The Session**: A configurable batch of duels. Default ~10 per session (quick daily burst). User can set session length or go unlimited. Progress bar shows remaining duels.
+- **The Ranking**: The evolving full list from #1 to last. Updated after every duel via ELO (invisible to user). Users see clean ordinal ranks. Always "in progress" — improves with every duel.
+- **The List**: A markdown file of items to rank. Create from scratch, import, add items over time, export ranked. Multiple independent lists supported.
 
 ---
 
-## Phase 1: Core Foundation (Local-Only)
+## Phase 1: Core Foundation (Local-Only, PWA-Ready)
 
-**Goal**: Fully functional local app — create/import lists, compare items, view rankings.
+**Goal**: Fully functional local app — create/import lists, compare items, view rankings. Installable as PWA. All data persisted in markdown files.
 
 ### 1. Project Scaffolding
-- Vite + React + TypeScript
-- Tailwind CSS for styling
-- Framer Motion for swipe animations
+- pnpm + Vite + React 19 + TypeScript
+- Tailwind CSS v4 for styling
+- shadcn/ui (Radix + Tailwind) for accessible, ownable components
+- vite-plugin-pwa for PWA support (installable, offline-capable)
 - Key config files: `vite.config.ts`, `tailwind.config.ts`, `package.json`
 
-### 2. Markdown List Parser/Writer
-- Parse simple markdown bullet lists into internal data model
-- Write ranked lists back to markdown
-- Keep parser extensible for future metadata support
+### 2. Markdown Parser/Writer
+- Parse markdown files into internal data model
+- Write ranked lists back to markdown (list order = rank order)
+- Handle two input formats:
 
-**Simple format (Phase 1):**
+**Canonical format (DuelList-managed):**
 ```markdown
-# My Anime List
+---
+name: My Top Anime
+session_length: 10
+created: 2026-04-21
+---
+- One Piece <!-- {"elo":1089,"comparisons":18} -->
+- Attack on Titan <!-- {"elo":1065,"comparisons":15} -->
+- Naruto <!-- {"elo":1042,"comparisons":12} -->
+- Fullmetal Alchemist <!-- {"elo":980,"comparisons":8} -->
+```
+
+- **Frontmatter**: List-level config (name, session length, created date)
+- **List items**: Sorted by rank (list order = rank order)
+- **HTML comments**: Per-item ranking data (invisible in any markdown viewer)
+- File remains human-readable and renderable in GitHub, Obsidian, VS Code, etc.
+
+**Import-friendly (auto-converted on first save):**
+```markdown
+# My Top Anime
 - Naruto
 - One Piece
 - Attack on Titan
-- Fullmetal Alchemist: Brotherhood
 ```
 
-**Future format with metadata (Phase 3):**
-```markdown
-# My Anime List
-- Naruto [first_watched: 2005] [last_watched: 2024]
-- One Piece [first_watched: 2003]
-- Attack on Titan [first_watched: 2013] [last_watched: 2023]
-```
+On import: `# Heading` extracted as display name → moved to frontmatter `name:` field. Items get default ELO (1000).
 
 - Key file: `src/lib/markdown.ts`
 
-### 3. Data Model & Persistence
-- Define types: `Item`, `ComparisonRecord`, `ListConfig`, `RankingData`
-- Persist ranking data (ELO scores, comparison history) in IndexedDB via Dexie.js
-- The markdown file stays human-readable; ranking metadata lives separately
+### 3. Data Model & Persistence — Markdown Only
+- **No IndexedDB. No Dexie.js. No database.**
+- All data lives in markdown files:
+  - List items + ranking data (ELO, comparison count) embedded as HTML comments in the main `.md` file
+  - Duel history in companion `.duellist.md` file (optional, auto-generated)
+  - List config (name, session length) in YAML frontmatter
+- List order in the file = rank order (re-sorted on save)
+- Files managed via browser File System Access API or in-memory with download/export
 
 **Core types:**
 ```typescript
@@ -67,117 +88,162 @@ interface Item {
   comparisonCount: number;
 }
 
-interface ComparisonRecord {
-  itemA: string; // item ID
-  itemB: string; // item ID
-  winner: string; // item ID
+interface DuelRecord {
+  itemA: string;
+  itemB: string;
+  winner: string | null; // null = tie
   timestamp: number;
 }
 
 interface ListConfig {
   id: string;
   name: string;
-  source: 'local' | 'nextcloud';
-  filePath?: string;
+  sessionLength: number;
+  created: string;
   items: Item[];
-  rankings: ComparisonRecord[];
 }
 ```
 
-- Key files: `src/types.ts`, `src/lib/storage.ts`
+- Key files: `src/types.ts`, `src/lib/markdown.ts`
 
-### 4. Comparison Engine
-Smart pairing algorithm + ELO rating system:
+**Companion history file:**
+```
+My Top Anime.md                     ← ranked list (clean, portable)
+My Top Anime.duellist.md            ← duel history (auto-generated, optional)
+```
 
-- **Pairing strategy**:
-  - Prioritize items with fewest comparisons (high uncertainty)
-  - Among those, prefer items close in current rank (refines boundaries)
-  - Avoid recently compared pairs
+History file format:
+```markdown
+# My Top Anime — Duel History
+> Auto-generated by DuelList. 847 duels recorded.
+
+## 2026-04-21
+- One Piece > Naruto
+- Attack on Titan > Naruto
+- One Piece = Attack on Titan
+- Fullmetal Alchemist > Naruto
+```
+
+The history file is optional — can be deleted without affecting rankings. Useful for Phase 3 statistics.
+
+### 4. Ranking Engine
+ELO rating system + smart pairing algorithm:
+
 - **Rating system**: ELO with adjustable K-factor
+  - All items start at equal rating (1000)
   - Winner gains points, loser loses points
   - Magnitude depends on expected outcome (upset = bigger change)
+  - Formula: `newRating = oldRating + K * (actual - expected)`
+  - ELO is hidden from users — they see ordinal rank positions only
+
+- **Pairing strategy**:
+  1. Prioritize items with fewest comparisons (reduce uncertainty)
+  2. Among those, prefer items close in current rank (refine boundaries)
+  3. Avoid recently compared pairs (prevent staleness)
+  4. Random tiebreaker
+  - New items (ELO 1000) get prioritized for comparisons
 
 - Key files: `src/lib/ranking.ts`, `src/lib/pairing.ts`
 
-### 5. Swipe UI Mode (Tinder-Style)
+### 5. Side-by-Side Comparison Mode
+- Two items displayed as cards, side by side
+- Click/tap the winner
+- "Tie" button — both items treated as equal (no ELO change)
+- "Skip" button — pair is deferred, shown again later
+- Show item name, current rank, comparison count on each card
+- Keyboard shortcuts: Left arrow (←), Right arrow (→), T for tie, S for skip
+- Key file: `src/components/SideBySideMode.tsx`
+
+### 6. Ranking View
+- Full list sorted #1 to last
+- Each row: rank number, item name, comparison count
+- Toggle between "ranked order" and "original order"
+- No ELO scores shown
+- Key file: `src/components/RankingView.tsx`
+
+### 7. List Management
+- Create new list (type or paste items) → name goes to frontmatter
+- Import markdown file (file picker) → heading auto-detected, converted to frontmatter
+- Add individual items to existing list (start at ELO 1000, prioritized for duels)
+- Export ranked list as markdown
+- Delete list
+- Multiple independent lists supported
+- Key files: `src/components/ListManager.tsx`, `src/pages/Home.tsx`
+
+### 8. Session Configuration
+- Default session length: 10 duels
+- User-configurable: 5 / 10 / 20 / unlimited
+- Progress bar during session
+- "Session complete" summary showing notable rank changes
+- Stored in list frontmatter (`session_length`)
+
+### 9. First-Run Experience
+On first open, present the user with choices:
+1. "Take a quick tour" — brief onboarding explaining the concept
+2. "Try a sample list" — pre-loaded list to experience a duel immediately
+3. "Create a new list" — jump straight in
+4. "Connect to an existing list" — import markdown or (Phase 2) connect Nextcloud
+
+### 10. App Shell & Routing
+- Layout with navigation: Home → Compare → Rankings
+- React Router v7 for page navigation
+- PWA manifest + service worker via vite-plugin-pwa
+- Key files: `src/App.tsx`, `src/pages/`
+
+---
+
+## Phase 1b: Swipe Mode
+
+**Goal**: Add Tinder-style swipe comparison as an alternative to side-by-side.
+
 - Two stacked cards shown
 - Swipe right = left item wins, swipe left = right item wins
 - Framer Motion for drag/swipe gesture handling
-- Mobile-friendly touch support
+- Mobile-optimized with touch support
+- User can toggle between swipe and side-by-side in settings
 - Key file: `src/components/SwipeMode.tsx`
-
-### 6. Side-by-Side UI Mode
-- Two items displayed as cards, side by side
-- Click/tap the better one
-- Simple, accessible, works well on desktop
-- Key file: `src/components/SideBySideMode.tsx`
-
-### 7. Ranking Display
-- Full list sorted by ELO score, top to bottom
-- Show rank number, item name, score, and comparison count
-- Toggle between "ranked view" and "original order"
-- Key file: `src/components/RankingView.tsx`
-
-### 8. List Management
-- Create new list (type items manually)
-- Import markdown file (file picker)
-- Export ranked list as markdown
-- Multiple lists supported (independent rankings)
-- Key files: `src/components/ListManager.tsx`, `src/pages/Home.tsx`
-
-### 9. App Shell & Routing
-- Layout with navigation: Home → Compare → Rankings
-- React Router for page navigation
-- Key files: `src/App.tsx`, `src/pages/`
 
 ---
 
 ## Phase 2: Nextcloud Integration
 
-**Goal**: Sync lists with Nextcloud via WebDAV.
+**Goal**: Sync markdown lists with Nextcloud via WebDAV.
 
-### 10. WebDAV Client
+### 11. WebDAV Client
 - Use `webdav` npm package for WebDAV operations (list, read, write files)
 - Handle authentication (basic auth or app tokens)
 - Key file: `src/lib/nextcloud.ts`
 
-### 11. CORS Handling
+### 12. CORS Handling
 - Try direct WebDAV from browser first
-- If CORS blocks it, options:
-  - Configure Nextcloud CORS headers (ideal)
-  - Add lightweight Node.js/Express proxy server
-  - Browser extension approach (less ideal)
+- If CORS blocks it: add lightweight proxy server or configure Nextcloud CORS headers
 - Decision: try direct first, add proxy if needed
 
-### 12. Sync UI
+### 13. Sync UI
 - Settings page: configure Nextcloud URL + credentials
 - File browser: select markdown file from Nextcloud
 - Manual sync button (auto-sync optional later)
 - Conflict resolution: last-write-wins to start
 - Key files: `src/components/NextcloudSettings.tsx`, `src/components/FileBrowser.tsx`
 
-### 13. Bi-Directional Sync
+### 14. Bi-Directional Sync
 - Items added to markdown on Nextcloud → appear unranked in app
 - Items ranked in app → markdown file updated with new order
-- Ranking metadata stored in companion `.duellist.json` file alongside the markdown
+- Just sync the `.md` file + optional `.duellist.md` — no companion JSON needed
 - Key file: `src/lib/sync.ts`
 
 ---
 
 ## Phase 3: Polish & Extras
 
-### 14. Periodic Comparison Prompts
-- Setting: "Remind me to compare every N hours/days"
-- Browser notifications or in-app prompt on open
-
-### 15. Comparison Session Settings
-- "How many comparisons per session?" (5, 10, 20, unlimited)
-- Progress bar during session
-
-### 16. Statistics
+### 15. Statistics Dashboard
 - Total comparisons made
 - Confidence level per item
-- Comparison history timeline
+- Comparison history timeline (powered by `.duellist.md` history file)
+
+### 16. Periodic Comparison Prompts
+- Setting: "Remind me to compare every N hours/days"
+- Browser notifications or in-app prompt on open
 
 ### 17. Dark Mode / Themes
 - Follow system preference
@@ -187,7 +253,26 @@ Smart pairing algorithm + ELO rating system:
 - Extend markdown parser for inline metadata
 - Display metadata on cards during comparison
 - Filter/group items by metadata
-- Metadata fields: `first_watched`, `last_watched`, and user-defined fields
+
+**Future format with metadata:**
+```markdown
+---
+name: My Top Anime
+session_length: 10
+created: 2026-04-21
+---
+- Naruto [first_watched: 2005] [last_watched: 2024] <!-- {"elo":1042,"comparisons":12} -->
+- One Piece [first_watched: 2003] <!-- {"elo":1089,"comparisons":18} -->
+```
+
+---
+
+## Future
+
+- **Tauri**: Wrap web app as native desktop app (same React + shadcn/ui codebase, Rust-based, small binary)
+- **Cross-platform path**: Web → PWA → Tauri
+- **Other cloud storage**: Google Drive, Dropbox, etc.
+- **Category-specific features**: Cover art for anime/movies, album art for music
 
 ---
 
@@ -195,9 +280,14 @@ Smart pairing algorithm + ELO rating system:
 
 1. [ ] Import a 10-item markdown file → all items parsed correctly
 2. [ ] Run 20+ comparisons → ranking stabilizes with preferred items at top
-3. [ ] Export ranked list to markdown → ordering matches displayed ranking
-4. [ ] Test swipe mode on mobile viewport → gesture works smoothly
+3. [ ] Export ranked list to markdown → ordering matches displayed ranking, HTML comments present
+4. [ ] Re-import exported file → all ELO scores and comparison counts preserved
 5. [ ] Test side-by-side mode on desktop → click-to-pick works
+6. [ ] Test side-by-side mode on mobile viewport → responsive layout works
+7. [ ] Test tie and skip buttons → ELO unchanged (tie) / pair re-queued (skip)
+8. [ ] Add new item to existing ranked list → starts at ELO 1000, gets prioritized in pairing
+9. [ ] PWA install → app works offline after first load
+10. [ ] Companion `.duellist.md` file generated → duel history readable
 6. [ ] Create two separate lists → independent rankings maintained
 7. [ ] (Phase 2) Connect to Nextcloud → file read/write via WebDAV works
 8. [ ] (Phase 2) Modify markdown on Nextcloud → sync brings in new items unranked
