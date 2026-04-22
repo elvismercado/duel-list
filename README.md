@@ -29,15 +29,15 @@ session_length: 10
 k_factor: 32
 created: 2026-04-21
 ---
-- One Piece <!-- {"id":"x7k2","elo":1089,"comparisons":18,"added":"2026-04-21"} -->
-- Attack on Titan <!-- {"id":"m3p9","elo":1065,"comparisons":15,"added":"2026-04-21"} -->
-- Naruto <!-- {"id":"a1b2","elo":1042,"comparisons":12,"added":"2026-04-21"} -->
-- Fullmetal Alchemist <!-- {"id":"q8w4","elo":980,"comparisons":8,"added":"2026-04-21"} -->
+- One Piece <!-- {"id":"x7k2","elo":1089,"prevElo":1065,"prevRank":2,"comparisons":18,"added":"2026-04-21"} -->
+- Attack on Titan <!-- {"id":"m3p9","elo":1065,"prevElo":1042,"prevRank":3,"comparisons":15,"added":"2026-04-21"} -->
+- Naruto <!-- {"id":"a1b2","elo":1042,"prevElo":1050,"prevRank":2,"comparisons":12,"added":"2026-04-21"} -->
+- Fullmetal Alchemist <!-- {"id":"q8w4","elo":980,"prevElo":980,"prevRank":4,"comparisons":8,"added":"2026-04-21"} -->
 ```
 
-- **Frontmatter**: List-level config (name, session length, created date)
+- **Frontmatter**: List-level config (id, name, session length, K-factor, created date)
 - **List items**: Sorted by rank (list order = rank order)
-- **HTML comments**: Per-item data — short random `id`, ELO score, comparison count, date added (invisible in any markdown viewer)
+- **HTML comments**: Per-item data — short random `id`, ELO score, previous ELO/rank, comparison count, date added (invisible in any markdown viewer)
 - File remains human-readable and renderable in GitHub, Obsidian, VS Code, etc.
 
 ### Import-friendly (auto-converted on first save)
@@ -49,7 +49,7 @@ created: 2026-04-21
 - Attack on Titan
 ```
 
-On import: `# Heading` extracted as display name → moved to frontmatter `name:` field. Items get default ELO (1000).
+On import: `# Heading` extracted as display name → moved to frontmatter `name:` field. Items get default ELO (1000), a generated short random ID, and `added` set to current date.
 
 ### Companion history file
 

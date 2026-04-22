@@ -58,9 +58,9 @@ session_length: 10
 k_factor: 32
 created: 2026-04-21
 ---
-- One Piece <!-- {"id":"x7k2","elo":1089,"comparisons":18,"added":"2026-04-21"} -->
-- Attack on Titan <!-- {"id":"m3p9","elo":1065,"comparisons":15,"added":"2026-04-21"} -->
-- Naruto <!-- {"id":"a1b2","elo":1042,"comparisons":12,"added":"2026-04-21"} -->
+- One Piece <!-- {"id":"x7k2","elo":1089,"prevElo":1065,"prevRank":2,"comparisons":18,"added":"2026-04-21"} -->
+- Attack on Titan <!-- {"id":"m3p9","elo":1065,"prevElo":1042,"prevRank":3,"comparisons":15,"added":"2026-04-21"} -->
+- Naruto <!-- {"id":"a1b2","elo":1042,"prevElo":1050,"prevRank":2,"comparisons":12,"added":"2026-04-21"} -->
 ```
 
 **Rationale**:
@@ -174,7 +174,13 @@ created: 2026-04-21
 
 **Decision**: Each item gets a short random ID generated on first import, persisted in the HTML comment JSON.
 
-**Format**: `<!-- {"id":"a1b2","elo":1000,"comparisons":0,"added":"2026-04-21"} -->`
+**Format**: `<!-- {"id":"a1b2","elo":1000,"prevElo":1000,"prevRank":1,"comparisons":0,"added":"2026-04-21"} -->`
+
+**Generation**:
+- 4 characters, lowercase alphanumeric (`a-z0-9`) — 1,679,616 possible values
+- Generated via `crypto.getRandomValues()` — no external dependencies
+- Uniqueness checked within the list before assigning; retry on collision
+- Same spec used for list IDs in frontmatter
 
 **Rationale**:
 - Stable across renames — if user changes "Naruto" to "Naruto Shippuden", the ID stays the same
@@ -221,7 +227,7 @@ created: 2026-04-21
 
 **Key structure**:
 ```
-duellist:lists          → [{id, name, lastOpened, fileHandle?}, ...]   // list registry
+duellist:lists          → [{id, name, lastOpened}, ...]                // list registry
 duellist:list:<id>      → {full list JSON (ListConfig + items)}         // per-list data
 duellist:settings       → {firstRunDone, theme, ...}                   // app preferences
 ```
@@ -230,12 +236,47 @@ duellist:settings       → {firstRunDone, theme, ...}                   // app 
 - localStorage is synchronous — no async overhead for reads during rendering
 - Available in all browsers (unlike File System Access API)
 - Markdown files serve as the portable backup — if localStorage is cleared, re-import to restore
-- IndexedDB is used only for persisting File System Access API file handles (desktop Chrome/Edge)
+- IndexedDB is used only for persisting File System Access API file handles (desktop Chrome/Edge) — file handles cannot be serialized to localStorage
 
 **Quota management**:
 - localStorage limit is ~5-10MB per origin
 - Monitor usage and warn user at ~80% capacity
 - A 500-item list with full metadata is ~50-100KB; 10 such lists is ~0.5-1MB — well within limits for typical use
+
+### 16. Pairing Cooldown Derived from History
+
+**Decision**: The pairing cooldown (avoid recently compared pairs) is derived from the companion history file on list load, then cached in-memory during the session. No separate cooldown storage.
+
+**How it works**:
+- On list load: parse the last N entries from the `.duellist.md` history file (N = list size)
+- Build an in-memory `Set<string>` of recently compared pair keys (canonical order: smaller ID first)
+- During session: update the set after each duel, evict oldest when size > N
+- On save: nothing extra — the history file append already happens per duel
+
+**Degraded scenarios**:
+- History file deleted → empty cooldown, algorithm falls back to least-recently-compared (step 3 of pairing strategy)
+- localStorage cleared + re-import → cooldown derived from history if present, else empty
+- Both lost → pairing uses comparison counts and ELO scores (steps 1-2), which are in the markdown file
+
+**Rationale**:
+- Cooldown is an optimization, not a correctness concern — rankings converge regardless of pair order
+- No invisible state divergence — everything derives from the portable markdown files
+- Sub-millisecond parse cost for 500 entries
+
+### 17. No Undo in Phase 1
+
+**Decision**: Users cannot undo a duel decision in Phase 1. Planned for a future phase as recursive LIFO undo (undo last duel, then the one before, etc.).
+
+**Future undo design**:
+- Reverse the ELO change (DuelRecord has both item IDs and the winner)
+- Decrement comparison counts for both items
+- Remove the last entry from the history file
+- Recursive: undo the most recent duel first, then the next, etc.
+
+**Rationale**:
+- Keeps Phase 1 simple — skip button exists for uncertain comparisons
+- The current data model (DuelRecord with item IDs, winner, timestamp) supports undo without changes
+- ELO reversal is straightforward: `oldRating = newRating - K * (actual - expected)`
 
 ---
 

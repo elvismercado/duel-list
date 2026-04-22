@@ -33,15 +33,15 @@ session_length: 10
 k_factor: 32
 created: 2026-04-21
 ---
-- One Piece <!-- {"id":"x7k2","elo":1089,"comparisons":18,"added":"2026-04-21"} -->
-- Attack on Titan <!-- {"id":"m3p9","elo":1065,"comparisons":15,"added":"2026-04-21"} -->
-- Naruto <!-- {"id":"a1b2","elo":1042,"comparisons":12,"added":"2026-04-21"} -->
-- Fullmetal Alchemist <!-- {"id":"q8w4","elo":980,"comparisons":8,"added":"2026-04-21"} -->
+- One Piece <!-- {"id":"x7k2","elo":1089,"prevElo":1065,"prevRank":2,"comparisons":18,"added":"2026-04-21"} -->
+- Attack on Titan <!-- {"id":"m3p9","elo":1065,"prevElo":1042,"prevRank":3,"comparisons":15,"added":"2026-04-21"} -->
+- Naruto <!-- {"id":"a1b2","elo":1042,"prevElo":1050,"prevRank":2,"comparisons":12,"added":"2026-04-21"} -->
+- Fullmetal Alchemist <!-- {"id":"q8w4","elo":980,"prevElo":980,"prevRank":4,"comparisons":8,"added":"2026-04-21"} -->
 ```
 
 - **Frontmatter**: List-level config (id, name, session length, K-factor, created date)
 - **List items**: Sorted by rank (list order = rank order)
-- **HTML comments**: Per-item data — short random `id`, ELO score, comparison count, date added (invisible in any markdown viewer)
+- **HTML comments**: Per-item data — short random `id`, ELO score, previous ELO/rank (for session summary), comparison count, date added (invisible in any markdown viewer)
 - File remains human-readable and renderable in GitHub, Obsidian, VS Code, etc.
 
 **Import-friendly (auto-converted on first save):**
@@ -71,7 +71,7 @@ On import: `# Heading` extracted as display name → moved to frontmatter `name:
 
 **localStorage key structure:**
 ```
-duellist:lists          → [{id, name, lastOpened, fileHandle?}, ...]   // list registry
+duellist:lists          → [{id, name, lastOpened}, ...]                // list registry
 duellist:list:<id>      → {full list JSON (ListConfig + items)}         // per-list data
 duellist:settings       → {firstRunDone, theme, ...}                   // app preferences
 ```
@@ -94,6 +94,8 @@ interface Item {
   name: string;
   metadata?: Record<string, string>;
   eloScore: number;
+  prevEloScore: number;  // ELO at start of last session (for session summary "biggest movers")
+  prevRank: number;      // rank at start of last session
   comparisonCount: number;
   added: string;         // ISO date string, e.g. "2026-04-21"
 }
@@ -137,7 +139,7 @@ History file format:
 
 The history file is optional — can be deleted without affecting rankings. Useful for Phase 3 statistics.
 
-**Name resolution**: History entries display item names for readability (e.g., `One Piece (x7k2) > Naruto (a1b2)`), but `DuelRecord` stores IDs only. Names are resolved from the current item list at write time. If an item has been deleted, its last known name is used.
+**Name resolution**: History entries display item names for readability (e.g., `One Piece (x7k2) > Naruto (a1b2)`), but `DuelRecord` stores IDs only. Names are resolved from the current item list at write time. Past history entries retain item names as written. Deleted items cannot appear in future entries.
 
 ### 4. Ranking Engine
 ELO rating system + smart pairing algorithm:
@@ -158,6 +160,8 @@ ELO rating system + smart pairing algorithm:
   3. Avoid pairs compared in the last N duels, where N = list size (soft preference — if all pairs are on cooldown, fall back to least-recently-compared pair)
   4. Random tiebreaker
   - New items (ELO 1000) get prioritized for comparisons
+
+- **Pairing cooldown**: Derived from the companion history file on list load (parse last N entries), cached in-memory during the session. No separate cooldown storage. See TECH_DECISIONS #16.
 
 - Key files: `src/lib/ranking.ts`, `src/lib/pairing.ts`
 
@@ -193,6 +197,8 @@ ELO rating system + smart pairing algorithm:
 - User-configurable: 5 / 10 / 20 / unlimited
 - Progress bar during session (hidden in unlimited mode)
 - Unlimited mode: runs forever; user clicks "Done" for summary, or navigates away / closes
+- **Session start**: auto-starts when user navigates to Compare page; uses the list's stored `sessionLength`. No setup screen.
+- **Pre-session snapshot**: on session start, capture each item's current rank and ELO → saved to `prevElo`/`prevRank` in the item data for session summary
 - **"Session complete" summary**: total duels completed, biggest rank movers (e.g., "Attack on Titan ↑ 3 spots"), current top 3
 - Stored in list frontmatter (`session_length`)
 - **K-factor presets** (shown at list creation + list settings):
@@ -205,6 +211,8 @@ ELO rating system + smart pairing algorithm:
 On first open, present the user with choices:
 1. "Take a quick tour" — guided walkthrough (see tour steps below)
 2. "Try a sample list" — pre-loaded list to experience a duel immediately
+   - **Sample lists available**: Pizza Toppings, Top Anime, Favorite Movies, Vacation Destinations, Best Snacks, Hobbies
+   - Each contains ~8-10 items for a quick first session
 3. "Create a new list" — jump straight in
 4. "Import an existing list" — import a local markdown file (Nextcloud connection added in Phase 2)
 
@@ -216,7 +224,10 @@ On first open, present the user with choices:
 5. **"Done!"** — "Create a list or try a sample to get started."
 
 ### 10. App Shell & Routing
-- Layout with navigation: Home → Compare → Rankings
+- **Navigation model**: Home (list of lists) → Rankings (list detail page) → Compare (duel session)
+  - Home shows all lists; clicking a list opens its Rankings page
+  - Rankings page shows the ranked list + button to start a duel session
+  - Header shows current list name as clickable breadcrumb back to Home
 - React Router v7 for page navigation
 - PWA manifest + service worker via vite-plugin-pwa
 - Key files: `src/App.tsx`, `src/pages/`
@@ -252,24 +263,24 @@ On first open, present the user with choices:
 
 **Goal**: Sync markdown lists with Nextcloud via WebDAV.
 
-### 11. WebDAV Client
+### 12. WebDAV Client
 - Use `webdav` npm package for WebDAV operations (list, read, write files)
 - Handle authentication (basic auth or app tokens)
 - Key file: `src/lib/nextcloud.ts`
 
-### 12. CORS Handling
+### 13. CORS Handling
 - Try direct WebDAV from browser first
 - If CORS blocks it: add lightweight proxy server or configure Nextcloud CORS headers
 - Decision: try direct first, add proxy if needed
 
-### 13. Sync UI
+### 14. Sync UI
 - Settings page: configure Nextcloud URL + credentials
 - File browser: select markdown file from Nextcloud
 - Manual sync button (auto-sync optional later)
 - Conflict resolution: last-write-wins to start
 - Key files: `src/components/NextcloudSettings.tsx`, `src/components/FileBrowser.tsx`
 
-### 14. Bi-Directional Sync
+### 15. Bi-Directional Sync
 - Items added to markdown on Nextcloud → appear unranked in app
 - Items ranked in app → markdown file updated with new order
 - Just sync the `.md` file + optional `.duellist.md` — no companion JSON needed
@@ -315,8 +326,8 @@ session_length: 10
 k_factor: 32
 created: 2026-04-21
 ---
-- Naruto [first_watched: 2005] [last_watched: 2024] <!-- {"id":"a1b2","elo":1042,"comparisons":12,"added":"2026-04-21"} -->
-- One Piece [first_watched: 2003] <!-- {"id":"x7k2","elo":1089,"comparisons":18,"added":"2026-04-21"} -->
+- Naruto [first_watched: 2005] [last_watched: 2024] <!-- {"id":"a1b2","elo":1042,"prevElo":1050,"prevRank":2,"comparisons":12,"added":"2026-04-21"} -->
+- One Piece [first_watched: 2003] <!-- {"id":"x7k2","elo":1089,"prevElo":1065,"prevRank":2,"comparisons":18,"added":"2026-04-21"} -->
 ```
 
 ---
@@ -361,7 +372,9 @@ created: 2026-04-21
 25. [ ] Empty state: 0 items → ranking view shows "add items" message
 26. [ ] Empty state: 1 item → compare page shows "need 2 items" message
 27. [ ] Empty state: 0 comparisons → ranking view shows import order with "start comparing" note
+28. [ ] K-factor presets → Quick/Gradual/Tight options shown at list creation and list settings, different K values produce different ranking behavior
+29. [ ] localStorage quota → warning banner appears when storage usage exceeds ~80%
 
 ### Phase 2
-28. [ ] Connect to Nextcloud → file read/write via WebDAV works
-29. [ ] Modify markdown on Nextcloud → sync brings in new items unranked
+30. [ ] Connect to Nextcloud → file read/write via WebDAV works
+31. [ ] Modify markdown on Nextcloud → sync brings in new items unranked
