@@ -72,16 +72,26 @@
 - [ ] React Router v7 setup with routes: `/`, `/welcome`, `/list/:id`, `/list/:id/duel`, `/list/:id/settings`, `/settings`
 - [ ] App shell / layout component
 
-## Phase D: Pages & Components — NOT STARTED
+## Phase D: Pages & Components — COMPLETE
 
-- [ ] Home page (list registry, sort, empty states)
-- [ ] Welcome page (first-run onboarding)
-- [ ] List detail / ranking view
-- [ ] Duel page (A-vs-B comparison UI)
-- [ ] Session summary
-- [ ] List settings page
-- [ ] App settings page
-- [ ] Import / Export flows
+- [x] D1 Foundation: shadcn components (button, card, dialog, input, select, progress, separator, dropdown-menu)
+- [x] D1 Foundation: `src/lib/download.ts` — slugify, downloadFile, downloadZip
+- [x] D1 Foundation: `src/hooks/useList.ts` — list CRUD hook (add/rename/remove/restore items, delete list)
+- [x] D1 Foundation: `src/hooks/useListRegistry.ts` — list registry hook (sort, create, import, delete)
+- [x] D1 Foundation: `src/hooks/useExport.ts` — export list/history/all/app-data
+- [x] D1 Foundation: `src/hooks/useComparison.ts` — duel session hook (ELO, pairing, skip, session tracking)
+- [x] D1 Foundation: `src/components/ConfirmDialog.tsx` — reusable confirmation modal
+- [x] D1 Foundation: `src/components/ListCard.tsx` — list card with relative time, item count, top item
+- [x] D1 Foundation: `src/components/ListCreateDialog.tsx` — create list dialog with name, K-factor, session length
+- [x] D1 Foundation: `src/components/AddItemsDialog.tsx` — bulk add items (one per line)
+- [x] D2 Home: `src/pages/Home.tsx` — list grid, sort dropdown, create/import, empty state, settings gear
+- [x] D3 Welcome: `src/pages/Welcome.tsx` — multi-step tour (5 steps), sample list loading, step dots
+- [x] D4 Rankings: `src/pages/Rankings.tsx` — ranked items with ELO scores, inline rename, remove/restore, add items, start duel
+- [x] D5 Duel: `src/pages/Duel.tsx` — A-vs-B comparison cards, tie/skip, keyboard shortcuts (←/→/T/S), progress bar, session summary with top 3 & biggest movers
+- [x] D6 ListSettings: `src/pages/ListSettings.tsx` — name, K-factor, session length, removed items, export, danger zone delete
+- [x] D7 AppSettings: `src/pages/AppSettings.tsx` — theme select, export all/app data, storage usage bar
+- [x] CSS animations: winner-grow, slide-in-up in `src/index.css`
+- [x] Build verification — `tsc --noEmit` + `vite build` pass with zero errors
 
 ## Phase E: File Sync & PWA — NOT STARTED
 

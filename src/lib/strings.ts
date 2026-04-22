@@ -28,11 +28,14 @@ export const S = {
     skipLabel: 'Skip (tie)',
     sessionComplete: 'Session complete!',
     needTwoItems: 'Add at least 2 items to start duelling.',
+    tie: 'Tie',
+    skip: 'Skip',
   },
 
   ranking: {
     addItemsPrompt: 'Add some items to get started.',
     startComparing: 'Start comparing to see rankings change.',
+    startDuel: 'Start duelling',
   },
 
   list: {
@@ -53,5 +56,8 @@ export const S = {
     exportList: 'Export list',
     exportHistory: 'Export history',
     exportAll: 'Export all lists',
+    listButton: 'List (.md)',
+    historyButton: 'History (.md)',
+    exportAppData: 'Export app data',
   },
 } as const;

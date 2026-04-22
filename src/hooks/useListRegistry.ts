@@ -1,0 +1,119 @@
+import { useState, useCallback } from 'react';
+import {
+  getAllLists,
+  saveList,
+  deleteList as storageDelete,
+  getSettings,
+  updateSettings,
+  getList,
+  type ListEntry,
+} from '@/lib/storage';
+import { generateShortId, parseMarkdown } from '@/lib/markdown';
+import type { ListConfig } from '@/types';
+
+function sortEntries(
+  entries: ListEntry[],
+  order: string,
+  customOrder: string[],
+): ListEntry[] {
+  switch (order) {
+    case 'a-z':
+      return [...entries].sort((a, b) => a.name.localeCompare(b.name));
+    case 'created': {
+      return [...entries].sort((a, b) => {
+        const aList = getList(a.id);
+        const bList = getList(b.id);
+        return (bList?.created ?? '').localeCompare(aList?.created ?? '');
+      });
+    }
+    case 'custom': {
+      const idxMap = new Map(customOrder.map((id, idx) => [id, idx]));
+      return [...entries].sort((a, b) => {
+        const ai = idxMap.get(a.id) ?? Infinity;
+        const bi = idxMap.get(b.id) ?? Infinity;
+        return ai - bi;
+      });
+    }
+    default: // 'recent'
+      return [...entries].sort(
+        (a, b) => (b.lastOpened ?? 0) - (a.lastOpened ?? 0),
+      );
+  }
+}
+
+export function useListRegistry() {
+  const settings = getSettings();
+  const [lists, setLists] = useState<ListEntry[]>(() =>
+    sortEntries(getAllLists(), settings.homeSortOrder, settings.customListOrder),
+  );
+  const [sortOrder, setSortOrder] = useState(settings.homeSortOrder);
+
+  const refresh = useCallback(() => {
+    const s = getSettings();
+    setLists(sortEntries(getAllLists(), s.homeSortOrder, s.customListOrder));
+  }, []);
+
+  const changeSortOrder = useCallback(
+    (order: 'recent' | 'a-z' | 'created' | 'custom') => {
+      updateSettings({ homeSortOrder: order });
+      setSortOrder(order);
+      const s = getSettings();
+      setLists(sortEntries(getAllLists(), order, s.customListOrder));
+    },
+    [],
+  );
+
+  const updateCustomOrder = useCallback((ids: string[]) => {
+    updateSettings({ customListOrder: ids });
+    setLists(sortEntries(getAllLists(), 'custom', ids));
+  }, []);
+
+  const createList = useCallback(
+    (name: string, kFactor: number, sessionLength: number): string => {
+      const id = generateShortId();
+      const config: ListConfig = {
+        id,
+        name,
+        kFactor,
+        sessionLength,
+        created: new Date().toISOString().slice(0, 10),
+        items: [],
+      };
+      saveList(config);
+      refresh();
+      return id;
+    },
+    [refresh],
+  );
+
+  const importList = useCallback(
+    (markdown: string): string => {
+      const parsed = parseMarkdown(markdown);
+      // Generate new ID to avoid collisions
+      parsed.id = generateShortId();
+      saveList(parsed);
+      refresh();
+      return parsed.id;
+    },
+    [refresh],
+  );
+
+  const deleteList = useCallback(
+    (id: string) => {
+      storageDelete(id);
+      refresh();
+    },
+    [refresh],
+  );
+
+  return {
+    lists,
+    sortOrder,
+    changeSortOrder,
+    updateCustomOrder,
+    createList,
+    importList,
+    deleteList,
+    refresh,
+  };
+}
