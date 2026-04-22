@@ -186,6 +186,7 @@ created: 2026-04-21
 - Stable across renames — if user changes "Naruto" to "Naruto Shippuden", the ID stays the same
 - Enables reliable duel history tracking (history references IDs internally, displays names)
 - Duplicate item names are allowed — each gets a unique ID
+- Stable across renames — inline rename on Rankings page changes the name but ID stays the same
 
 ### 12. PWA from Phase 1
 
@@ -282,6 +283,13 @@ duellist:settings       → {firstRunDone, theme, ...}                   // app 
 
 **Decision**: Deleted items are not permanently removed in Phase 1. They move to a soft-delete bucket — excluded from pairing and ranking, but restorable.
 
+**Markdown format**: Soft-deleted items are written to a `## Removed` section at the bottom of the markdown file:
+```markdown
+## Removed
+- Naruto <!-- {"id":"a1b2","elo":1042,"prevElo":1050,"prevRank":2,"comparisons":12,"added":"2026-04-21","removed":true} -->
+```
+On parse, items under `## Removed` are loaded into the soft-delete bucket. On write, active items appear first (ranked by ELO), then the `## Removed` section with bucket items. The `"removed":true` flag in the JSON comment is the canonical marker.
+
 **Visibility**:
 - Collapsed "Removed items" section at the bottom of the Rankings page
 - Full list of removed items in the list's Settings page (`/list/:id/settings`)
@@ -289,14 +297,18 @@ duellist:settings       → {firstRunDone, theme, ...}                   // app 
 
 **On restore**:
 - Item returns to the active list with its original ID preserved
-- ELO reset to 1000 (treated as a new item)
+- `eloScore` reset to 1000
+- `prevEloScore` reset to 1000
+- `prevRank` set to last position (current item count)
+- `comparisonCount` reset to 0
+- `added` set to current date (treated as a fully new item)
+- `removed` flag removed
 - Prioritized for pairing (same as newly added items)
-- Comparison count reset to 0
 
 **Rationale**:
 - Prevents accidental permanent data loss without implementing full undo
 - Simple UX — user can see what was removed and bring it back
-- Soft-deleted items remain in the markdown file (marked with a flag) for portability
+- `## Removed` section in the markdown file ensures soft-delete state is portable across devices and re-imports
 
 ### 19. Session Lifecycle
 
@@ -360,6 +372,8 @@ src/
 ├── App.tsx                          # App shell, routing
 ├── main.tsx                         # Entry point
 ├── types.ts                         # Core type definitions
+├── data/
+│   └── samples.ts                   # Sample list definitions (6 pre-built lists)
 ├── lib/
 │   ├── markdown.ts                  # Markdown parser/writer (frontmatter + HTML comments)
 │   ├── ranking.ts                   # ELO rating system

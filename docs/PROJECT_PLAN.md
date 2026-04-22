@@ -110,6 +110,12 @@ duellist:settings       → {firstRunDone, theme, ...}                   // app 
   - Duel history in companion `.duellist.md` file (optional, auto-generated)
   - List config (name, session length, k-factor) in YAML frontmatter
 - List order in the file = rank order (re-sorted on save)
+- **Soft-deleted items** are written to a `## Removed` section at the bottom of the file:
+```markdown
+## Removed
+- Naruto <!-- {"id":"a1b2","elo":1042,"prevElo":1050,"prevRank":2,"comparisons":12,"added":"2026-04-21","removed":true} -->
+```
+  On parse, items in this section are loaded into the soft-delete bucket. On write, active items appear first (ranked), then `## Removed` with bucket items.
 
 **Core types:**
 ```typescript
@@ -122,6 +128,7 @@ interface Item {
   prevRank: number;      // rank at start of last session
   comparisonCount: number;
   added: string;         // ISO date string, e.g. "2026-04-21"
+  removed?: boolean;     // true if soft-deleted (in ## Removed section of markdown)
 }
 
 interface DuelRecord {
@@ -142,6 +149,8 @@ interface ListConfig {
 ```
 
 - Key files: `src/types.ts`, `src/lib/markdown.ts`
+
+**DuelRecord session storage**: The `useComparison` hook maintains a `DuelRecord[]` array in React component state during the active session. On each duel: (1) update ELO + save to localStorage, (2) push record to the in-memory array, (3) if a file handle is available, append to the history file. The session summary reads from this array.
 
 **Companion history file** (named after the source file, not the list display name):
 ```
@@ -214,15 +223,18 @@ ELO rating system + smart pairing algorithm:
 - **Import markdown file** (file picker) → heading auto-detected, converted to frontmatter
 - **Add items**: Button on Rankings page opens textarea dialog for batch add (one item per line). New items start at ELO 1000, prioritized for duels.
 - **Delete items**: Delete icon per row on Rankings page. Confirmation dialog required. Deleted items move to soft-delete bucket (see below).
+- **Rename items**: On hover (mouse) or tap (touch), an edit button appears on the item row. Clicking it enables inline editing — press Enter to confirm. The item ID remains stable across renames.
 - **Soft-delete bucket**: Deleted items are not permanently removed. They appear in a collapsed "Removed items" section at the bottom of the Rankings page and are also listed in the list's Settings page. Items in the bucket are excluded from pairing and ranking. Users can restore items from either location.
-- **Export**: Available from `/settings` (app-level settings page):
+- **Per-list export**: Available from list Settings page (`/list/:id/settings`):
   - Export list (`.md` file)
   - Export history (`.duellist.md` file)
-  - Export app data (all lists as JSON)
-  - "Export all" button (downloads all of the above)
   - Filename: slugified list name (e.g., `my-top-anime.md`)
+- **App-wide export**: Available from `/settings` (app-level settings page):
+  - Export all lists (downloads all `.md` files)
+  - Export app data (all lists as JSON)
+  - "Export all" button (downloads everything)
 - **Delete list**: Available from list Settings page (danger zone). Confirmation dialog required.
-- **Edit list settings**: Gear icon on Rankings page header → navigates to `/list/:id/settings`. Settings page contains: name, K-factor preset, session length, removed items (restorable), and danger zone (delete list).
+- **Edit list settings**: Gear icon on Rankings page header → navigates to `/list/:id/settings`. Settings page contains: name, K-factor preset, session length, removed items (restorable), per-list export (list + history), and danger zone (delete list).
 - Multiple independent lists supported
 - Key files: `src/components/ListManager.tsx`, `src/pages/Home.tsx`
 
@@ -248,17 +260,17 @@ On first open, the user is redirected to `/welcome` with choices:
 1. "Take a quick tour" — guided walkthrough (see tour steps below)
 2. "Try a sample list" — pre-loaded list to experience a duel immediately
    - **Sample lists available**: Pizza Toppings, Top Anime, Favorite Movies, Vacation Destinations, Best Snacks, Hobbies
-   - Each contains ~8-10 items for a quick first session
+   - Each contains ~8-10 items for a quick first session\n   - Sample data defined in `src/data/samples.ts`
 3. "Create a new list" — jump straight in
 4. "Import an existing list" — import a local markdown file (Nextcloud connection added in Phase 2)
 
 After completion, redirect to Home (`/`).
 
-**Tour steps** (5-step overlay walkthrough):
+**Tour steps** (5-step walkthrough with illustrations):
 1. **"Welcome to DuelList"** — "Rank anything by picking winners in quick A-vs-B duels. No need to sort the whole list — just pick one."
-2. **"The Duel"** — (highlights comparison area) "Two items appear side by side. Pick the winner, declare a tie, or skip."
-3. **"Your Ranking Builds Itself"** — (highlights ranking view) "After each duel, your list re-ranks automatically. The more duels you do, the more accurate it gets."
-4. **"Quick Sessions"** — (highlights session config) "Do 5–10 duels a day. It's a habit, not a chore."
+2. **"The Duel"** — (illustration of comparison cards) "Two items appear side by side. Pick the winner, declare a tie, or skip."
+3. **"Your Ranking Builds Itself"** — (illustration of ranked list) "After each duel, your list re-ranks automatically. The more duels you do, the more accurate it gets."
+4. **"Quick Sessions"** — (illustration of progress bar) "Do 5–10 duels a day. It's a habit, not a chore."
 5. **"Done!"** — "Create a list or try a sample to get started."
 
 ### 10. App Shell & Routing
@@ -272,8 +284,8 @@ After completion, redirect to Home (`/`).
   - `/welcome` — First-run onboarding (redirects here if `firstRunDone` is false)
   - `/list/:id` — Rankings (list detail)
   - `/list/:id/duel` — Duel session
-  - `/list/:id/settings` — List settings (name, K-factor, session length, removed items, delete list)
-  - `/settings` — App settings (export: list, history, app data, export all)
+  - `/list/:id/settings` — List settings (name, K-factor, session length, removed items, per-list export, delete list)
+  - `/settings` — App settings (export all lists, export app data)
 - React Router v7 for page navigation
 - PWA manifest + service worker via vite-plugin-pwa
 - Key files: `src/App.tsx`, `src/pages/`
@@ -423,10 +435,13 @@ created: 2026-04-21
 31. [ ] Edit list settings → gear icon on Rankings, change name/K-factor/session length, changes saved
 32. [ ] Soft-delete item → item moves to "Removed items" section, excluded from pairing and ranking
 33. [ ] Restore soft-deleted item → item returns to ranking at ELO 1000, prioritized for pairing
-34. [ ] Export list/history/app data → downloads correct files from /settings page
+34. [ ] Per-list export → downloads list .md and history .duellist.md from list Settings page
 35. [ ] First-run onboarding → /welcome route shown on first visit, redirects to Home after completion
 36. [ ] Home list cards → show name, item count, and top-ranked item preview
+37. [ ] Rename item → edit button on hover/tap, inline edit, ID stays stable
+38. [ ] App-wide export → export all lists and app data from /settings page
+39. [ ] Soft-delete markdown format → ## Removed section at bottom of file, items preserved with removed flag
 
 ### Phase 2
-30. [ ] Connect to Nextcloud → file read/write via WebDAV works
-31. [ ] Modify markdown on Nextcloud → sync brings in new items unranked
+40. [ ] Connect to Nextcloud → file read/write via WebDAV works
+41. [ ] Modify markdown on Nextcloud → sync brings in new items unranked

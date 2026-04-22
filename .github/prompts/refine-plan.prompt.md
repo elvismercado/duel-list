@@ -95,16 +95,22 @@ These topics have been decided across prior refinement rounds. Reference them fo
 - **History ID delimiter**: Square brackets `[id]` (not parentheses) to avoid ambiguity with item names
 - **i18n strategy**: Phase 1 extracts strings to constants, Phase 3 adds i18n library
 - **Empty/error states**: 6 states specified (no lists, 0 items, 1 item, 0 comparisons, no history, storage near limit). "All pairs exhausted" dropped — pairing always continues.
-- **First-run tour**: 5-step overlay walkthrough with defined content, dedicated `/welcome` route
+- **First-run tour**: 5-step walkthrough with illustrations (not UI overlays), dedicated `/welcome` route
 - **Session lifecycle**: Ephemeral counter (component state). Fresh session on every visit to Duel page. ELO safe per-duel.
 - **Post-session flow**: "Continue dueling" + "View rankings" buttons
+- **DuelRecord session storage**: `useComparison` hook maintains `DuelRecord[]` in component state. Used for session summary + history append.
 - **List creation**: Name + K-factor + session length. Empty lists allowed. Items added from Rankings page.
-- **Soft-delete**: Deleted items move to bucket (collapsed on Rankings, listed in list Settings). Restorable. Excluded from pairing.
+- **Soft-delete**: Deleted items move to bucket (collapsed on Rankings, listed in list Settings). Restorable. Excluded from pairing. `## Removed` section in markdown file.
+- **Soft-delete markdown format**: `## Removed` section at bottom of file. Items keep HTML comment JSON with `"removed":true` flag. Item type has `removed?: boolean`.
+- **Soft-delete restore**: Full reset — ELO 1000, prevElo 1000, prevRank last, comparisons 0, added = today. Treated as new item.
 - **Delete confirmation**: Always confirm for both items and lists
-- **Export**: Three exports (list .md, history .duellist.md, app data JSON) + "Export all". Located in `/settings`.
-- **Edit list settings**: Gear icon on Rankings → `/list/:id/settings` (name, K-factor, session length, removed items, delete list)
+- **Export split**: Per-list exports (list .md, history .duellist.md) on `/list/:id/settings`. App-wide exports (all lists, app data, export all) on `/settings`.
+- **Edit list settings**: Gear icon on Rankings → `/list/:id/settings` (name, K-factor, session length, removed items, per-list export, delete list)
+- **Item rename**: Edit button on hover (mouse) / tap (touch) on Rankings → inline edit. ID stays stable.
 - **Routes**: `/`, `/welcome`, `/list/:id`, `/list/:id/duel`, `/list/:id/settings`, `/settings`
 - **Home list cards**: Name, item count, top-ranked item preview
 - **Escaping**: HTML-encode `<!-- -->` in item names. Trim whitespace. Strip newlines.
-- **Parser edge cases**: Unknown frontmatter preserved, frontmatter name wins over heading, duplicate IDs regenerated
+- **Parser edge cases**: Unknown frontmatter preserved, frontmatter name wins over heading, duplicate IDs regenerated. `## Removed` section parsed into soft-delete bucket.
 - **Serialization mapping**: eloScore↔elo, prevEloScore↔prevElo, comparisonCount↔comparisons
+- **Sample list data**: `src/data/samples.ts` — constant array of partial ListConfig objects (IDs generated on creation)
+- **History in localStorage**: Not stored. File handles only. Mobile/Firefox users don't get persistent history — pairing degrades gracefully.
