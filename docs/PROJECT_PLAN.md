@@ -60,7 +60,7 @@ On import: `# Heading` extracted as display name → moved to frontmatter `name:
 | `eloScore` | `elo` | Shorter key in serialized form |
 | `prevEloScore` | `prevElo` | |
 | `comparisonCount` | `comparisons` | |
-| `id`, `prevRank`, `added` | same | Identical in both |
+| `id`, `prevRank`, `added`, `removed` | same | Identical in both |
 
 **Escaping rules**:
 - Item names containing `<!--` are HTML-encoded to `&lt;!--` on write, decoded on read
@@ -95,6 +95,7 @@ On import: `# Heading` extracted as display name → moved to frontmatter `name:
 ```
 duellist:lists          → [{id, name, lastOpened}, ...]                // list registry
 duellist:list:<id>      → {full list JSON (ListConfig + items)}         // per-list data
+duellist:history:<id>   → raw markdown string (duel history entries)     // per-list history
 duellist:settings       → {firstRunDone, theme, ...}                   // app preferences
 ```
 
@@ -103,7 +104,7 @@ duellist:settings       → {firstRunDone, theme, ...}                   // app 
 - Check total usage after every localStorage write (serialize all keys, check `.length`)
 - Show persistent banner (not toast) when usage exceeds ~80% capacity
 - A 500-item list with full metadata is ~50-100KB; 10 such lists is ~0.5-1MB — well within limits for typical use
-- **localStorage-only users** (mobile, Firefox): no persistent history file or pairing cooldown between sessions — pairing degrades gracefully using comparison counts and ELO scores
+- **Duel history** is stored in localStorage under `duellist:history:<id>` as a raw markdown string (same format as `.duellist.md`). This ensures all users — including mobile and Firefox — have exportable history and pairing cooldown between sessions. No cap on entries.
 
 **Data stored in markdown files:**
   - List items + ranking data (ELO, comparison count, ID, added date) embedded as HTML comments
@@ -150,7 +151,9 @@ interface ListConfig {
 
 - Key files: `src/types.ts`, `src/lib/markdown.ts`
 
-**DuelRecord session storage**: The `useComparison` hook maintains a `DuelRecord[]` array in React component state during the active session. On each duel: (1) update ELO + save to localStorage, (2) push record to the in-memory array, (3) if a file handle is available, append to the history file. The session summary reads from this array.
+**DuelRecord session storage**: The `useComparison` hook maintains a `DuelRecord[]` array in React component state during the active session. On each duel: (1) update ELO + save to localStorage, (2) push record to the in-memory array, (3) append the formatted history line to `duellist:history:<id>` in localStorage, (4) if a file handle is available, also append to the `.duellist.md` file. The session summary reads from the in-memory array.
+
+**`useExport` hook**: Delegates to `markdown.ts` for list serialization and `storage.ts` for reading all lists. For history export, reads `duellist:history:<id>` from localStorage and wraps it with the history file header.
 
 **Companion history file** (named after the source file, not the list display name):
 ```
@@ -172,7 +175,7 @@ History file format:
 
 The history file is optional — can be deleted without affecting rankings. Useful for Phase 3 statistics.
 
-**History file lifecycle**: Created (or appended to) on the first duel that syncs to a file handle. For export, generated on demand.
+**History file lifecycle**: History accumulates in localStorage (`duellist:history:<id>`) after every duel. If a file handle is available (desktop Chrome/Edge), the `.duellist.md` file is also kept in sync. For export, the history is generated on demand from localStorage.
 
 **Name resolution**: History entries display item names for readability (e.g., `One Piece [x7k2] > Naruto [a1b2]`), but `DuelRecord` stores IDs only. Names are resolved from the current item list at write time. Past history entries retain item names as written. Deleted items cannot appear in future entries. Item IDs use square brackets `[id]` to avoid ambiguity with parenthesized item names (e.g., "Fate/Stay Night (2006)").
 
@@ -191,12 +194,12 @@ ELO rating system + smart pairing algorithm:
 
 - **Pairing strategy**:
   1. Prioritize items with fewest comparisons (reduce uncertainty)
-  2. Among those, prefer items close in current rank (refine boundaries)
+  2. Among those, prefer items close in current ELO score (refine boundaries)
   3. Avoid pairs compared in the last N duels, where N = list size (soft preference — if all pairs are on cooldown, fall back to least-recently-compared pair)
   4. Random tiebreaker
   - New items (ELO 1000) get prioritized for comparisons
 
-- **Pairing cooldown**: Derived from the companion history file on list load (parse last N entries), cached in-memory during the session. No separate cooldown storage. See TECH_DECISIONS #16.
+- **Pairing cooldown**: Derived from `duellist:history:<id>` in localStorage on list load (parse last N entries), cached in-memory during the session. Falls back to companion history file if localStorage is empty. See TECH_DECISIONS #16.
 
 - Key files: `src/lib/ranking.ts`, `src/lib/pairing.ts`
 
@@ -204,7 +207,7 @@ ELO rating system + smart pairing algorithm:
 - Two items displayed as cards, side by side
 - Click/tap the winner
 - "Tie" button — standard ELO tie (both get `actual = 0.5`)
-- "Skip" button — pair is deferred, shown again later (not recorded in history)
+- "Skip" button — pair is deferred to a session-local re-queue, not recorded in history. The algorithm checks the re-queue first before generating a new pair. Skips do not count toward the session counter.
 - Show item name, current rank, comparison count on each card
 - Keyboard shortcuts: Left arrow (←), Right arrow (→), T for tie, S for skip
 - **Post-duel animation**: winner card grows to fill the full space, loser card shrinks out, then transition to next pair
@@ -220,7 +223,7 @@ ELO rating system + smart pairing algorithm:
 
 ### 7. List Management
 - **Create new list**: Name (required) + K-factor preset (default: Gradual) + session length (default: 10). Empty lists allowed — items added from Rankings page.
-- **Import markdown file** (file picker) → heading auto-detected, converted to frontmatter
+- **Import markdown file** (file picker) → heading auto-detected, converted to frontmatter. If the imported file's frontmatter `id` matches an existing list, prompt: "Replace existing" or "Import as new list" (generates new ID).
 - **Add items**: Button on Rankings page opens textarea dialog for batch add (one item per line). New items start at ELO 1000, prioritized for duels.
 - **Delete items**: Delete icon per row on Rankings page. Confirmation dialog required. Deleted items move to soft-delete bucket (see below).
 - **Rename items**: On hover (mouse) or tap (touch), an edit button appears on the item row. Clicking it enables inline editing — press Enter to confirm. The item ID remains stable across renames.
@@ -260,8 +263,9 @@ On first open, the user is redirected to `/welcome` with choices:
 1. "Take a quick tour" — guided walkthrough (see tour steps below)
 2. "Try a sample list" — pre-loaded list to experience a duel immediately
    - **Sample lists available**: Pizza Toppings, Top Anime, Favorite Movies, Vacation Destinations, Best Snacks, Hobbies
-   - Each contains ~8-10 items for a quick first session\n   - Sample data defined in `src/data/samples.ts`
-3. "Create a new list" — jump straight in
+   - Each contains ~8-10 items for a quick first session
+   - Sample data defined in `src/data/samples.ts`
+3. "Create a new list" — opens create dialog inline. On submit, redirects to `/list/:newId` (the new list's Rankings page).
 4. "Import an existing list" — import a local markdown file (Nextcloud connection added in Phase 2)
 
 After completion, redirect to Home (`/`).
@@ -276,6 +280,7 @@ After completion, redirect to Home (`/`).
 ### 10. App Shell & Routing
 - **Navigation model**: Home (list of lists) → Rankings (list detail page) → Duel (duel session)
   - Home shows all lists as cards: list name, item count, top-ranked item preview
+  - Home page includes "Create list" and "Import list" buttons
   - `lastOpened` updated when navigating to a list's Rankings page
   - Rankings page shows the ranked list + button to start a duel session + gear icon for list settings
   - Header shows current list name as clickable breadcrumb back to Home
@@ -296,10 +301,11 @@ After completion, redirect to Home (`/`).
 |-------|----------|---------|--------|
 | No lists yet | Home page | (First-run experience shown instead) | Tour / sample / create / import |
 | List has 0 items | Ranking view | "This list is empty. Add some items to get started." | Add items button |
-| List has 1 item | Compare page | "You need at least 2 items to start dueling." | Add items button |
+| List has 1 item | Duel page | "You need at least 2 items to start dueling." | Add items button |
 | List has 0 comparisons | Ranking view | Show items in import order | Note: "Start comparing to build your ranking" |
-| No history yet | History/stats (Phase 3) | "No duels recorded yet. Start comparing!" | Link to compare page |
+| No history yet | History/stats (Phase 3) | "No duels recorded yet. Start comparing!" | Link to Duel page |
 | localStorage near limit | Any page (banner) | "Storage is almost full. Export your lists to free up space." | Export button |
+| List not found | `/list/:id` (invalid ID) | "List not found." | Button to go Home |
 
 ---
 
@@ -427,7 +433,7 @@ created: 2026-04-21
 23. [ ] Delete an item from a 10-item ranked list → remaining 9 items keep ranks, deleted item gone from rankings view
 24. [ ] First-run tour → all 5 steps display correctly, can skip or complete
 25. [ ] Empty state: 0 items → ranking view shows "add items" message
-26. [ ] Empty state: 1 item → compare page shows "need 2 items" message
+26. [ ] Empty state: 1 item → Duel page shows "need 2 items" message
 27. [ ] Empty state: 0 comparisons → ranking view shows import order with "start comparing" note
 28. [ ] K-factor presets → Quick/Gradual/Tight options shown at list creation and list settings, different K values produce different ranking behavior
 29. [ ] localStorage quota → warning banner appears when storage usage exceeds ~80%
@@ -441,6 +447,11 @@ created: 2026-04-21
 37. [ ] Rename item → edit button on hover/tap, inline edit, ID stays stable
 38. [ ] App-wide export → export all lists and app data from /settings page
 39. [ ] Soft-delete markdown format → ## Removed section at bottom of file, items preserved with removed flag
+40. [ ] Skip re-queue → skipped pair re-presented before new pairs, skip doesn't count toward session counter
+41. [ ] Re-import collision → prompt "Replace existing" or "Import as new list" when frontmatter ID matches
+42. [ ] Home page actions → "Create list" and "Import list" buttons visible after first-run
+43. [ ] List not found → /list/:id with invalid ID shows "List not found" with Home button
+44. [ ] History in localStorage → duel entries stored, exportable, enables pairing cooldown for all users
 
 ### Phase 2
 40. [ ] Connect to Nextcloud → file read/write via WebDAV works

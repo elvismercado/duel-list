@@ -82,10 +82,11 @@ created: 2026-04-21
 - Frontmatter is the clean, machine-readable place for metadata
 - Avoids duplication between heading and frontmatter name
 - Import is forgiving — handles files with or without frontmatter
+- **Re-import collision**: If the imported file's frontmatter `id` matches an existing list, prompt the user: "Replace existing" or "Import as new list" (generates a new ID)
 
 ### 4. Companion History File
 
-**Decision**: Duel history stored in a companion file named after the source file (e.g., `anime.md` → `anime.duellist.md`).
+**Decision**: Duel history is stored in localStorage under `duellist:history:<id>` as a raw markdown string (same format as the `.duellist.md` file). This ensures all users — including mobile and Firefox — have exportable history and pairing cooldown between sessions. On desktop (Chrome/Edge), the companion `.duellist.md` file is also kept in sync via file handle.
 
 **Format**:
 ```markdown
@@ -136,7 +137,7 @@ created: 2026-04-21
 **Decision**: Both allowed during duels.
 
 - **Tie**: Standard ELO tie handling — both sides get `actual = 0.5`. This means upset ties (low-rated ties high-rated) still shift ratings. Recorded in history as `A [id] = B [id]`.
-- **Skip**: Pair deferred, shown again later. Not recorded in history.
+- **Skip**: Pair deferred to a session-local re-queue, checked before generating new pairs. Not recorded in history. Skips do not count toward the session counter.
 
 ### 8. Side-by-Side Only in Phase 1
 
@@ -183,10 +184,9 @@ created: 2026-04-21
 - Same spec used for list IDs in frontmatter
 
 **Rationale**:
-- Stable across renames — if user changes "Naruto" to "Naruto Shippuden", the ID stays the same
+- Stable across renames — if user changes "Naruto" to "Naruto Shippuden", the ID stays the same (inline rename on Rankings page changes the name but ID is preserved)
 - Enables reliable duel history tracking (history references IDs internally, displays names)
 - Duplicate item names are allowed — each gets a unique ID
-- Stable across renames — inline rename on Rankings page changes the name but ID stays the same
 
 ### 12. PWA from Phase 1
 
@@ -230,6 +230,7 @@ created: 2026-04-21
 ```
 duellist:lists          → [{id, name, lastOpened}, ...]                // list registry
 duellist:list:<id>      → {full list JSON (ListConfig + items)}         // per-list data
+duellist:history:<id>   → raw markdown string (duel history entries)     // per-list history
 duellist:settings       → {firstRunDone, theme, ...}                   // app preferences
 ```
 
@@ -249,14 +250,13 @@ duellist:settings       → {firstRunDone, theme, ...}                   // app 
 **Decision**: The pairing cooldown (avoid recently compared pairs) is derived from the companion history file on list load, then cached in-memory during the session. No separate cooldown storage.
 
 **How it works**:
-- On list load: parse the last N entries from the `.duellist.md` history file (N = list size)
+- On list load: parse the last N entries from `duellist:history:<id>` in localStorage (N = list size). Falls back to `.duellist.md` file if localStorage history is empty.
 - Build an in-memory `Set<string>` of recently compared pair keys (canonical order: smaller ID first)
 - During session: update the set after each duel, evict oldest when size > N
-- On save: nothing extra — the history file append already happens per duel
+- On save: nothing extra — the history append to localStorage already happens per duel
 
 **Degraded scenarios**:
-- History file deleted → empty cooldown, algorithm falls back to least-recently-compared (step 3 of pairing strategy)
-- localStorage cleared + re-import → cooldown derived from history if present, else empty
+- localStorage history cleared + re-import → cooldown derived from `.duellist.md` file if present, else empty
 - Both lost → pairing uses comparison counts and ELO scores (steps 1-2), which are in the markdown file
 
 **Rationale**:
@@ -397,7 +397,7 @@ src/
 ├── pages/
 │   ├── Home.tsx                     # List selector + first-run redirect
 │   ├── Welcome.tsx                  # First-run onboarding (/welcome)
-│   ├── Compare.tsx                  # Active duel session (/list/:id/duel)
+│   ├── Duel.tsx                     # Active duel session (/list/:id/duel)
 │   ├── Rankings.tsx                 # View rankings (/list/:id)
 │   ├── ListSettings.tsx             # List settings (/list/:id/settings)
 │   └── Settings.tsx                 # App settings + export (/settings)

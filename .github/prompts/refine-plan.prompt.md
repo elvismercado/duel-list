@@ -113,4 +113,11 @@ These topics have been decided across prior refinement rounds. Reference them fo
 - **Parser edge cases**: Unknown frontmatter preserved, frontmatter name wins over heading, duplicate IDs regenerated. `## Removed` section parsed into soft-delete bucket.
 - **Serialization mapping**: eloScore↔elo, prevEloScore↔prevElo, comparisonCount↔comparisons
 - **Sample list data**: `src/data/samples.ts` — constant array of partial ListConfig objects (IDs generated on creation)
-- **History in localStorage**: Not stored. File handles only. Mobile/Firefox users don't get persistent history — pairing degrades gracefully.
+- **History in localStorage**: Stored as raw markdown string under `duellist:history:<id>`. Unlimited entries. All users (including mobile/Firefox) get exportable history and pairing cooldown between sessions. Reverses Round 7.
+- **Skip re-queue**: Skips don't count toward session counter. Skipped pairs go to session-local re-queue, checked before generating new pairs.
+- **Re-import collision**: If imported file's frontmatter `id` matches existing list, prompt "Replace existing" or "Import as new list" (generates new ID).
+- **Home page actions**: "Create list" and "Import list" buttons on Home page.
+- **Page filename**: `Duel.tsx` (not `Compare.tsx`) to match `/duel` route.
+- **Pairing step 2 wording**: "close in current ELO score" (canonical, not "rank").
+- **List not found state**: `/list/:id` with invalid ID shows "List not found" + Home button.
+- **Welcome "Create" flow**: Opens create dialog inline. On submit, navigates to `/list/:newId`.
