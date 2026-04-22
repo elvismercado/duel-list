@@ -25,17 +25,18 @@ All data lives in markdown files — no database.
 ---
 name: My Top Anime
 session_length: 10
+k_factor: 32
 created: 2026-04-21
 ---
-- One Piece <!-- {"elo":1089,"comparisons":18} -->
-- Attack on Titan <!-- {"elo":1065,"comparisons":15} -->
-- Naruto <!-- {"elo":1042,"comparisons":12} -->
-- Fullmetal Alchemist <!-- {"elo":980,"comparisons":8} -->
+- One Piece <!-- {"id":"x7k2","elo":1089,"comparisons":18,"added":"2026-04-21"} -->
+- Attack on Titan <!-- {"id":"m3p9","elo":1065,"comparisons":15,"added":"2026-04-21"} -->
+- Naruto <!-- {"id":"a1b2","elo":1042,"comparisons":12,"added":"2026-04-21"} -->
+- Fullmetal Alchemist <!-- {"id":"q8w4","elo":980,"comparisons":8,"added":"2026-04-21"} -->
 ```
 
 - **Frontmatter**: List-level config (name, session length, created date)
 - **List items**: Sorted by rank (list order = rank order)
-- **HTML comments**: Per-item ranking data (invisible in any markdown viewer)
+- **HTML comments**: Per-item data — short random `id`, ELO score, comparison count, date added (invisible in any markdown viewer)
 - File remains human-readable and renderable in GitHub, Obsidian, VS Code, etc.
 
 ### Import-friendly (auto-converted on first save)
@@ -52,8 +53,8 @@ On import: `# Heading` extracted as display name → moved to frontmatter `name:
 ### Companion history file
 
 ```
-My Top Anime.md                     ← ranked list (clean, portable)
-My Top Anime.duellist.md            ← duel history (auto-generated, optional)
+anime.md                            ← ranked list (clean, portable)
+anime.duellist.md                   ← duel history (auto-generated, optional)
 ```
 
 History file format:
@@ -81,6 +82,7 @@ The history file is optional — can be deleted without affecting rankings.
 | **Components** | shadcn/ui (Radix + Tailwind) |
 | **Persistence** | Markdown files (no DB) |
 | **PWA** | vite-plugin-pwa |
+| **Routing** | React Router v7 |
 | **Package manager** | pnpm |
 
 ## Development
