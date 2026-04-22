@@ -55,13 +55,16 @@ created: 2026-04-21
 
 On import: `# Heading` extracted as display name → moved to frontmatter `name:` field. Items get default ELO (1000), a generated short random ID, and `added` set to current date. List gets a generated `id` in frontmatter.
 
-**Serialization mapping** (TypeScript field ↔ HTML comment JSON key):
-| TypeScript | JSON | Notes |
-|-----------|------|-------|
-| `eloScore` | `elo` | Shorter key in serialized form |
-| `prevEloScore` | `prevElo` | |
-| `comparisonCount` | `comparisons` | |
-| `id`, `prevRank`, `added`, `removed` | same | Identical in both |
+**Serialization mapping** (TypeScript field ↔ file format key):
+| TypeScript | File Key | Source | Notes |
+|-----------|----------|--------|-------|
+| `eloScore` | `elo` | HTML comment | Shorter key in serialized form |
+| `prevEloScore` | `prevElo` | HTML comment | |
+| `comparisonCount` | `comparisons` | HTML comment | |
+| `id`, `prevRank`, `added`, `removed` | same | HTML comment | Identical in both |
+| `sessionLength` | `session_length` | Frontmatter | snake_case in YAML |
+| `kFactor` | `k_factor` | Frontmatter | snake_case in YAML |
+| `id`, `name`, `created` | same | Frontmatter | Identical in both |
 
 **Escaping rules**:
 - Item names containing `<!--` are HTML-encoded to `&lt;!--` on write, decoded on read
@@ -157,7 +160,9 @@ interface ListConfig {
 
 **History append strategy**: On each duel, the formatted history line is appended to the raw markdown string in `duellist:history:<id>`. Tail parsing (`lastIndexOf('\n## ')`) checks if today's date header already exists — if yes, append under it; if no, add a new `## YYYY-MM-DD` header first. The duel count in the header line (line 2) is also incremented. The same string is written to both localStorage and the `.duellist.md` file (if available). Same format everywhere = zero drift.
 
-**`useExport` hook**: Delegates to `markdown.ts` for list serialization and `storage.ts` for reading all lists. For history export, reads `duellist:history:<id>` from localStorage and wraps it with the history file header.
+**`useExport` hook**: Delegates to `markdown.ts` for list serialization and `storage.ts` for reading all lists. For history export, reads the full markdown string from `duellist:history:<id>` in localStorage and triggers a download — no wrapping needed since the string already includes the header and all entries.
+
+- Key file: `src/lib/history.ts` (history append via tail parsing + cooldown parsing)
 
 **Companion history file** (named after the source file, not the list display name):
 ```
@@ -214,7 +219,7 @@ ELO rating system + smart pairing algorithm:
 - "Skip" button — pair is deferred to a session-local re-queue, not recorded in history. The algorithm checks the re-queue first before generating a new pair. Skips do not count toward the session counter.
 - Show item name, current rank, comparison count on each card
 - Keyboard shortcuts: Left arrow (←), Right arrow (→), T for tie, S for skip
-- **Post-duel animation**: winner card grows to fill the full space, loser card shrinks out, then transition to next pair
+- **Post-duel animation**: winner card grows to fill the full space, loser card shrinks out, then transition to next pair. Uses CSS transitions/`@keyframes` only — Framer Motion is added in Phase 1b for swipe gestures.
 - **Minimum 2 items required** to start a duel session; show message and disable compare if fewer
 - Key file: `src/components/SideBySideMode.tsx`
 
@@ -235,13 +240,13 @@ ELO rating system + smart pairing algorithm:
 - **Per-list export**: Available from list Settings page (`/list/:id/settings`):
   - Export list (`.md` file)
   - Export history (`.duellist.md` file)
-  - Filename: slugified list name (e.g., `my-top-anime.md`)
+  - Filename: slugified list name (e.g., `my-top-anime.md`). Slugify: `name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')`, truncated at 50 chars.
 - **App-wide export**: Available from `/settings` (app-level settings page):
   - Export all lists (downloads all `.md` + `.duellist.md` files as a single `.zip` via JSZip)
   - Export app data (full localStorage dump — all `duellist:*` keys as a JSON file)
   - "Export all" button (downloads everything)
-- **Delete list**: Available from list Settings page (danger zone). Confirmation dialog required.
-- **Edit list settings**: Gear icon on Rankings page header → navigates to `/list/:id/settings`. Settings page contains: name, K-factor preset, session length, removed items (restorable), per-list export (list + history), and danger zone (delete list).
+- **Delete list**: Available from list Settings page (danger zone). Confirmation dialog required. Cleanup: remove `duellist:list:<id>`, `duellist:history:<id>`, entry from `duellist:lists` registry, ID from `customListOrder` (if present), and file handle from IndexedDB.
+- **Edit list settings**: Gear icon on Rankings page header → navigates to `/list/:id/settings`. Settings page contains: name, K-factor preset, session length, removed items (restorable), per-list export (list + history), and danger zone (delete list). On rename, update both `duellist:list:<id>` and the matching entry in `duellist:lists`.
 - Multiple independent lists supported
 - Key files: `src/components/ListManager.tsx`, `src/pages/Home.tsx`
 
@@ -285,10 +290,10 @@ After completion, redirect to Home (`/`).
 - **Navigation model**: Home (list of lists) → Rankings (list detail page) → Duel (duel session)
   - Home shows all lists as cards: list name, item count, top-ranked item preview
   - Home page includes "Create list" and "Import list" buttons
-  - **Home sort**: Dropdown with options — Recent (default), A-Z, Created, Custom. Selected sort saved to `duellist:settings` (`homeSortOrder`). When "Custom" is selected, a "Reorder" toggle button appears — click to unlock drag-to-reorder, click again to lock. Custom order saved as array of list IDs in `duellist:settings` (`customListOrder`).
+  - **Home sort**: Dropdown with options — Recent (default), A-Z, Created, Custom. Selected sort saved to `duellist:settings` (`homeSortOrder`). When "Custom" is selected, a "Reorder" toggle button appears — click to unlock drag-to-reorder, click again to lock. Custom order saved as array of list IDs in `duellist:settings` (`customListOrder`). New lists are appended to the end of custom order. Deleted list IDs are removed from `customListOrder`.
   - `lastOpened` updated when navigating to a list's Rankings page
   - Rankings page shows the ranked list + button to start a duel session + gear icon for list settings
-  - **Navigation back**: Browser back button, back arrow in header, and clickable app logo/title. No breadcrumb trail.
+  - **Navigation back**: Back arrow in header (shown on sub-pages only — not on Home) and clickable app logo/title. No breadcrumb trail.
 - **Routes**:
   - `/` — Home (list of lists)
   - `/welcome` — First-run onboarding (redirects here if `firstRunDone` is false)
@@ -304,7 +309,8 @@ After completion, redirect to Home (`/`).
 
 | State | Location | Message | Action |
 |-------|----------|---------|--------|
-| No lists yet | Home page | (First-run experience shown instead) | Tour / sample / create / import |
+| No lists yet (`firstRunDone`=false) | Home page | (Redirect to `/welcome`) | Tour / sample / create / import |
+| No lists yet (`firstRunDone`=true) | Home page | "No lists yet. Create one or import a markdown file." | Create list / Import list buttons |
 | List has 0 items | Ranking view | "This list is empty. Add some items to get started." | Add items button |
 | List has 1 item | Duel page | "You need at least 2 items to start dueling." | Add items button |
 | List has 0 comparisons | Ranking view | Show items in import order | Note: "Start comparing to build your ranking" |

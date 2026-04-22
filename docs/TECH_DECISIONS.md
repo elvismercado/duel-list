@@ -143,7 +143,7 @@ created: 2026-04-21
 
 ### 8. Side-by-Side Only in Phase 1
 
-**Decision**: Swipe mode (Tinder-style) deferred to Phase 1b. Phase 1 ships with side-by-side click-to-pick only.
+**Decision**: Swipe mode (Tinder-style) deferred to Phase 1b. Phase 1 ships with side-by-side click-to-pick only. Post-duel animations (winner grows, loser shrinks) use CSS transitions/`@keyframes` — Framer Motion is only added in Phase 1b for swipe gestures.
 
 **Rationale**:
 - Side-by-side is simpler to implement and works on all screen sizes
@@ -372,7 +372,7 @@ On parse, items under `## Removed` are loaded into the soft-delete bucket. On wr
 
 ### 23. Home Sort & Custom Order
 
-**Decision**: Home page has a sort dropdown with 4 options: Recent (default), A-Z, Created, Custom. Selection persisted in `duellist:settings` (`homeSortOrder`). When "Custom" is selected, a "Reorder" toggle button appears. Click to unlock drag-to-reorder; click again to lock. Custom order saved as array of list IDs in `duellist:settings` (`customListOrder`).
+**Decision**: Home page has a sort dropdown with 4 options: Recent (default), A-Z, Created, Custom. Selection persisted in `duellist:settings` (`homeSortOrder`). When "Custom" is selected, a "Reorder" toggle button appears. Click to unlock drag-to-reorder; click again to lock. Custom order saved as array of list IDs in `duellist:settings` (`customListOrder`). New lists are appended to end of custom order. Deleted list IDs are removed from `customListOrder`.
 
 **Rationale**:
 - Sort dropdown covers the common cases without complexity
@@ -381,7 +381,7 @@ On parse, items under `## Removed` are loaded into the soft-delete bucket. On wr
 
 ### 24. Navigation: No Breadcrumb
 
-**Decision**: No breadcrumb trail in the header. Users navigate back via: browser back button, back arrow icon in header, or clickable app logo/title.
+**Decision**: No breadcrumb trail in the header. Users navigate back via: browser back button, back arrow icon in header (shown on sub-pages only — not on Home), or clickable app logo/title.
 
 **Rationale**:
 - Breadcrumbs add visual clutter for a simple 2-3 level hierarchy

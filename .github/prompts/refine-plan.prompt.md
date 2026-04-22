@@ -129,3 +129,13 @@ These topics have been decided across prior refinement rounds. Reference them fo
 - **Navigation**: No breadcrumb. Back arrow in header + clickable app logo/title + browser back.
 - **Item metadata field**: Keep `metadata?: Record<string, string>` in Phase 1 type (costs nothing, parser handles unknown data).
 - **Phase 2 checklist**: Restart numbering per phase (not continuous from Phase 1).
+- **useExport history**: Reads full markdown string from localStorage directly — no header wrapping (history already includes header).
+- **Phase 1 animations**: CSS transitions/`@keyframes` only. Framer Motion deferred to Phase 1b (swipe gestures).
+- **Serialization mapping**: Unified table with Source column (HTML comment vs Frontmatter). Frontmatter uses snake_case (`session_length`, `k_factor`).
+- **Delete list cleanup**: 5 targets — `duellist:list:<id>`, `duellist:history:<id>`, registry entry, `customListOrder` ID, IndexedDB file handle.
+- **Registry sync on rename**: Update both `duellist:list:<id>` and matching entry in `duellist:lists`.
+- **Home empty state**: `firstRunDone=false` → `/welcome`. `firstRunDone=true` + 0 lists → Home with empty message + Create/Import buttons.
+- **Custom order lifecycle**: New lists appended to end. Deleted list IDs removed from `customListOrder`.
+- **Back arrow**: Shown on sub-pages only (not on Home). Home shows logo/title only.
+- **Export filename slugify**: `name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')`, max 50 chars.
+- **`history.ts`**: Separate lib file for history append (tail parsing) + cooldown parsing.

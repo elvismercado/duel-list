@@ -84,6 +84,7 @@ The history file is optional — can be deleted without affecting rankings.
 | **Persistence** | Markdown files (no DB) |
 | **PWA** | vite-plugin-pwa |
 | **Routing** | React Router v7 |
+| **YAML parsing** | `yaml` + manual split |
 | **Package manager** | pnpm |
 
 ## Development
