@@ -1,0 +1,82 @@
+# DuelList — Implementation Status
+
+> Last updated: 2026-04-22
+
+## Phase A: Project Scaffolding — COMPLETE
+
+- [x] Initialize project with pnpm
+- [x] Install all dependencies (React 19, TypeScript 6, Vite 7, Tailwind v4, etc.)
+- [x] Fix esbuild build scripts approval (onlyBuiltDependencies)
+- [x] Create Vite config (`vite.config.ts`) with React, Tailwind, and PWA plugins
+- [x] Create TypeScript config (`tsconfig.json`) with `@/` path alias
+- [x] Create entry files (`index.html`, `src/main.tsx`, `src/App.tsx`)
+- [x] Configure Tailwind v4 (`src/index.css`)
+- [x] Initialize shadcn/ui (Radix library, Nova preset, Geist font)
+- [x] Create core types (`src/types.ts` — Item, DuelRecord, ListConfig)
+- [x] Create string constants (`src/lib/strings.ts` — i18n prep)
+- [x] Verify dev server runs (`pnpm dev` → Vite v7.3.2 on localhost:5173)
+
+### Files created
+- `package.json` — scripts: dev, build, preview
+- `vite.config.ts` — React + Tailwind + PWA plugins, `@/` alias
+- `tsconfig.json` — strict, bundler resolution, `@/` path alias
+- `index.html` — entry HTML
+- `src/main.tsx` — React root mount
+- `src/App.tsx` — placeholder App component
+- `src/index.css` — Tailwind v4 + shadcn theme (Nova/Geist)
+- `src/vite-env.d.ts` — Vite client types
+- `src/types.ts` — Item, DuelRecord, ListConfig interfaces
+- `src/lib/strings.ts` — all UI string constants
+- `src/lib/utils.ts` — `cn()` helper (shadcn-generated)
+- `src/components/ui/` — shadcn component directory
+- `components.json` — shadcn configuration
+
+### Tech stack (pinned versions)
+| Package | Version |
+|---|---|
+| React | 19.2.5 |
+| TypeScript | 6.0.3 |
+| Vite | 7.3.2 |
+| Tailwind CSS | 4.2.4 |
+| shadcn/ui | 4.4.0 (Radix + Nova) |
+| react-router | 7.14.2 |
+| vite-plugin-pwa | 1.2.0 |
+| yaml | 2.8.3 |
+| jszip | 3.10.1 |
+| pnpm | 10.29.2 |
+
+## Phase B: Data Layer — NOT STARTED
+
+- [ ] `src/lib/markdown.ts` — parse/serialize markdown ↔ ListConfig
+- [ ] `src/lib/storage.ts` — localStorage CRUD + IndexedDB file handles
+- [ ] `src/lib/ranking.ts` — ELO calculation engine
+- [ ] `src/lib/history.ts` — duel history append via tail parsing
+- [ ] `src/lib/pairing.ts` — pair selection with cooldown
+- [ ] `src/lib/samples.ts` — sample list data
+
+## Phase C: Routing & Layout — NOT STARTED
+
+- [ ] React Router v7 setup with routes: `/`, `/welcome`, `/list/:id`, `/list/:id/duel`, `/list/:id/settings`, `/settings`
+- [ ] App shell / layout component
+
+## Phase D: Pages & Components — NOT STARTED
+
+- [ ] Home page (list registry, sort, empty states)
+- [ ] Welcome page (first-run onboarding)
+- [ ] List detail / ranking view
+- [ ] Duel page (A-vs-B comparison UI)
+- [ ] Session summary
+- [ ] List settings page
+- [ ] App settings page
+- [ ] Import / Export flows
+
+## Phase E: File Sync & PWA — NOT STARTED
+
+- [ ] File System Access API integration
+- [ ] PWA service worker & offline support
+
+## Phase F: Polish — NOT STARTED
+
+- [ ] CSS transitions & animations
+- [ ] Responsive design pass
+- [ ] Accessibility audit
