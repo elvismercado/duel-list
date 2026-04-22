@@ -137,6 +137,8 @@ History file format:
 
 The history file is optional — can be deleted without affecting rankings. Useful for Phase 3 statistics.
 
+**Name resolution**: History entries display item names for readability (e.g., `One Piece (x7k2) > Naruto (a1b2)`), but `DuelRecord` stores IDs only. Names are resolved from the current item list at write time. If an item has been deleted, its last known name is used.
+
 ### 4. Ranking Engine
 ELO rating system + smart pairing algorithm:
 
@@ -194,23 +196,42 @@ ELO rating system + smart pairing algorithm:
 - **"Session complete" summary**: total duels completed, biggest rank movers (e.g., "Attack on Titan ↑ 3 spots"), current top 3
 - Stored in list frontmatter (`session_length`)
 - **K-factor presets** (shown at list creation + list settings):
-  - K=48 — fast convergence, more volatile (label TBD)
-  - K=32 — balanced, default (label TBD)
-  - K=16 — slow convergence, more stable (label TBD)
+  - **Quick** (K=48) — "Rankings shift quickly after each duel"
+  - **Gradual** (K=32, default) — "Rankings update at a balanced pace"
+  - **Tight** (K=16) — "Rankings resist change, require more evidence"
   - Stored in list frontmatter (`k_factor`)
 
 ### 9. First-Run Experience
 On first open, present the user with choices:
-1. "Take a quick tour" — basic step-by-step walkthrough explaining the concept
+1. "Take a quick tour" — guided walkthrough (see tour steps below)
 2. "Try a sample list" — pre-loaded list to experience a duel immediately
 3. "Create a new list" — jump straight in
 4. "Import an existing list" — import a local markdown file (Nextcloud connection added in Phase 2)
+
+**Tour steps** (5-step overlay walkthrough):
+1. **"Welcome to DuelList"** — "Rank anything by picking winners in quick A-vs-B duels. No need to sort the whole list — just pick one."
+2. **"The Duel"** — (highlights comparison area) "Two items appear side by side. Pick the winner, declare a tie, or skip."
+3. **"Your Ranking Builds Itself"** — (highlights ranking view) "After each duel, your list re-ranks automatically. The more duels you do, the more accurate it gets."
+4. **"Quick Sessions"** — (highlights session config) "Do 5–10 duels a day. It's a habit, not a chore."
+5. **"Done!"** — "Create a list or try a sample to get started."
 
 ### 10. App Shell & Routing
 - Layout with navigation: Home → Compare → Rankings
 - React Router v7 for page navigation
 - PWA manifest + service worker via vite-plugin-pwa
 - Key files: `src/App.tsx`, `src/pages/`
+
+### 11. Empty & Error States
+
+| State | Location | Message | Action |
+|-------|----------|---------|--------|
+| No lists yet | Home page | (First-run experience shown instead) | Tour / sample / create / import |
+| List has 0 items | Ranking view | "This list is empty. Add some items to get started." | Add items button |
+| List has 1 item | Compare page | "You need at least 2 items to start dueling." | Add items button |
+| List has 0 comparisons | Ranking view | Show items in import order | Note: "Start comparing to build your ranking" |
+| All pairs exhausted | Compare page | "You've compared every possible pair! Rankings are fully refined." | Option to re-compare |
+| No history yet | History/stats (Phase 3) | "No duels recorded yet. Start comparing!" | Link to compare page |
+| localStorage near limit | Any page (banner) | "Storage is almost full. Export your lists to free up space." | Export button |
 
 ---
 
@@ -336,7 +357,11 @@ created: 2026-04-21
 21. [ ] First-run experience → tour, sample list, create, and import options all work
 22. [ ] Duplicate item names → each gets unique ID, both appear in rankings
 23. [ ] Delete an item from a 10-item ranked list → remaining 9 items keep ranks, deleted item gone from rankings view
+24. [ ] First-run tour → all 5 steps display correctly, can skip or complete
+25. [ ] Empty state: 0 items → ranking view shows "add items" message
+26. [ ] Empty state: 1 item → compare page shows "need 2 items" message
+27. [ ] Empty state: 0 comparisons → ranking view shows import order with "start comparing" note
 
 ### Phase 2
-24. [ ] Connect to Nextcloud → file read/write via WebDAV works
-25. [ ] Modify markdown on Nextcloud → sync brings in new items unranked
+28. [ ] Connect to Nextcloud → file read/write via WebDAV works
+29. [ ] Modify markdown on Nextcloud → sync brings in new items unranked
