@@ -56,7 +56,18 @@
 - [x] `src/lib/samples.ts` — 6 sample lists (anime, pizza, movies, vacation, snacks, hobbies) with `getSampleList()` deep clone
 - [x] Build verification — `tsc --noEmit` + `vite build` pass with zero errors
 
-## Phase C: Routing & Layout — NOT STARTED
+## Phase C: Routing & Layout — COMPLETE
+
+- [x] `src/components/Layout.tsx` — app shell with sticky header, conditional back arrow, clickable logo
+- [x] `src/App.tsx` — `createBrowserRouter` with 7 routes wrapped in Layout
+- [x] `src/pages/Home.tsx` — first-run redirect to `/welcome`, empty state placeholder
+- [x] `src/pages/Welcome.tsx` — onboarding with get-started + sample buttons, sets `firstRunDone`
+- [x] `src/pages/Rankings.tsx` — list ID validation, ranked items display, empty state
+- [x] `src/pages/Duel.tsx` — list validation, ≥2 items check, placeholder
+- [x] `src/pages/ListSettings.tsx` — list validation, settings display placeholder
+- [x] `src/pages/AppSettings.tsx` — app settings placeholder
+- [x] `src/pages/NotFound.tsx` — 404 with home button
+- [x] Build verification — `tsc --noEmit` + `vite build` pass with zero errors
 
 - [ ] React Router v7 setup with routes: `/`, `/welcome`, `/list/:id`, `/list/:id/duel`, `/list/:id/settings`, `/settings`
 - [ ] App shell / layout component
