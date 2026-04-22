@@ -27,6 +27,7 @@ See [README.md](../README.md) for project overview, core concepts, and file form
 **Canonical format (DuelList-managed):**
 ```markdown
 ---
+id: f4j7
 name: My Top Anime
 session_length: 10
 k_factor: 32
@@ -38,7 +39,7 @@ created: 2026-04-21
 - Fullmetal Alchemist <!-- {"id":"q8w4","elo":980,"comparisons":8,"added":"2026-04-21"} -->
 ```
 
-- **Frontmatter**: List-level config (name, session length, K-factor, created date)
+- **Frontmatter**: List-level config (id, name, session length, K-factor, created date)
 - **List items**: Sorted by rank (list order = rank order)
 - **HTML comments**: Per-item data — short random `id`, ELO score, comparison count, date added (invisible in any markdown viewer)
 - File remains human-readable and renderable in GitHub, Obsidian, VS Code, etc.
@@ -51,7 +52,7 @@ created: 2026-04-21
 - Attack on Titan
 ```
 
-On import: `# Heading` extracted as display name → moved to frontmatter `name:` field. Items get default ELO (1000), a generated short random ID, and `added` set to current date.
+On import: `# Heading` extracted as display name → moved to frontmatter `name:` field. Items get default ELO (1000), a generated short random ID, and `added` set to current date. List gets a generated `id` in frontmatter.
 
 - Key file: `src/lib/markdown.ts`
 
@@ -67,6 +68,18 @@ On import: `# Heading` extracted as display name → moved to frontmatter `name:
   - Manual export/import (all browsers) — download/upload `.md` files
 - **IndexedDB for file handles only** — persists File System Access API handles so desktop users can re-open files without re-picking. Not used for data.
 - If localStorage is cleared, user re-imports markdown files — all ranking data is in the files.
+
+**localStorage key structure:**
+```
+duellist:lists          → [{id, name, lastOpened, fileHandle?}, ...]   // list registry
+duellist:list:<id>      → {full list JSON (ListConfig + items)}         // per-list data
+duellist:settings       → {firstRunDone, theme, ...}                   // app preferences
+```
+
+**Quota management:**
+- localStorage limit is ~5-10MB per origin
+- Monitor usage and warn user at ~80% capacity
+- A 500-item list with full metadata is ~50-100KB; 10 such lists is ~0.5-1MB — well within limits for typical use
 
 **Data stored in markdown files:**
   - List items + ranking data (ELO, comparison count, ID, added date) embedded as HTML comments
@@ -93,7 +106,7 @@ interface DuelRecord {
 }
 
 interface ListConfig {
-  id: string;
+  id: string;            // short random ID, persisted in frontmatter
   name: string;
   sessionLength: number;
   kFactor: number;       // ELO K-factor, default 32. Higher = faster/volatile, lower = stable.
@@ -140,7 +153,7 @@ ELO rating system + smart pairing algorithm:
 - **Pairing strategy**:
   1. Prioritize items with fewest comparisons (reduce uncertainty)
   2. Among those, prefer items close in current rank (refine boundaries)
-  3. Avoid recently compared pairs (prevent staleness)
+  3. Avoid pairs compared in the last N duels, where N = list size (soft preference — if all pairs are on cooldown, fall back to least-recently-compared pair)
   4. Random tiebreaker
   - New items (ELO 1000) get prioritized for comparisons
 
@@ -180,6 +193,11 @@ ELO rating system + smart pairing algorithm:
 - Unlimited mode: runs forever; user clicks "Done" for summary, or navigates away / closes
 - **"Session complete" summary**: total duels completed, biggest rank movers (e.g., "Attack on Titan ↑ 3 spots"), current top 3
 - Stored in list frontmatter (`session_length`)
+- **K-factor presets** (shown at list creation + list settings):
+  - K=48 — fast convergence, more volatile (label TBD)
+  - K=32 — balanced, default (label TBD)
+  - K=16 — slow convergence, more stable (label TBD)
+  - Stored in list frontmatter (`k_factor`)
 
 ### 9. First-Run Experience
 On first open, present the user with choices:
@@ -270,6 +288,7 @@ On first open, present the user with choices:
 **Future format with metadata:**
 ```markdown
 ---
+id: f4j7
 name: My Top Anime
 session_length: 10
 k_factor: 32
@@ -316,7 +335,8 @@ created: 2026-04-21
 20. [ ] localStorage fallback → close tab without exporting, reopen → data recovered
 21. [ ] First-run experience → tour, sample list, create, and import options all work
 22. [ ] Duplicate item names → each gets unique ID, both appear in rankings
+23. [ ] Delete an item from a 10-item ranked list → remaining 9 items keep ranks, deleted item gone from rankings view
 
 ### Phase 2
-23. [ ] Connect to Nextcloud → file read/write via WebDAV works
-24. [ ] Modify markdown on Nextcloud → sync brings in new items unranked
+24. [ ] Connect to Nextcloud → file read/write via WebDAV works
+25. [ ] Modify markdown on Nextcloud → sync brings in new items unranked

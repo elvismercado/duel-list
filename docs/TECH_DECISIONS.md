@@ -18,20 +18,23 @@
 
 ## Architecture Decisions
 
-### 1. Markdown-Only Persistence (No Database)
+### 1. Markdown-Based Persistence with localStorage Working Copy
 
-**Decision**: All data lives in markdown files. No IndexedDB, no Dexie.js, no database of any kind.
+**Decision**: All ranking data is stored in markdown files (portable, human-readable). The app uses localStorage as the active working copy for fast reads/writes, with markdown files as sync targets for backup and sharing.
 
 **How it works**:
 - Per-item ranking data (ELO score, comparison count) is embedded as HTML comments in the markdown file
-- List-level config (name, session length, created date) lives in YAML frontmatter
+- List-level config (id, name, session length, created date) lives in YAML frontmatter
 - List order in the file = rank order (re-sorted on every save)
 - Duel history stored in a companion `.duellist.md` file (optional, auto-generated)
+- **localStorage** holds the active working copy — the app always reads/writes here first
+- **Markdown files** are the portable sync targets — if localStorage is cleared, re-import the markdown files to restore everything
+- **IndexedDB** is used only to persist File System Access API file handles (desktop Chrome/Edge), so users don't have to re-pick files on reload. Not used for ranking data.
 
 **Rationale**:
-- Single file = simpler everything (portability, sync, backup, mental model)
-- No data loss when browser cache clears (IndexedDB can be wiped)
-- Eliminates the Dexie.js dependency entirely
+- localStorage is fast, synchronous, and available in all browsers
+- Markdown files remain the portable source of truth — all ranking data is embedded in the file
+- No data loss when browser cache clears — user re-imports the markdown file
 - Nextcloud sync becomes trivial — just sync one file (or two with history)
 - File stays human-readable — HTML comments are invisible in markdown viewers
 - Users can open/edit the file in any text editor, GitHub, Obsidian, VS Code, etc.
@@ -40,6 +43,7 @@
 - Comparison history would bloat the main file → solved by companion `.duellist.md`
 - Manual edits could corrupt embedded data → mitigated by resilient parser (ignores malformed comments)
 - File written after every duel → acceptable for local files and Nextcloud sync
+- localStorage has a ~5-10MB limit per origin → monitor usage and warn at ~80% capacity
 
 ### 2. File Format: Frontmatter + HTML Comments
 
@@ -48,6 +52,7 @@
 **Canonical format**:
 ```markdown
 ---
+id: f4j7
 name: My Top Anime
 session_length: 10
 k_factor: 32
@@ -122,7 +127,7 @@ created: 2026-04-21
 **Strategy**:
 1. Find items with the fewest comparisons (highest uncertainty)
 2. Among those, prefer items close in current ELO score (refines ranking boundaries)
-3. Avoid pairs compared in the last N rounds (prevent staleness)
+3. Avoid pairs compared in the last N duels, where N = list size (soft preference — if all pairs are on cooldown, fall back to least-recently-compared pair)
 4. Random tiebreaker for equal candidates
 5. New items (ELO 1000) are prioritized for comparisons automatically
 
@@ -154,15 +159,16 @@ created: 2026-04-21
 - Keeps deployment simple (static hosting)
 - Backend only becomes necessary if Nextcloud CORS is a problem (Phase 2)
 
-### 10. Save After Every Duel + localStorage Fallback
+### 10. Save After Every Duel
 
-**Decision**: Write ranking data to the markdown file after every single duel, not batched to end of session. Use localStorage as crash-recovery fallback.
+**Decision**: Write ranking data after every single duel, not batched to end of session. Write to localStorage immediately (the working copy). If a file handle is available (desktop Chrome/Edge via File System Access API), also sync to the markdown file.
 
 **Rationale**:
 - No data loss if the user closes the tab mid-session
+- localStorage write is synchronous and fast — no perceived delay during post-duel animation
 - File System Access API not available in all browsers (no Firefox, no Safari iOS)
-- For unsupported browsers: cache current list state in localStorage to survive tab close
-- localStorage is a recovery mechanism, not primary storage — primary is always the markdown file
+- For unsupported browsers: localStorage is the working copy; user exports markdown manually
+- For supported browsers: localStorage + file sync after every duel provides seamless persistence
 
 ### 11. Item IDs
 
@@ -209,6 +215,28 @@ created: 2026-04-21
 | **Capacitor (native mobile)** | ✓ | Future option — web app in native shell |
 | **React Native** | ✗ | Would require full UI rewrite — not planned |
 
+### 15. localStorage Architecture
+
+**Decision**: localStorage is the app's working copy. All reads and writes go through localStorage first. Markdown files are sync targets.
+
+**Key structure**:
+```
+duellist:lists          → [{id, name, lastOpened, fileHandle?}, ...]   // list registry
+duellist:list:<id>      → {full list JSON (ListConfig + items)}         // per-list data
+duellist:settings       → {firstRunDone, theme, ...}                   // app preferences
+```
+
+**Rationale**:
+- localStorage is synchronous — no async overhead for reads during rendering
+- Available in all browsers (unlike File System Access API)
+- Markdown files serve as the portable backup — if localStorage is cleared, re-import to restore
+- IndexedDB is used only for persisting File System Access API file handles (desktop Chrome/Edge)
+
+**Quota management**:
+- localStorage limit is ~5-10MB per origin
+- Monitor usage and warn user at ~80% capacity
+- A 500-item list with full metadata is ~50-100KB; 10 such lists is ~0.5-1MB — well within limits for typical use
+
 ---
 
 ## User Requirements (from conversation)
@@ -254,8 +282,15 @@ src/
 │   ├── markdown.ts                  # Markdown parser/writer (frontmatter + HTML comments)
 │   ├── ranking.ts                   # ELO rating system
 │   ├── pairing.ts                   # Smart pair selection
+│   ├── storage.ts                   # localStorage read/write + quota monitoring
+│   ├── strings.ts                   # UI string constants (i18n prep)
 │   ├── nextcloud.ts                 # WebDAV client (Phase 2)
 │   └── sync.ts                      # Bi-directional sync (Phase 2)
+├── locales/                         # Translation JSON files (Phase 3)
+│   ├── en.json
+│   ├── nl.json
+│   ├── es.json
+│   └── pap.json
 ├── components/
 │   ├── SideBySideMode.tsx           # Click-to-pick comparison
 │   ├── SwipeMode.tsx                # Tinder-style swipe comparison (Phase 1b)
