@@ -25,3 +25,10 @@ export interface ListConfig {
   created: string;
   items: Item[];
 }
+
+export interface AppSettings {
+  firstRunDone: boolean;
+  theme: 'light' | 'dark' | 'system';
+  homeSortOrder: 'recent' | 'a-z' | 'created' | 'custom';
+  customListOrder: string[];
+}

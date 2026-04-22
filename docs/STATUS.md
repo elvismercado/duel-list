@@ -45,14 +45,16 @@
 | jszip | 3.10.1 |
 | pnpm | 10.29.2 |
 
-## Phase B: Data Layer — NOT STARTED
+## Phase B: Data Layer — COMPLETE
 
-- [ ] `src/lib/markdown.ts` — parse/serialize markdown ↔ ListConfig
-- [ ] `src/lib/storage.ts` — localStorage CRUD + IndexedDB file handles
-- [ ] `src/lib/ranking.ts` — ELO calculation engine
-- [ ] `src/lib/history.ts` — duel history append via tail parsing
-- [ ] `src/lib/pairing.ts` — pair selection with cooldown
-- [ ] `src/lib/samples.ts` — sample list data
+- [x] `src/types.ts` — added `AppSettings` interface
+- [x] `src/lib/markdown.ts` — parse/serialize markdown ↔ ListConfig (frontmatter via `yaml` pkg, HTML comment JSON, escaping, import-friendly format support)
+- [x] `src/lib/storage.ts` — localStorage CRUD (`duellist:*` keys), IndexedDB file handles (`DuelListDB`), quota monitoring (warn at 80%)
+- [x] `src/lib/ranking.ts` — ELO calculation engine (K-factor presets, session snapshots, biggest movers)
+- [x] `src/lib/history.ts` — duel history append via tail parsing, cooldown pair extraction, `createPairKey` canonical ordering
+- [x] `src/lib/pairing.ts` — smart pair selection (skip re-queue → uncertainty → ELO proximity → cooldown → random tiebreaker)
+- [x] `src/lib/samples.ts` — 6 sample lists (anime, pizza, movies, vacation, snacks, hobbies) with `getSampleList()` deep clone
+- [x] Build verification — `tsc --noEmit` + `vite build` pass with zero errors
 
 ## Phase C: Routing & Layout — NOT STARTED
 
