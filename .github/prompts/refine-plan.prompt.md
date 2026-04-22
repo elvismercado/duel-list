@@ -121,3 +121,11 @@ These topics have been decided across prior refinement rounds. Reference them fo
 - **Pairing step 2 wording**: "close in current ELO score" (canonical, not "rank").
 - **List not found state**: `/list/:id` with invalid ID shows "List not found" + Home button.
 - **Welcome "Create" flow**: Opens create dialog inline. On submit, navigates to `/list/:newId`.
+- **YAML parser**: `yaml` package + manual ~5-line split/join. Not `gray-matter` (Buffer/ESM issues, unmaintained) or `front-matter` (read-only).
+- **History append**: Tail parsing (`lastIndexOf`) on raw markdown string. Same format in localStorage and `.duellist.md`. Duel count incremented in header line 2.
+- **Re-import "Replace existing"**: Full overwrite — replaces all item data, config, and history.
+- **Export all**: Zip via JSZip (all `.md` + `.duellist.md` files). Export app data = full localStorage dump as JSON.
+- **Home sort**: Dropdown with Recent (default) / A-Z / Created / Custom. Custom enables drag-to-reorder with toggle lock button. Sort selection + custom order persisted in `duellist:settings`.
+- **Navigation**: No breadcrumb. Back arrow in header + clickable app logo/title + browser back.
+- **Item metadata field**: Keep `metadata?: Record<string, string>` in Phase 1 type (costs nothing, parser handles unknown data).
+- **Phase 2 checklist**: Restart numbering per phase (not continuous from Phase 1).
