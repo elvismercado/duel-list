@@ -1,9 +1,5 @@
 if you go throug this list, then make sure you do it one at a time
 
-- stay consistent with how we show times
-    - maybe add settings for 24h vs am/pm
-    - notification settings showing am/pm time selector for custom preferred time when 24h format chosen
-    
 - since this app is called duellist then dueling should be more prominent.
     - think of ways to make dueling more prominent
     - maybe start a random duel from the home page?

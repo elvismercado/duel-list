@@ -10,12 +10,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Plus, Settings, FolderOpen, ArrowDownAZ, ArrowUpAZ, ArrowDownNarrowWide, ArrowUpWideNarrow, ArrowUpDown } from 'lucide-react';
+import { Plus, Settings, FolderOpen, ArrowDownAZ, ArrowUpAZ, ArrowDownNarrowWide, ArrowUpWideNarrow, ArrowUpDown, Swords } from 'lucide-react';
 import { ListCard } from '@/components/ListCard';
 import { ListCreateDialog } from '@/components/ListCreateDialog';
 import { ImportConflictDialog } from '@/components/ImportConflictDialog';
 import { ReminderBanner } from '@/components/ReminderBanner';
-import { isReminderDue, pickReminderList } from '@/lib/reminders';
+import { isReminderDue, pickReminderList, pickRandomDuelList } from '@/lib/reminders';
 import { useListRegistry } from '@/hooks/useListRegistry';
 import { useFileSync } from '@/hooks/useFileSync';
 import { saveFileHandle } from '@/lib/storage';
@@ -230,6 +230,17 @@ export default function Home() {
     setReminderTick((t) => t + 1);
   }
 
+  function handleRandomDuel() {
+    const pick = pickRandomDuelList(lists, getList, getHistory);
+    if (pick) navigate(`/list/${pick.id}/duel`);
+  }
+
+  // Eligible only when at least one list has >= 2 active items.
+  const hasDuelEligibleList = useMemo(
+    () => lists.some((l) => (getList(l.id)?.items.filter((i) => !i.removed).length ?? 0) >= 2),
+    [lists],
+  );
+
   return (
     <div className="p-4 max-w-lg mx-auto space-y-4">
       <div className="flex items-center justify-between">
@@ -245,6 +256,24 @@ export default function Home() {
           onSnooze={handleSnoozeReminder}
           onSkip={handleSkipReminder}
         />
+      )}
+
+      {hasDuelEligibleList && (
+        <button
+          type="button"
+          onClick={handleRandomDuel}
+          className="w-full text-left rounded-lg border bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-4 flex items-center gap-3 hover:from-primary/15 hover:via-primary/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          aria-label={S.home.heroAction}
+        >
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary/15 text-primary">
+            <Swords className="h-6 w-6" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="text-base font-semibold">{S.home.heroTitle}</div>
+            <div className="text-xs text-muted-foreground truncate">{S.home.heroSubtitle}</div>
+          </div>
+          <span className="shrink-0 text-sm font-medium text-primary">{S.home.heroAction}</span>
+        </button>
       )}
 
       {lists.length === 0 ? (

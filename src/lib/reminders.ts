@@ -125,3 +125,39 @@ export function pickReminderList(
   });
   return candidates[0] ?? null;
 }
+
+/**
+ * Weighted-random pick of a duel-eligible list, biased toward stale /
+ * less-developed lists. Returns null when no list has >= 2 active items.
+ */
+export function pickRandomDuelList(
+  entries: ListEntry[],
+  getList: (id: string) => ListConfig | null,
+  getHistory: (id: string) => string,
+  now: Date = new Date(),
+): ListEntry | null {
+  const weighted: { entry: ListEntry; weight: number }[] = [];
+  for (const entry of entries) {
+    const list = getList(entry.id);
+    if (!list) continue;
+    const activeCount = list.items.filter((i) => !i.removed).length;
+    if (activeCount < 2) continue;
+    const duelCount = getDuelCountFromHistory(getHistory(entry.id));
+    const daysSinceOpened =
+      entry.lastOpened === null
+        ? 365
+        : Math.max(0, (now.getTime() - entry.lastOpened) / DAY_MS);
+    const developmentBonus = duelCount < 10 ? 2 : duelCount < 50 ? 1 : 0;
+    // Floor of 1 so even fresh, well-developed lists keep a chance.
+    const weight = Math.max(1, daysSinceOpened * 0.3 + developmentBonus + 1);
+    weighted.push({ entry, weight });
+  }
+  if (weighted.length === 0) return null;
+  const total = weighted.reduce((s, w) => s + w.weight, 0);
+  let r = Math.random() * total;
+  for (const w of weighted) {
+    r -= w.weight;
+    if (r <= 0) return w.entry;
+  }
+  return weighted[weighted.length - 1]!.entry;
+}

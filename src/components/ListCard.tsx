@@ -3,10 +3,11 @@ import type { ListEntry } from '@/lib/storage';
 import { getList, getHistory } from '@/lib/storage';
 import { sortItemsByElo } from '@/lib/ranking';
 import { getDuelCountFromHistory } from '@/lib/history';
-import { GripVertical, ArrowUp, ArrowDown } from 'lucide-react';
+import { GripVertical, ArrowUp, ArrowDown, Swords } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { useNavigate } from 'react-router';
 import { S } from '@/lib/strings';
 
 interface ListCardProps {
@@ -73,6 +74,8 @@ export function ListCard({
   const topThree = sorted.slice(0, 3);
   const duelCount = getDuelCountFromHistory(getHistory(entry.id));
   const activity = getActivityBucket(entry.lastOpened);
+  const canDuel = activeItems.length >= 2;
+  const navigate = useNavigate();
 
   const sortable = useSortable({ id: entry.id, disabled: !reorderMode });
   const style = reorderMode
@@ -142,15 +145,32 @@ export function ListCard({
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 min-w-0">
             <span
-              className={`h-2 w-2 rounded-full shrink-0 ${ACTIVITY_DOT_CLASS[activity]}`}
+              className={`h-2.5 w-2.5 rounded-full shrink-0 ${ACTIVITY_DOT_CLASS[activity]}`}
               aria-label={ACTIVITY_ARIA[activity]}
               title={ACTIVITY_ARIA[activity]}
             />
-            <h3 className="font-semibold truncate">{entry.name}</h3>
+            <h3 className="text-lg font-bold truncate">{entry.name}</h3>
           </div>
-          <span className="text-xs text-muted-foreground shrink-0">
-            {formatRelativeTime(entry.lastOpened)}
-          </span>
+          <div className="flex items-center gap-1 shrink-0">
+            <span className="text-xs text-muted-foreground">
+              {formatRelativeTime(entry.lastOpened)}
+            </span>
+            {canDuel && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+                aria-label={S.list.quickDuelAria(entry.name)}
+                title={S.ranking.startDuel}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  navigate(`/list/${entry.id}/duel`);
+                }}
+              >
+                <Swords className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
         </div>
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <span>{S.ranking.itemsCount(activeItems.length)}</span>

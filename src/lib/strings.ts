@@ -63,6 +63,10 @@ export const S = {
     sortDirAriaNameDesc: 'Z to A — tap to reverse',
     sortDirAriaCreatedDesc: 'Newest first — tap to reverse',
     sortDirAriaCreatedAsc: 'Oldest first — tap to reverse',
+    heroTitle: 'Ready for a duel?',
+    heroSubtitle: 'Pick a winner from a random match-up.',
+    heroAction: 'Random duel',
+    heroNoneEligibleHint: 'Add 2+ items to a list to enable duels.',
   },
 
   welcome: {
@@ -218,6 +222,7 @@ export const S = {
     activityCold: 'Inactive',
     activityNever: 'Never opened',
     podiumPositionAria: (pos: number, name: string) => `Position ${pos}: ${name}`,
+    quickDuelAria: (name: string) => `Start a duel for ${name}`,
   },
 
   glossary: {
