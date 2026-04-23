@@ -35,7 +35,6 @@ import {
 } from '@/components/ui/select';
 import {
   Plus,
-  Play,
   Settings,
   MoreVertical,
   Trash2,
@@ -210,13 +209,20 @@ export default function Rankings() {
       </div>
 
       {canDuel && (
-        <Button
-          className="w-full"
+        <button
+          type="button"
           onClick={() => navigate(`/list/${id}/duel`)}
+          className="w-full text-left rounded-lg border bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-4 flex items-center gap-3 hover:from-primary/15 hover:via-primary/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          aria-label={S.ranking.startDuel}
         >
-          <Play className="h-4 w-4 mr-2" />
-          {S.ranking.startDuel}
-        </Button>
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary/15 text-primary">
+            <Swords className="h-6 w-6" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="text-base font-semibold">{S.ranking.startDuel}</div>
+            <div className="text-xs text-muted-foreground truncate">{S.ranking.heroSubtitle}</div>
+          </div>
+        </button>
       )}
 
       {activeItems.length > 0 && (

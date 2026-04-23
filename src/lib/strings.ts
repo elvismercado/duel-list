@@ -115,6 +115,7 @@ export const S = {
     addItemsPrompt: 'Add some items to get started.',
     startComparing: 'Start comparing to see rankings change.',
     startDuel: 'Start duelling',
+    heroSubtitle: 'Compare two items, sharpen the ranking',
     rank: 'Rank',
     elo: 'ELO',
     rankTooltip: 'Rank',
