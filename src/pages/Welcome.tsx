@@ -11,22 +11,20 @@ const TOUR_STEPS = [
     description: S.welcome.description,
   },
   {
-    heading: 'The Duel',
-    description:
-      'Two items appear side by side. Pick the winner, declare a tie, or skip.',
+    heading: S.welcome.duelStepTitle,
+    description: S.welcome.duelStepDescription,
   },
   {
-    heading: 'Your Ranking Builds Itself',
-    description:
-      'After each duel, your list re-ranks automatically. The more duels you do, the more accurate it gets.',
+    heading: S.welcome.rankingStepTitle,
+    description: S.welcome.rankingStepDescription,
   },
   {
-    heading: 'Quick Sessions',
-    description: "Do 5–10 duels a day. It's a habit, not a chore.",
+    heading: S.welcome.sessionsStepTitle,
+    description: S.welcome.sessionsStepDescription,
   },
   {
-    heading: 'Ready!',
-    description: 'Create a list or try a sample to get started.',
+    heading: S.welcome.readyStepTitle,
+    description: S.welcome.readyStepDescription,
   },
 ];
 
@@ -65,7 +63,7 @@ export default function Welcome() {
             className={`h-2 w-2 rounded-full transition-colors ${
               i === step ? 'bg-primary' : 'bg-muted'
             }`}
-            aria-label={`Step ${i + 1}`}
+            aria-label={S.welcome.stepAria(i + 1)}
           />
         ))}
       </div>
@@ -74,7 +72,7 @@ export default function Welcome() {
         {isLast ? (
           <>
             <Button onClick={finish} className="w-48">
-              Go to home
+              {S.common.goToHome}
             </Button>
             <Button variant="outline" onClick={handleTrySample} className="w-48">
               {S.welcome.trySample}
@@ -87,13 +85,13 @@ export default function Welcome() {
               }}
               className="w-48"
             >
-              See all features
+              {S.welcome.seeAllFeatures}
             </Button>
           </>
         ) : (
           <>
             <Button onClick={() => setStep(step + 1)} className="w-48">
-              {step === 0 ? S.welcome.getStarted : 'Next'}
+              {step === 0 ? S.welcome.getStarted : S.common.next}
             </Button>
             {step === 0 && (
               <Button
@@ -109,7 +107,7 @@ export default function Welcome() {
               onClick={() => setStep(TOUR_STEPS.length - 1)}
               className="text-xs"
             >
-              Skip tour
+              {S.welcome.skipTour}
             </Button>
           </>
         )}

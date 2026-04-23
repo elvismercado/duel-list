@@ -28,8 +28,8 @@ export default function Duel() {
   if (!list) {
     return (
       <div className="p-4 max-w-lg mx-auto space-y-4 text-center mt-12">
-        <h1 className="text-2xl font-bold">List not found</h1>
-        <Button onClick={() => navigate('/')}>Go home</Button>
+        <h1 className="text-2xl font-bold">{S.common.listNotFound}</h1>
+        <Button onClick={() => navigate('/')}>{S.common.goHome}</Button>
       </div>
     );
   }
@@ -40,7 +40,7 @@ export default function Duel() {
     return (
       <div className="p-4 max-w-lg mx-auto space-y-4 text-center mt-12">
         <p className="text-muted-foreground">{S.duel.needTwoItems}</p>
-        <Button onClick={() => navigate(`/list/${id}`)}>Back to list</Button>
+        <Button onClick={() => navigate(`/list/${id}`)}>{S.common.backToList}</Button>
       </div>
     );
   }
@@ -112,14 +112,14 @@ function DuelSession({
           <Trophy className="h-10 w-10 mx-auto text-yellow-500" />
           <h1 className="text-2xl font-bold">{S.duel.sessionComplete}</h1>
           <p className="text-muted-foreground">
-            {duelCount} duels completed
+            {S.duel.duelsCompleted(duelCount)}
           </p>
         </div>
 
         {top.length > 0 && (
           <div className="space-y-2">
             <h2 className="text-sm font-semibold text-muted-foreground">
-              Current Top 3
+              {S.duel.currentTop3}
             </h2>
             {top.map((item, i) => (
               <div
@@ -141,7 +141,7 @@ function DuelSession({
         {movers.length > 0 && (
           <div className="space-y-2">
             <h2 className="text-sm font-semibold text-muted-foreground">
-              Biggest Movers
+              {S.duel.biggestMovers}
             </h2>
             {movers.map((m) => (
               <div
@@ -170,14 +170,14 @@ function DuelSession({
             onClick={() => navigate(`/list/${list.id}`)}
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Rankings
+            {S.duel.rankings}
           </Button>
           <Button
             variant="outline"
             className="flex-1"
             onClick={restartSession}
           >
-            New session
+            {S.duel.newSession}
           </Button>
         </div>
       </div>
@@ -187,9 +187,9 @@ function DuelSession({
   if (!currentPair) {
     return (
       <div className="p-4 max-w-lg mx-auto text-center space-y-4 mt-12">
-        <p className="text-muted-foreground">No more pairs available</p>
+        <p className="text-muted-foreground">{S.duel.noMorePairs}</p>
         <Button onClick={() => navigate(`/list/${list.id}`)}>
-          Back to rankings
+          {S.duel.backToRankings}
         </Button>
       </div>
     );
@@ -232,7 +232,7 @@ function DuelSession({
         <Card
           role="button"
           tabIndex={0}
-          aria-label={`Pick ${itemA.name}`}
+          aria-label={S.duel.pickAria(itemA.name)}
           className={`cursor-pointer hover:border-primary focus-visible:ring-2 focus-visible:ring-ring transition-all ${
             lastWinner === itemA.id ? 'animate-winner-grow' : ''
           }${lastWinner && lastWinner !== 'tie' && lastWinner !== itemA.id ? ' animate-loser-shrink' : ''}`}
@@ -242,7 +242,7 @@ function DuelSession({
           <CardContent className="p-6 text-center">
             <p className="font-semibold text-lg">{itemA.name}</p>
             <p className="text-xs text-muted-foreground mt-1">
-              {Math.round(itemA.eloScore)} ELO
+              {S.duel.eloSuffix(Math.round(itemA.eloScore))}
             </p>
           </CardContent>
         </Card>
@@ -250,7 +250,7 @@ function DuelSession({
         <Card
           role="button"
           tabIndex={0}
-          aria-label={`Pick ${itemB.name}`}
+          aria-label={S.duel.pickAria(itemB.name)}
           className={`cursor-pointer hover:border-primary focus-visible:ring-2 focus-visible:ring-ring transition-all ${
             lastWinner === itemB.id ? 'animate-winner-grow' : ''
           }${lastWinner && lastWinner !== 'tie' && lastWinner !== itemB.id ? ' animate-loser-shrink' : ''}`}
@@ -260,7 +260,7 @@ function DuelSession({
           <CardContent className="p-6 text-center">
             <p className="font-semibold text-lg">{itemB.name}</p>
             <p className="text-xs text-muted-foreground mt-1">
-              {Math.round(itemB.eloScore)} ELO
+              {S.duel.eloSuffix(Math.round(itemB.eloScore))}
             </p>
           </CardContent>
         </Card>
@@ -278,7 +278,7 @@ function DuelSession({
       </div>
 
       <p className="text-xs text-center text-muted-foreground">
-        ← / → to pick · T for tie · S to skip
+        {S.duel.keyboardHint}
       </p>
     </div>
   );

@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { Link, useParams, useNavigate } from 'react-router';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { S } from '@/lib/strings';
 import { getList, getHistory } from '@/lib/storage';
 import { useExport } from '@/hooks/useExport';
 import {
@@ -57,8 +58,8 @@ export default function History() {
   if (!list || !id) {
     return (
       <div className="p-4 max-w-lg mx-auto space-y-4 text-center mt-12">
-        <h1 className="text-2xl font-bold">List not found</h1>
-        <Button onClick={() => navigate('/')}>Go home</Button>
+        <h1 className="text-2xl font-bold">{S.common.listNotFound}</h1>
+        <Button onClick={() => navigate('/')}>{S.common.goHome}</Button>
       </div>
     );
   }
@@ -76,7 +77,7 @@ export default function History() {
           variant="ghost"
           size="icon"
           className="min-h-[44px] min-w-[44px]"
-          aria-label="Back to list"
+          aria-label={S.common.backToList}
         >
           <Link to={`/list/${id}`}>
             <ArrowLeft className="h-5 w-5" />
@@ -84,17 +85,17 @@ export default function History() {
         </Button>
         <div className="min-w-0 flex-1">
           <h1 className="text-2xl font-bold truncate">{list.name}</h1>
-          <p className="text-xs text-muted-foreground">Duel history</p>
+          <p className="text-xs text-muted-foreground">{S.history.title}</p>
         </div>
         {total > 0 && (
           <Button
             variant="outline"
             size="sm"
             onClick={() => exportHistory(list.id, list.name)}
-            aria-label="Export history"
+            aria-label={S.history.exportHistoryAria}
           >
             <Download className="h-4 w-4 mr-1" />
-            Export
+            {S.common.export}
           </Button>
         )}
       </div>
@@ -102,28 +103,28 @@ export default function History() {
       {sections.length === 0 ? (
         <div className="text-center py-12 space-y-2">
           <p className="text-muted-foreground">
-            No duels yet. Play a session to start building history.
+            {S.history.emptyDescription}
           </p>
           <Button onClick={() => navigate(`/list/${id}/duel`)}>
-            Start a duel
+            {S.history.startDuel}
           </Button>
         </div>
       ) : (
         <>
           <div className="grid grid-cols-2 gap-2">
-            <StatTile label="Total duels" value={String(stats.total)} />
-            <StatTile label="Ties" value={String(stats.ties)} />
+            <StatTile label={S.history.statTotal} value={String(stats.total)} />
+            <StatTile label={S.history.statTies} value={String(stats.ties)} />
             <StatTile
-              label="Top winner"
+              label={S.history.statTopWinner}
               value={stats.topWinner ? stats.topWinner.name : '—'}
               subtitle={
                 stats.topWinner
-                  ? `${stats.topWinner.wins} ${stats.topWinner.wins === 1 ? 'win' : 'wins'}`
+                  ? S.history.winsCount(stats.topWinner.wins)
                   : undefined
               }
             />
             <StatTile
-              label="Biggest rivalry"
+              label={S.history.statBiggestRivalry}
               value={
                 stats.biggestRivalry
                   ? `${stats.biggestRivalry.a} · ${stats.biggestRivalry.b}`
@@ -131,7 +132,7 @@ export default function History() {
               }
               subtitle={
                 stats.biggestRivalry
-                  ? `${stats.biggestRivalry.count} ${stats.biggestRivalry.count === 1 ? 'meeting' : 'meetings'}`
+                  ? S.history.meetingsCount(stats.biggestRivalry.count)
                   : undefined
               }
             />
@@ -140,9 +141,9 @@ export default function History() {
           {daily.some((d) => d.count > 0) && (
             <div className="rounded-lg border bg-card p-3 space-y-2">
               <div className="flex items-center justify-between text-xs text-muted-foreground">
-                <span>Last 30 days</span>
+                <span>{S.history.sparklineRangeLabel}</span>
                 <span>
-                  {daily.reduce((s, d) => s + d.count, 0)} duels
+                  {S.history.totalDuels(daily.reduce((s, d) => s + d.count, 0))}
                 </span>
               </div>
               <Sparkline data={daily} />
@@ -153,18 +154,18 @@ export default function History() {
             <Search className="h-4 w-4 absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
             <Input
               type="search"
-              placeholder="Filter by name…"
+              placeholder={S.history.filterPlaceholder}
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               className="pl-8 pr-8"
-              aria-label="Filter duels by name"
+              aria-label={S.history.filterAria}
             />
             {query && (
               <button
                 type="button"
                 onClick={() => setQuery('')}
                 className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                aria-label="Clear filter"
+                aria-label={S.common.clearFilter}
               >
                 <X className="h-4 w-4" />
               </button>
@@ -174,17 +175,16 @@ export default function History() {
           {filteredCount === 0 ? (
             <div className="text-center py-8 space-y-2">
               <p className="text-muted-foreground text-sm">
-                No duels match “{query}”.
+                {S.history.noMatch(query)}
               </p>
               <Button variant="outline" size="sm" onClick={() => setQuery('')}>
-                Clear filter
+                {S.common.clearFilter}
               </Button>
             </div>
           ) : (
             <div className="space-y-4">
               <p className="text-xs text-muted-foreground">
-                Showing {filteredCount} of {total}{' '}
-                {total === 1 ? 'duel' : 'duels'}.
+                {S.history.showingOf(filteredCount, total)}
               </p>
               {filteredSections.map((section) => (
                 <section key={section.date} className="space-y-1">
@@ -244,7 +244,7 @@ function Sparkline({ data }: { data: { date: string; count: number }[] }) {
       preserveAspectRatio="none"
       className="w-full h-8"
       role="img"
-      aria-label="Duels per day, last 30 days"
+      aria-label={S.history.sparklineAria}
     >
       {data.map((d, i) => {
         const barH = d.count === 0 ? 1 : (d.count / max) * (h - 2);
@@ -263,7 +263,7 @@ function Sparkline({ data }: { data: { date: string; count: number }[] }) {
             className="fill-primary"
             opacity={opacity}
           >
-            <title>{`${d.date}: ${d.count} ${d.count === 1 ? 'duel' : 'duels'}`}</title>
+            <title>{S.history.sparklineDay(d.date, d.count)}</title>
           </rect>
         );
       })}
@@ -284,9 +284,9 @@ function DuelRow({ entry }: { entry: ParsedEntry }) {
             ? 'bg-muted text-muted-foreground'
             : 'bg-foreground/10 text-foreground/70'
         }`}
-        aria-label={tie ? 'Tie' : 'versus'}
+        aria-label={tie ? S.history.tieAria : S.history.versusAria}
       >
-        {tie ? 'TIE' : 'VS'}
+        {tie ? S.history.tieBadge : S.history.vsBadge}
       </div>
       <NameChip name={entry.b} won={bWon} dimmed={!tie && !bWon} alignRight />
     </div>
@@ -320,7 +320,7 @@ function NameChip({
       {won && (
         <Trophy
           className="h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400"
-          aria-label="Winner"
+          aria-label={S.history.winnerAria}
         />
       )}
       <span className="truncate min-w-0 flex-1">{name}</span>
@@ -345,6 +345,8 @@ function parseHistorySections(md: string): Section[] {
       if (parsed) current.entries.push(parsed);
     }
   }
+  // Newest date first, and within each date newest entry first.
+  for (const s of sections) s.entries.reverse();
   return sections.reverse();
 }
 

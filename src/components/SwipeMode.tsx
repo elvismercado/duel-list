@@ -54,7 +54,7 @@ function SwipeCard({ item, showElo, onPick, exiting }: SwipeCardProps) {
       <Card
         role="button"
         tabIndex={0}
-        aria-label={`Pick ${item.name}`}
+        aria-label={S.duel.pickAria(item.name)}
         onClick={onPick}
         onKeyDown={(e) => {
           if (e.key === 'Enter' || e.key === ' ') {
@@ -68,14 +68,14 @@ function SwipeCard({ item, showElo, onPick, exiting }: SwipeCardProps) {
           <p className="font-semibold text-base sm:text-lg">{item.name}</p>
           {showElo && (
             <p className="text-xs text-muted-foreground mt-1">
-              {Math.round(item.eloScore)} ELO
+              {S.duel.eloSuffix(Math.round(item.eloScore))}
             </p>
           )}
           <motion.div
             style={{ opacity: upHint }}
             className="absolute top-3 left-1/2 -translate-x-1/2 border-2 border-green-500 text-green-500 px-3 py-1 rounded font-bold text-xs"
           >
-            PICK
+            {S.duel.pickBadge}
           </motion.div>
         </CardContent>
       </Card>
@@ -109,7 +109,7 @@ export function SwipeMode({
   return (
     <div className="p-4 max-w-lg mx-auto space-y-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-lg font-semibold">Swipe up to pick</h1>
+        <h1 className="text-lg font-semibold">{S.duel.swipeUpToPick}</h1>
         {sessionLength > 0 && (
           <span
             className="text-sm text-muted-foreground tabular-nums"
@@ -148,7 +148,7 @@ export function SwipeMode({
       </div>
 
       <p className="text-xs text-center text-muted-foreground">
-        Swipe up or tap to pick · ← / → keys work too
+        {S.duel.swipeHelpText}
       </p>
     </div>
   );

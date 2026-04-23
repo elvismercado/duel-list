@@ -6,6 +6,7 @@ import { GripVertical, ArrowUp, ArrowDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { S } from '@/lib/strings';
 
 interface ListCardProps {
   entry: ListEntry;
@@ -16,16 +17,16 @@ interface ListCardProps {
 }
 
 function formatRelativeTime(ts: number | null): string {
-  if (!ts) return 'Never opened';
+  if (!ts) return S.list.neverOpened;
   const diff = Date.now() - ts;
   const mins = Math.floor(diff / 60_000);
-  if (mins < 1) return 'Just now';
-  if (mins < 60) return `${mins}m ago`;
+  if (mins < 1) return S.list.justNow;
+  if (mins < 60) return S.list.minutesAgo(mins);
   const hours = Math.floor(mins / 60);
-  if (hours < 24) return `${hours}h ago`;
+  if (hours < 24) return S.list.hoursAgo(hours);
   const days = Math.floor(hours / 24);
-  if (days === 1) return 'Yesterday';
-  return `${days}d ago`;
+  if (days === 1) return S.list.yesterday;
+  return S.list.daysAgo(days);
 }
 
 export function ListCard({
@@ -52,21 +53,21 @@ export function ListCard({
   if (reorderMode) {
     return (
       <div ref={sortable.setNodeRef} style={style}>
-        <Card aria-label={`${entry.name}, draggable`}>
+        <Card aria-label={S.list.draggableAria(entry.name)}>
           <CardContent className="p-2 flex items-center gap-2">
             <button
               type="button"
               {...sortable.attributes}
               {...sortable.listeners}
               className="touch-none cursor-grab active:cursor-grabbing p-2 -m-2 text-muted-foreground"
-              aria-label={`Drag ${entry.name}`}
+              aria-label={S.list.dragAria(entry.name)}
             >
               <GripVertical className="h-5 w-5" />
             </button>
             <div className="flex-1 min-w-0">
               <h3 className="font-semibold truncate">{entry.name}</h3>
               <p className="text-xs text-muted-foreground">
-                {activeItems.length} items
+                {S.ranking.itemsCount(activeItems.length)}
               </p>
             </div>
             <Button
@@ -74,7 +75,7 @@ export function ListCard({
               size="icon"
               className="min-h-[44px] min-w-[44px]"
               onClick={onMoveUp}
-              aria-label={`Move ${entry.name} up`}
+              aria-label={S.list.moveUpAria(entry.name)}
               disabled={!onMoveUp}
             >
               <ArrowUp className="h-4 w-4" />
@@ -84,7 +85,7 @@ export function ListCard({
               size="icon"
               className="min-h-[44px] min-w-[44px]"
               onClick={onMoveDown}
-              aria-label={`Move ${entry.name} down`}
+              aria-label={S.list.moveDownAria(entry.name)}
               disabled={!onMoveDown}
             >
               <ArrowDown className="h-4 w-4" />
@@ -112,10 +113,10 @@ export function ListCard({
           </span>
         </div>
         <div className="flex items-center justify-between text-sm text-muted-foreground">
-          <span>{activeItems.length} items</span>
+          <span>{S.ranking.itemsCount(activeItems.length)}</span>
           {topItem && (
             <span className="truncate ml-2">
-              #1 {topItem.name}
+              {S.ranking.topItemPrefix(topItem.name)}
             </span>
           )}
         </div>

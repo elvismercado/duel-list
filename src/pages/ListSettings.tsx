@@ -42,8 +42,8 @@ export default function ListSettings() {
   if (!list) {
     return (
       <div className="p-4 max-w-lg mx-auto space-y-4 text-center mt-12">
-        <h1 className="text-2xl font-bold">List not found</h1>
-        <Button onClick={() => navigate('/')}>Go home</Button>
+        <h1 className="text-2xl font-bold">{S.common.listNotFound}</h1>
+        <Button onClick={() => navigate('/')}>{S.common.goHome}</Button>
       </div>
     );
   }
@@ -93,7 +93,7 @@ export default function ListSettings() {
 
       {/* Name — read-only display with edit button */}
       <div className="space-y-2">
-        <label className="text-sm font-medium">Name</label>
+        <label className="text-sm font-medium">{S.list.name}</label>
         {editingName ? (
           <div className="flex gap-2">
             <Input
@@ -116,7 +116,7 @@ export default function ListSettings() {
               size="icon"
               className="min-h-[44px] min-w-[44px] shrink-0"
               onClick={handleNameBlur}
-              aria-label="Save name"
+              aria-label={S.common.saveName}
             >
               <Check className="h-4 w-4" />
             </Button>
@@ -129,7 +129,7 @@ export default function ListSettings() {
               size="icon"
               className="h-7 w-7 min-h-[44px] min-w-[44px] shrink-0"
               onClick={() => setEditingName(true)}
-              aria-label="Edit name"
+              aria-label={S.common.editName}
             >
               <Pencil className="h-4 w-4" />
             </Button>
@@ -171,7 +171,7 @@ export default function ListSettings() {
             className="w-28"
           />
           <span className="text-sm text-muted-foreground self-center">
-            {list.sessionLength === 0 ? 'Unlimited' : 'duels'}
+            {list.sessionLength === 0 ? S.settings.sessionLengthUnlimited : S.settings.sessionLengthUnit}
           </span>
         </div>
         <div className="flex gap-1 flex-wrap">
@@ -190,7 +190,7 @@ export default function ListSettings() {
             variant={list.sessionLength === 0 ? 'default' : 'outline'}
             onClick={() => handleSessionLengthChange('0')}
           >
-            Unlimited
+            {S.settings.sessionLengthUnlimited}
           </Button>
         </div>
       </div>
@@ -199,7 +199,7 @@ export default function ListSettings() {
 
       {/* Export */}
       <div className="space-y-2">
-        <h2 className="text-sm font-semibold text-muted-foreground">Export</h2>
+        <h2 className="text-sm font-semibold text-muted-foreground">{S.settings.exportHeading}</h2>
         <div className="flex gap-2 flex-wrap">
           <Button
             variant="outline"
@@ -226,23 +226,23 @@ export default function ListSettings() {
           <Separator />
           <div className="space-y-2">
             <h2 className="text-sm font-semibold text-muted-foreground">
-              File sync
+              {S.settings.fileSyncHeading}
             </h2>
             {isSynced ? (
               <div className="space-y-2">
                 <p className="text-sm text-muted-foreground">
-                  Linked — changes sync to file automatically.
+                  {S.settings.fileSyncLinked}
                 </p>
                 <Button variant="outline" size="sm" onClick={unlinkFile}>
                   <Unlink className="h-4 w-4 mr-1" />
-                  Unlink file
+                  {S.settings.unlinkFile}
                 </Button>
               </div>
             ) : (
               <div className="space-y-2">
                 {needsRelink && (
                   <p className="text-sm text-destructive">
-                    File sync lost — permission denied. Re-link to restore.
+                    {S.settings.fileSyncLost}
                   </p>
                 )}
                 <Button
@@ -251,7 +251,7 @@ export default function ListSettings() {
                   onClick={() => list && linkFile(list)}
                 >
                   <Link className="h-4 w-4 mr-1" />
-                  Link to file
+                  {S.settings.linkFile}
                 </Button>
               </div>
             )}
@@ -270,7 +270,7 @@ export default function ListSettings() {
             onClick={() => setRemovedOpen(true)}
           >
             <Archive className="h-4 w-4 mr-2" />
-            Removed items ({removedItems.length})
+            {S.settings.removedItemsButton(removedItems.length)}
           </Button>
         </div>
       )}
@@ -279,21 +279,21 @@ export default function ListSettings() {
 
       {/* Danger Zone */}
       <div className="space-y-2">
-        <h2 className="text-sm font-semibold text-destructive">Danger zone</h2>
+        <h2 className="text-sm font-semibold text-destructive">{S.settings.dangerZone}</h2>
         <Button
           variant="destructive"
           onClick={() => setDeleteOpen(true)}
         >
           <Trash2 className="h-4 w-4 mr-2" />
-          Delete list
+          {S.settings.deleteList}
         </Button>
       </div>
 
       <ConfirmDialog
         open={deleteOpen}
-        title="Delete list"
-        message={`Permanently delete "${list.name}" and all its history? This cannot be undone.`}
-        confirmLabel="Delete"
+        title={S.settings.deleteList}
+        message={S.settings.deleteListConfirm(list.name)}
+        confirmLabel={S.common.delete}
         danger
         onConfirm={handleDelete}
         onCancel={() => setDeleteOpen(false)}
@@ -302,12 +302,12 @@ export default function ListSettings() {
       <Dialog open={removedOpen} onOpenChange={setRemovedOpen}>
         <DialogContent className="max-h-[80vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Removed items</DialogTitle>
+            <DialogTitle>{S.settings.removedItemsTitle}</DialogTitle>
           </DialogHeader>
           <div className="space-y-2">
             {removedItems.length === 0 ? (
               <p className="text-sm text-muted-foreground">
-                No removed items.
+                {S.settings.noRemovedItems}
               </p>
             ) : (
               removedItems.map((item) => (
@@ -321,7 +321,7 @@ export default function ListSettings() {
                     size="icon"
                     className="h-7 w-7 min-h-[44px] min-w-[44px]"
                     onClick={() => restoreItem(item.id)}
-                    aria-label={`Restore ${item.name}`}
+                    aria-label={S.settings.restoreAria(item.name)}
                   >
                     <Undo2 className="h-4 w-4" />
                   </Button>

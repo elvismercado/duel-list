@@ -153,7 +153,7 @@ export default function Home() {
     <div className="p-4 max-w-lg mx-auto space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">{S.app.name}</h1>
-        <Button variant="ghost" size="icon" className="min-h-[44px] min-w-[44px]" onClick={() => navigate('/settings')} aria-label="App settings">
+        <Button variant="ghost" size="icon" className="min-h-[44px] min-w-[44px]" onClick={() => navigate('/settings')} aria-label={S.app.appSettingsAria}>
           <Settings className="h-5 w-5" />
         </Button>
       </div>
@@ -169,7 +169,7 @@ export default function Home() {
             </Button>
             <Button variant="outline" onClick={handleOpen}>
               <FolderOpen className="h-4 w-4 mr-2" />
-              Open file
+              {S.home.openFile}
             </Button>
           </div>
         </div>
@@ -183,13 +183,13 @@ export default function Home() {
               }
             >
               <SelectTrigger className="w-[140px]">
-                <SelectValue placeholder="Sort by" />
+                <SelectValue placeholder={S.home.sortBy} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="recent">Recent</SelectItem>
-                <SelectItem value="a-z">A–Z</SelectItem>
-                <SelectItem value="created">Created</SelectItem>
-                <SelectItem value="custom">Custom</SelectItem>
+                <SelectItem value="recent">{S.home.sortRecent}</SelectItem>
+                <SelectItem value="a-z">{S.home.sortAZ}</SelectItem>
+                <SelectItem value="created">{S.home.sortCreated}</SelectItem>
+                <SelectItem value="custom">{S.home.sortCustom}</SelectItem>
               </SelectContent>
             </Select>
             <div className="flex gap-2 flex-wrap">
@@ -200,16 +200,16 @@ export default function Home() {
                   onClick={() => setReorderMode((v) => !v)}
                   aria-pressed={reorderMode}
                 >
-                  {reorderMode ? 'Done' : 'Reorder'}
+                  {reorderMode ? S.home.done : S.home.reorder}
                 </Button>
               )}
               <Button size="sm" onClick={() => setCreateOpen(true)}>
                 <Plus className="h-4 w-4 mr-1" />
-                New
+                {S.home.new}
               </Button>
               <Button size="sm" variant="outline" onClick={handleOpen}>
                 <FolderOpen className="h-4 w-4 mr-1" />
-                Open
+                {S.home.open}
               </Button>
             </div>
           </div>

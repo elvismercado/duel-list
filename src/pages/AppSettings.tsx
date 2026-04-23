@@ -45,7 +45,7 @@ export default function AppSettingsPage() {
 
       {/* Theme */}
       <div className="space-y-2">
-        <label className="text-sm font-medium">Theme</label>
+        <label className="text-sm font-medium">{S.settings.themeLabel}</label>
         <Select
           value={settings.theme ?? 'system'}
           onValueChange={handleThemeChange}
@@ -54,16 +54,16 @@ export default function AppSettingsPage() {
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="system">System</SelectItem>
-            <SelectItem value="light">Light</SelectItem>
-            <SelectItem value="dark">Dark</SelectItem>
+            <SelectItem value="system">{S.settings.themeSystem}</SelectItem>
+            <SelectItem value="light">{S.settings.themeLight}</SelectItem>
+            <SelectItem value="dark">{S.settings.themeDark}</SelectItem>
           </SelectContent>
         </Select>
       </div>
 
       {/* Duel mode */}
       <div className="space-y-2">
-        <label className="text-sm font-medium">Duel mode</label>
+        <label className="text-sm font-medium">{S.settings.duelModeLabel}</label>
         <Select
           value={settings.duelMode ?? 'side-by-side'}
           onValueChange={handleDuelModeChange}
@@ -72,12 +72,12 @@ export default function AppSettingsPage() {
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="side-by-side">Side-by-side cards</SelectItem>
-            <SelectItem value="swipe">Swipe</SelectItem>
+            <SelectItem value="side-by-side">{S.settings.duelModeSideBySide}</SelectItem>
+            <SelectItem value="swipe">{S.settings.duelModeSwipe}</SelectItem>
           </SelectContent>
         </Select>
         <p className="text-xs text-muted-foreground">
-          Swipe mode shows both items side by side — drag a card up to pick it.
+          {S.settings.duelModeHelp}
         </p>
       </div>
 
@@ -85,18 +85,18 @@ export default function AppSettingsPage() {
 
       {/* About / Features */}
       <div className="space-y-2">
-        <h2 className="text-sm font-semibold text-muted-foreground">About</h2>
+        <h2 className="text-sm font-semibold text-muted-foreground">{S.settings.aboutHeading}</h2>
         <div className="flex gap-2 flex-wrap">
           <Button asChild variant="outline" size="sm">
             <Link to="/features">
               <Sparkles className="h-4 w-4 mr-1" />
-              What's in DuelList
+              {S.settings.whatsInDuelList}
             </Link>
           </Button>
           <Button asChild variant="outline" size="sm">
             <Link to="/welcome">
               <Compass className="h-4 w-4 mr-1" />
-              Replay onboarding
+              {S.settings.replayOnboarding}
             </Link>
           </Button>
         </div>
@@ -106,7 +106,7 @@ export default function AppSettingsPage() {
 
       {/* Export */}
       <div className="space-y-3">
-        <h2 className="text-sm font-semibold text-muted-foreground">Export</h2>
+        <h2 className="text-sm font-semibold text-muted-foreground">{S.settings.exportHeading}</h2>
         <div className="flex gap-2 flex-wrap">
           <Button variant="outline" size="sm" onClick={exportAll}>
             <Download className="h-4 w-4 mr-1" />
@@ -124,12 +124,11 @@ export default function AppSettingsPage() {
       {/* Storage */}
       <div className="space-y-2">
         <h2 className="text-sm font-semibold text-muted-foreground">
-          Storage
+          {S.settings.storageHeading}
         </h2>
         <Progress value={storage.percentage} className="h-2" />
         <p className="text-xs text-muted-foreground">
-          {(storage.current / 1024).toFixed(1)} KB used of ~
-          {(storage.limit / 1024 / 1024).toFixed(0)} MB
+          {S.settings.storageUsage(storage.current / 1024, storage.limit / 1024 / 1024)}
         </p>
       </div>
     </div>

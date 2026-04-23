@@ -8,6 +8,7 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { S } from '@/lib/strings';
 
 interface AddItemsDialogProps {
   open: boolean;
@@ -34,23 +35,23 @@ export function AddItemsDialog({ open, onClose, onAdd }: AddItemsDialogProps) {
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Add items</DialogTitle>
-          <DialogDescription>One item per line</DialogDescription>
+          <DialogTitle>{S.list.addItemsTitle}</DialogTitle>
+          <DialogDescription>{S.list.addItemsHelp}</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <textarea
             className="w-full min-h-[120px] rounded-md border bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
             value={text}
             onChange={(e) => setText(e.target.value)}
-            placeholder={"Naruto\nOne Piece\nAttack on Titan"}
+            placeholder={S.list.addItemsPlaceholder}
             autoFocus
           />
           <DialogFooter>
             <Button type="button" variant="outline" onClick={onClose}>
-              Cancel
+              {S.common.cancel}
             </Button>
             <Button type="submit" disabled={!text.trim()}>
-              Add
+              {S.common.add}
             </Button>
           </DialogFooter>
         </form>

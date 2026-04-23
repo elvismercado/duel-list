@@ -88,18 +88,18 @@ export function ListCreateDialog({
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <label className="text-sm font-medium">Name</label>
+            <label className="text-sm font-medium">{S.list.name}</label>
             <Input
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="My Top Anime"
+              placeholder={S.list.namePlaceholder}
               autoFocus
             />
           </div>
 
           <div className="space-y-2">
             <label className="text-sm font-medium">
-              Start from a template (optional)
+              {S.list.startFromTemplate}
             </label>
             <div className="flex gap-1 flex-wrap">
               {SAMPLE_KEYS.map((key) => {
@@ -120,7 +120,7 @@ export function ListCreateDialog({
             </div>
             {template && (
               <p className="text-xs text-muted-foreground">
-                {getSampleList(template)?.items.length} items will be added.
+                {S.list.templateItemsAdded(getSampleList(template)?.items.length ?? 0)}
               </p>
             )}
           </div>
@@ -156,7 +156,7 @@ export function ListCreateDialog({
                 className="w-28"
               />
               <span className="text-sm text-muted-foreground self-center">
-                {sessionLength === 0 ? 'Unlimited' : 'duels'}
+                {sessionLength === 0 ? S.settings.sessionLengthUnlimited : S.settings.sessionLengthUnit}
               </span>
             </div>
             <div className="flex gap-1 flex-wrap">
@@ -177,17 +177,17 @@ export function ListCreateDialog({
                 variant={sessionLength === 0 ? 'default' : 'outline'}
                 onClick={() => setSessionLength(0)}
               >
-                Unlimited
+                {S.settings.sessionLengthUnlimited}
               </Button>
             </div>
           </div>
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => { reset(); onClose(); }}>
-              Cancel
+              {S.common.cancel}
             </Button>
             <Button type="submit" disabled={!name.trim()}>
-              Create
+              {S.common.create}
             </Button>
           </DialogFooter>
         </form>

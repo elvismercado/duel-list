@@ -54,12 +54,12 @@ export default function Layout() {
       {quotaWarning && (
         <div className="bg-destructive text-destructive-foreground px-4 py-2 text-sm flex items-center gap-2">
           <AlertTriangle className="h-4 w-4 shrink-0" />
-          <span>Storage is almost full. Export your lists to free up space.</span>
+          <span>{S.app.storageAlmostFull}</span>
           <button
             onClick={() => navigate('/settings')}
             className="underline font-medium ml-auto shrink-0"
           >
-            Export
+            {S.common.export}
           </button>
         </div>
       )}
@@ -68,7 +68,7 @@ export default function Layout() {
           <button
             onClick={() => navigate(backTarget)}
             className="p-1 rounded-md hover:bg-accent min-h-[44px] min-w-[44px] flex items-center justify-center"
-            aria-label="Go back"
+            aria-label={S.app.goBackAria}
           >
             <ArrowLeft className="h-5 w-5" />
           </button>

@@ -48,8 +48,8 @@ export default function Rankings() {
   if (!list) {
     return (
       <div className="p-4 max-w-lg mx-auto space-y-4 text-center mt-12">
-        <h1 className="text-2xl font-bold">List not found</h1>
-        <Button onClick={() => navigate('/')}>Go home</Button>
+        <h1 className="text-2xl font-bold">{S.common.listNotFound}</h1>
+        <Button onClick={() => navigate('/')}>{S.common.goHome}</Button>
       </div>
     );
   }
@@ -76,18 +76,18 @@ export default function Rankings() {
         <div className="flex items-center gap-2 min-w-0">
           <h1 className="text-2xl font-bold truncate">{list.name}</h1>
           {supported && isSynced && (
-            <span title="File linked">
-              <FileCheck className="h-4 w-4 text-green-600 shrink-0" aria-label="File linked" />
+            <span title={S.ranking.fileLinkedTooltip}>
+              <FileCheck className="h-4 w-4 text-green-600 shrink-0" aria-label={S.ranking.fileLinked} />
             </span>
           )}
           {supported && needsRelink && (
-            <span title="File link broken — re-link in settings">
-              <FileX className="h-4 w-4 text-destructive shrink-0" aria-label="File link broken" />
+            <span title={S.ranking.fileLinkBrokenTooltip}>
+              <FileX className="h-4 w-4 text-destructive shrink-0" aria-label={S.ranking.fileLinkBroken} />
             </span>
           )}
           {supported && !isSynced && !needsRelink && (
-            <span title="Not linked to a file — changes are stored locally">
-              <FileQuestion className="h-4 w-4 text-muted-foreground shrink-0" aria-label="Not linked to a file" />
+            <span title={S.ranking.fileNotLinkedTooltip}>
+              <FileQuestion className="h-4 w-4 text-muted-foreground shrink-0" aria-label={S.ranking.fileNotLinked} />
             </span>
           )}
         </div>
@@ -97,7 +97,7 @@ export default function Rankings() {
             variant="ghost"
             className="min-h-[44px] min-w-[44px]"
             onClick={() => navigate(`/list/${id}/history`)}
-            aria-label="Duel history"
+            aria-label={S.ranking.historyAria}
           >
             <History className="h-5 w-5" />
           </Button>
@@ -106,7 +106,7 @@ export default function Rankings() {
             variant="ghost"
             className="min-h-[44px] min-w-[44px]"
             onClick={() => setAddOpen(true)}
-            aria-label="Add items"
+            aria-label={S.ranking.addItemsAria}
           >
             <Plus className="h-5 w-5" />
           </Button>
@@ -115,7 +115,7 @@ export default function Rankings() {
             variant="ghost"
             className="min-h-[44px] min-w-[44px]"
             onClick={() => navigate(`/list/${id}/settings`)}
-            aria-label="List settings"
+            aria-label={S.ranking.settingsAria}
           >
             <Settings className="h-5 w-5" />
           </Button>
@@ -138,17 +138,17 @@ export default function Rankings() {
             variant="outline"
             size="sm"
             onClick={toggleDisplayMode}
-            aria-label={`Switch to ${displayMode === 'rank' ? 'ELO' : 'rank'} display`}
+            aria-label={displayMode === 'rank' ? S.ranking.switchToElo : S.ranking.switchToRank}
           >
             {displayMode === 'rank' ? (
               <>
                 <Hash className="h-4 w-4 mr-1" />
-                Rank
+                {S.ranking.rank}
               </>
             ) : (
               <>
                 <Trophy className="h-4 w-4 mr-1" />
-                ELO
+                {S.ranking.elo}
               </>
             )}
           </Button>
@@ -160,7 +160,7 @@ export default function Rankings() {
           <p className="text-muted-foreground">{S.list.noItems}</p>
           <Button onClick={() => setAddOpen(true)}>
             <Plus className="h-4 w-4 mr-2" />
-            Add items
+            {S.ranking.addItems}
           </Button>
         </div>
       ) : (
@@ -172,7 +172,7 @@ export default function Rankings() {
             >
               <span
                 className="text-muted-foreground font-mono text-sm w-12 text-right shrink-0 tabular-nums"
-                title={displayMode === 'rank' ? 'Rank' : 'ELO score'}
+                title={displayMode === 'rank' ? S.ranking.rankTooltip : S.ranking.eloTooltip}
               >
                 {displayMode === 'rank' ? `#${idx + 1}` : Math.round(item.eloScore)}
               </span>
@@ -187,7 +187,7 @@ export default function Rankings() {
                       if (e.key === 'Enter') handleRename(item.id);
                       if (e.key === 'Escape') setEditingId(null);
                     }}
-                    aria-label={`Rename ${item.name}`}
+                    aria-label={S.ranking.renameAria(item.name)}
                     autoFocus
                   />
                   <Button
@@ -197,7 +197,7 @@ export default function Rankings() {
                     className="h-9 w-9 shrink-0"
                     onMouseDown={(e) => e.preventDefault()}
                     onClick={() => handleRename(item.id)}
-                    aria-label="Confirm rename"
+                    aria-label={S.common.confirmRename}
                   >
                     <Check className="h-4 w-4" />
                   </Button>
@@ -208,7 +208,7 @@ export default function Rankings() {
               {item.comparisonCount > 0 && (
                 <span
                   className="flex items-center gap-1 text-xs text-muted-foreground tabular-nums shrink-0"
-                  title={`${item.comparisonCount} ${item.comparisonCount === 1 ? 'duel' : 'duels'} played`}
+                  title={S.ranking.duelsPlayed(item.comparisonCount)}
                 >
                   <Swords className="h-3.5 w-3.5" aria-hidden="true" />
                   {item.comparisonCount}
@@ -216,7 +216,7 @@ export default function Rankings() {
               )}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-7 w-7 min-h-[44px] min-w-[44px]" aria-label={`Options for ${item.name}`}>
+                  <Button variant="ghost" size="icon" className="h-7 w-7 min-h-[44px] min-w-[44px]" aria-label={S.ranking.optionsAria(item.name)}>
                     <MoreVertical className="h-4 w-4" />
                   </Button>
                 </DropdownMenuTrigger>
@@ -228,14 +228,14 @@ export default function Rankings() {
                     }}
                   >
                     <Pencil className="h-4 w-4 mr-2" />
-                    Rename
+                    {S.ranking.renameAction}
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     className="text-destructive"
                     onClick={() => setRemoveTarget({ id: item.id, name: item.name })}
                   >
                     <Trash2 className="h-4 w-4 mr-2" />
-                    Remove
+                    {S.ranking.removeAction}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -252,9 +252,9 @@ export default function Rankings() {
 
       <ConfirmDialog
         open={!!removeTarget}
-        title="Remove item"
-        message={`Remove "${removeTarget?.name}" from the ranking? You can restore it later.`}
-        confirmLabel="Remove"
+        title={S.ranking.removeItemTitle}
+        message={removeTarget ? S.ranking.removeItemMessage(removeTarget.name) : ''}
+        confirmLabel={S.common.remove}
         danger
         onConfirm={() => {
           if (removeTarget) removeItem(removeTarget.id);
