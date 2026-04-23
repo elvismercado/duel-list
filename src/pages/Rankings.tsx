@@ -12,6 +12,7 @@ import {
 import { useList } from '@/hooks/useList';
 import { useFileSync } from '@/hooks/useFileSync';
 import { RankChip } from '@/components/RankChip';
+import { HelpHint } from '@/components/HelpHint';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -66,14 +67,14 @@ const SORT_FIELDS: SortField[] = ['rank', 'elo', 'added', 'name'];
 
 const FIELD_LABELS: Record<SortField, string> = {
   rank: S.ranking.sortFieldRank,
-  elo: S.ranking.sortFieldElo,
+  elo: S.ranking.sortFieldScore,
   added: S.ranking.sortFieldAdded,
   name: S.ranking.sortFieldName,
 };
 
 const DIR_ARIA: Record<SortField, Record<SortDir, string>> = {
   rank: { desc: S.ranking.sortDirAriaRankDesc, asc: S.ranking.sortDirAriaRankAsc },
-  elo: { desc: S.ranking.sortDirAriaEloDesc, asc: S.ranking.sortDirAriaEloAsc },
+  elo: { desc: S.ranking.sortDirAriaScoreDesc, asc: S.ranking.sortDirAriaScoreAsc },
   added: { desc: S.ranking.sortDirAriaAddedDesc, asc: S.ranking.sortDirAriaAddedAsc },
   name: { desc: S.ranking.sortDirAriaNameDesc, asc: S.ranking.sortDirAriaNameAsc },
 };
@@ -116,8 +117,8 @@ export default function Rankings() {
     );
   }
 
-  const rankedByElo = sortItemsByElo(list.items.filter((i) => !i.removed));
-  const rankById = new Map(rankedByElo.map((it, idx) => [it.id, idx + 1]));
+  const rankedByScore = sortItemsByElo(list.items.filter((i) => !i.removed));
+  const rankById = new Map(rankedByScore.map((it, idx) => [it.id, idx + 1]));
   const removedItems = sortItemsByElo(list.items.filter((i) => i.removed));
   const urlSort = searchParams.get('sort');
   const validSortModes: SortMode[] = [
@@ -129,8 +130,8 @@ export default function Rankings() {
       ? (urlSort as SortMode)
       : list.sortMode ?? 'rank-desc';
   const { field: sortField, dir: sortDir } = splitSortMode(sortMode);
-  const activeItems = applyDisplaySort(rankedByElo, sortMode);
-  const canDuel = rankedByElo.length >= 2;
+  const activeItems = applyDisplaySort(rankedByScore, sortMode);
+  const canDuel = rankedByScore.length >= 2;
   const displayMode: 'rank' | 'elo' = list.displayMode ?? 'rank';
   const detailsItem = detailsId ? list.items.find((i) => i.id === detailsId) ?? null : null;
 
@@ -231,7 +232,7 @@ export default function Rankings() {
             <Button
               variant="outline"
               onClick={toggleDisplayMode}
-              aria-label={displayMode === 'rank' ? S.ranking.switchToElo : S.ranking.switchToRank}
+              aria-label={displayMode === 'rank' ? S.ranking.switchToScore : S.ranking.switchToRank}
             >
               {displayMode === 'rank' ? (
                 <>
@@ -241,10 +242,14 @@ export default function Rankings() {
               ) : (
                 <>
                   <Trophy className="h-4 w-4 mr-1" />
-                  {S.ranking.elo}
+                  {S.ranking.score}
                 </>
               )}
             </Button>
+            <HelpHint
+              anchor={displayMode === 'rank' ? 'rank' : 'score'}
+              term={displayMode === 'rank' ? S.ranking.rank : S.ranking.score}
+            />
           </div>
           <div className="flex items-center gap-2">
             <Select
@@ -304,7 +309,7 @@ export default function Rankings() {
               ) : (
                 <span
                   className="text-muted-foreground font-mono text-sm w-12 text-right shrink-0 tabular-nums"
-                  title={displayMode === 'rank' ? S.ranking.rankTooltip : S.ranking.eloTooltip}
+                  title={displayMode === 'rank' ? S.ranking.rankTooltip : S.ranking.scoreTooltip}
                 >
                   {displayMode === 'rank' ? `#${currentRank || '?'}` : Math.round(item.eloScore)}
                 </span>

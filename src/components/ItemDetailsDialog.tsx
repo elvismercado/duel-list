@@ -11,6 +11,7 @@ import { S } from '@/lib/strings';
 import { getSettings } from '@/lib/storage';
 import { formatTimeOfDay } from '@/lib/datetime';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { HelpHint } from '@/components/HelpHint';
 import type { Item } from '@/types';
 import {
   computeItemStats,
@@ -92,10 +93,14 @@ export function ItemDetailsDialog({
             <StatTile
               label={S.ranking.detailsRank}
               value={rank > 0 ? `#${rank}` : '—'}
+              helpAnchor="rank"
+              helpTerm={S.ranking.detailsRank}
             />
             <StatTile
-              label={S.ranking.detailsElo}
+              label={S.ranking.detailsScore}
               value={String(Math.round(item.eloScore))}
+              helpAnchor="score"
+              helpTerm={S.ranking.detailsScore}
             />
             <StatTile
               label={S.ranking.detailsTotal}
@@ -223,14 +228,23 @@ function StatTile({
   label,
   value,
   subtitle,
+  helpAnchor,
+  helpTerm,
 }: {
   label: string;
   value: string;
   subtitle?: string;
+  helpAnchor?: string;
+  helpTerm?: string;
 }) {
   return (
     <div className="rounded-lg border bg-card p-2">
-      <div className="text-xs text-muted-foreground">{label}</div>
+      <div className="flex items-center gap-1 text-xs text-muted-foreground">
+        <span>{label}</span>
+        {helpAnchor && helpTerm && (
+          <HelpHint anchor={helpAnchor} term={helpTerm} className="h-4 w-4" />
+        )}
+      </div>
       <div className="text-base font-semibold truncate" title={value}>
         {value}
       </div>

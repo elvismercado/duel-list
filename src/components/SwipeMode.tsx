@@ -68,7 +68,7 @@ function SwipeCard({ item, showElo, onPick, exiting }: SwipeCardProps) {
           <p className="font-semibold text-base sm:text-lg">{item.name}</p>
           {showElo && (
             <p className="text-xs text-muted-foreground mt-1">
-              {S.duel.eloSuffix(Math.round(item.eloScore))}
+              {S.duel.scoreSuffix(Math.round(item.eloScore))}
             </p>
           )}
           <motion.div

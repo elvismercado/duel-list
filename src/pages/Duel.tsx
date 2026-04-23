@@ -11,6 +11,7 @@ import { Separator } from '@/components/ui/separator';
 import { SkipForward, Equal, Trophy, TrendingUp, TrendingDown, ArrowLeft } from 'lucide-react';
 import { SwipeMode } from '@/components/SwipeMode';
 import { RankChip } from '@/components/RankChip';
+import { HelpHint } from '@/components/HelpHint';
 import { getSettings } from '@/lib/storage';
 
 export default function Duel() {
@@ -217,8 +218,11 @@ function DuelSession({
       <div className="flex items-center justify-between">
         <h1 className="text-lg font-semibold truncate">{list.name}</h1>
         {list.sessionLength > 0 && (
-          <span className="text-sm text-muted-foreground tabular-nums" aria-live="polite" aria-atomic="true">
-            {duelCount}/{list.sessionLength}
+          <span className="inline-flex items-center gap-1 text-sm text-muted-foreground tabular-nums">
+            <span aria-live="polite" aria-atomic="true">
+              {duelCount}/{list.sessionLength}
+            </span>
+            <HelpHint anchor="session" term="Session" />
           </span>
         )}
       </div>
@@ -241,7 +245,7 @@ function DuelSession({
           <CardContent className="p-6 text-center">
             <p className="font-semibold text-lg">{itemA.name}</p>
             <p className="text-xs text-muted-foreground mt-1">
-              {S.duel.eloSuffix(Math.round(itemA.eloScore))}
+              {S.duel.scoreSuffix(Math.round(itemA.eloScore))}
             </p>
           </CardContent>
         </Card>
@@ -259,7 +263,7 @@ function DuelSession({
           <CardContent className="p-6 text-center">
             <p className="font-semibold text-lg">{itemB.name}</p>
             <p className="text-xs text-muted-foreground mt-1">
-              {S.duel.eloSuffix(Math.round(itemB.eloScore))}
+              {S.duel.scoreSuffix(Math.round(itemB.eloScore))}
             </p>
           </CardContent>
         </Card>
