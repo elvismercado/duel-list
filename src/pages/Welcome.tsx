@@ -79,6 +79,16 @@ export default function Welcome() {
             <Button variant="outline" onClick={handleTrySample} className="w-48">
               {S.welcome.trySample}
             </Button>
+            <Button
+              variant="ghost"
+              onClick={() => {
+                updateSettings({ firstRunDone: true });
+                navigate('/features');
+              }}
+              className="w-48"
+            >
+              See all features
+            </Button>
           </>
         ) : (
           <>

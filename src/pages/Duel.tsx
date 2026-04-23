@@ -206,6 +206,7 @@ function DuelSession({
         itemB={itemB}
         duelCount={duelCount}
         sessionLength={list.sessionLength}
+        showElo={(list.displayMode ?? 'rank') === 'elo'}
         onPick={handlePick}
         onSkip={skipPair}
       />

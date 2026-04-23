@@ -24,6 +24,8 @@ export interface ListConfig {
   kFactor: number;
   created: string;
   items: Item[];
+  /** Display mode for ranked items: rank position (default) or ELO score. */
+  displayMode?: 'rank' | 'elo';
 }
 
 export interface AppSettings {

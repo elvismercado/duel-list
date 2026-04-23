@@ -5,6 +5,7 @@ import { sortItemsByElo } from '@/lib/ranking';
 import { useList } from '@/hooks/useList';
 import { useFileSync } from '@/hooks/useFileSync';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { AddItemsDialog } from '@/components/AddItemsDialog';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import {
@@ -13,7 +14,21 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Plus, Play, Settings, MoreVertical, Undo2, Trash2, Pencil, FileCheck, FileX } from 'lucide-react';
+import {
+  Plus,
+  Play,
+  Settings,
+  MoreVertical,
+  Trash2,
+  Pencil,
+  FileCheck,
+  FileX,
+  FileQuestion,
+  History,
+  Hash,
+  Trophy,
+  Check,
+} from 'lucide-react';
 
 export default function Rankings() {
   const { id } = useParams<{ id: string }>();
@@ -23,7 +38,7 @@ export default function Rankings() {
     (list: import('@/types').ListConfig) => { syncToFile(list); },
     [syncToFile],
   );
-  const { list, addItems, renameItem, removeItem, restoreItem } = useList(id!, onSave);
+  const { list, save, addItems, renameItem, removeItem } = useList(id!, onSave);
   const [addOpen, setAddOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState('');
@@ -40,6 +55,7 @@ export default function Rankings() {
 
   const activeItems = sortItemsByElo(list.items.filter((i) => !i.removed));
   const canDuel = activeItems.length >= 2;
+  const displayMode: 'rank' | 'elo' = list.displayMode ?? 'rank';
 
   function handleRename(itemId: string) {
     const trimmed = editValue.trim();
@@ -49,19 +65,41 @@ export default function Rankings() {
     setEditingId(null);
   }
 
+  function toggleDisplayMode() {
+    save({ ...list!, displayMode: displayMode === 'rank' ? 'elo' : 'rank' });
+  }
+
   return (
     <div className="p-4 max-w-lg mx-auto space-y-4">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2 min-w-0">
           <h1 className="text-2xl font-bold truncate">{list.name}</h1>
           {supported && isSynced && (
-            <FileCheck className="h-4 w-4 text-green-500 shrink-0" />
+            <span title="File linked">
+              <FileCheck className="h-4 w-4 text-green-600 shrink-0" aria-label="File linked" />
+            </span>
           )}
           {supported && needsRelink && (
-            <FileX className="h-4 w-4 text-destructive shrink-0" />
+            <span title="File link broken — re-link in settings">
+              <FileX className="h-4 w-4 text-destructive shrink-0" aria-label="File link broken" />
+            </span>
+          )}
+          {supported && !isSynced && !needsRelink && (
+            <span title="Not linked to a file — changes are stored locally">
+              <FileQuestion className="h-4 w-4 text-muted-foreground shrink-0" aria-label="Not linked to a file" />
+            </span>
           )}
         </div>
-        <div className="flex gap-1">
+        <div className="flex gap-1 shrink-0">
+          <Button
+            size="icon"
+            variant="ghost"
+            className="min-h-[44px] min-w-[44px]"
+            onClick={() => navigate(`/list/${id}/history`)}
+            aria-label="Duel history"
+          >
+            <History className="h-5 w-5" />
+          </Button>
           <Button
             size="icon"
             variant="ghost"
@@ -93,6 +131,29 @@ export default function Rankings() {
         </Button>
       )}
 
+      {activeItems.length > 0 && (
+        <div className="flex justify-end">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={toggleDisplayMode}
+            aria-label={`Switch to ${displayMode === 'rank' ? 'ELO' : 'rank'} display`}
+          >
+            {displayMode === 'rank' ? (
+              <>
+                <Hash className="h-4 w-4 mr-1" />
+                Rank
+              </>
+            ) : (
+              <>
+                <Trophy className="h-4 w-4 mr-1" />
+                ELO
+              </>
+            )}
+          </Button>
+        </div>
+      )}
+
       {activeItems.length === 0 ? (
         <div className="text-center space-y-3 py-8">
           <p className="text-muted-foreground">{S.list.noItems}</p>
@@ -112,24 +173,39 @@ export default function Rankings() {
                 {idx + 1}
               </span>
               {editingId === item.id ? (
-                <input
-                  className="flex-1 bg-transparent border-b outline-none"
-                  value={editValue}
-                  onChange={(e) => setEditValue(e.target.value)}
-                  onBlur={() => handleRename(item.id)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') handleRename(item.id);
-                    if (e.key === 'Escape') setEditingId(null);
-                  }}
-                  aria-label={`Rename ${item.name}`}
-                  autoFocus
-                />
+                <div className="flex items-center gap-1 flex-1 min-w-0">
+                  <Input
+                    className="flex-1 h-9 bg-background"
+                    value={editValue}
+                    onChange={(e) => setEditValue(e.target.value)}
+                    onBlur={() => handleRename(item.id)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') handleRename(item.id);
+                      if (e.key === 'Escape') setEditingId(null);
+                    }}
+                    aria-label={`Rename ${item.name}`}
+                    autoFocus
+                  />
+                  <Button
+                    type="button"
+                    size="icon"
+                    variant="ghost"
+                    className="h-9 w-9 shrink-0"
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => handleRename(item.id)}
+                    aria-label="Confirm rename"
+                  >
+                    <Check className="h-4 w-4" />
+                  </Button>
+                </div>
               ) : (
                 <span className="flex-1 truncate">{item.name}</span>
               )}
-              <span className="text-xs text-muted-foreground tabular-nums">
-                {Math.round(item.eloScore)}
-              </span>
+              {displayMode === 'elo' && (
+                <span className="text-xs text-muted-foreground tabular-nums">
+                  {Math.round(item.eloScore)}
+                </span>
+              )}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="icon" className="h-7 w-7 min-h-[44px] min-w-[44px]" aria-label={`Options for ${item.name}`}>
@@ -158,34 +234,6 @@ export default function Rankings() {
             </li>
           ))}
         </ul>
-      )}
-
-      {/* Removed items section */}
-      {list.items.some((i) => i.removed) && (
-        <div className="space-y-2 pt-4">
-          <h2 className="text-sm font-semibold text-muted-foreground">
-            Removed
-          </h2>
-          {list.items
-            .filter((i) => i.removed)
-            .map((item) => (
-              <div
-                key={item.id}
-                className="flex items-center justify-between rounded-md border border-dashed p-2 opacity-60"
-              >
-                <span className="truncate text-sm">{item.name}</span>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-7 w-7 min-h-[44px] min-w-[44px]"
-                  onClick={() => restoreItem(item.id)}
-                  aria-label={`Restore ${item.name}`}
-                >
-                  <Undo2 className="h-4 w-4" />
-                </Button>
-              </div>
-            ))}
-        </div>
       )}
 
       <AddItemsDialog

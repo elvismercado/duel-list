@@ -16,12 +16,20 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { S } from '@/lib/strings';
+import { SAMPLE_KEYS, getSampleList } from '@/lib/samples';
 
 interface ListCreateDialogProps {
   open: boolean;
   onClose: () => void;
-  onCreate: (name: string, kFactor: number, sessionLength: number) => void;
+  onCreate: (
+    name: string,
+    kFactor: number,
+    sessionLength: number,
+    templateItems?: string[],
+  ) => void;
 }
+
+const SESSION_PRESETS = [5, 10, 20, 50];
 
 export function ListCreateDialog({
   open,
@@ -30,22 +38,51 @@ export function ListCreateDialog({
 }: ListCreateDialogProps) {
   const [name, setName] = useState('');
   const [kFactor, setKFactor] = useState('32');
-  const [sessionLength, setSessionLength] = useState('10');
+  const [sessionLength, setSessionLength] = useState(10);
+  const [template, setTemplate] = useState<string | null>(null);
+
+  function reset() {
+    setName('');
+    setKFactor('32');
+    setSessionLength(10);
+    setTemplate(null);
+  }
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     const trimmed = name.trim();
     if (!trimmed) return;
-    onCreate(trimmed, parseInt(kFactor, 10), parseInt(sessionLength, 10));
-    setName('');
-    setKFactor('32');
-    setSessionLength('10');
+    let items: string[] | undefined;
+    if (template) {
+      const sample = getSampleList(template);
+      items = sample?.items.map((i) => i.name);
+    }
+    onCreate(trimmed, parseInt(kFactor, 10), sessionLength, items);
+    reset();
     onClose();
   }
 
+  function pickTemplate(key: string) {
+    if (template === key) {
+      setTemplate(null);
+      return;
+    }
+    setTemplate(key);
+    if (!name.trim()) {
+      const sample = getSampleList(key);
+      if (sample) setName(sample.name);
+    }
+  }
+
+  function handleSessionLengthInput(raw: string) {
+    const n = parseInt(raw, 10);
+    if (Number.isNaN(n) || n < 0) return;
+    setSessionLength(Math.min(n, 500));
+  }
+
   return (
-    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent>
+    <Dialog open={open} onOpenChange={(o) => !o && (reset(), onClose())}>
+      <DialogContent className="max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{S.home.createList}</DialogTitle>
         </DialogHeader>
@@ -59,6 +96,35 @@ export function ListCreateDialog({
               autoFocus
             />
           </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium">
+              Start from a template (optional)
+            </label>
+            <div className="flex gap-1 flex-wrap">
+              {SAMPLE_KEYS.map((key) => {
+                const sample = getSampleList(key);
+                if (!sample) return null;
+                return (
+                  <Button
+                    key={key}
+                    type="button"
+                    size="sm"
+                    variant={template === key ? 'default' : 'outline'}
+                    onClick={() => pickTemplate(key)}
+                  >
+                    {sample.name}
+                  </Button>
+                );
+              })}
+            </div>
+            {template && (
+              <p className="text-xs text-muted-foreground">
+                {getSampleList(template)?.items.length} items will be added.
+              </p>
+            )}
+          </div>
+
           <div className="space-y-2">
             <label className="text-sm font-medium">
               {S.settings.kFactorLabel}
@@ -74,24 +140,50 @@ export function ListCreateDialog({
               </SelectContent>
             </Select>
           </div>
+
           <div className="space-y-2">
-            <label className="text-sm font-medium">
+            <label className="text-sm font-medium" htmlFor="create-session-length">
               {S.settings.sessionLengthLabel}
             </label>
-            <Select value={sessionLength} onValueChange={setSessionLength}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="5">5 duels</SelectItem>
-                <SelectItem value="10">10 duels</SelectItem>
-                <SelectItem value="20">20 duels</SelectItem>
-                <SelectItem value="0">Unlimited</SelectItem>
-              </SelectContent>
-            </Select>
+            <div className="flex gap-2">
+              <Input
+                id="create-session-length"
+                type="number"
+                min={0}
+                max={500}
+                value={sessionLength}
+                onChange={(e) => handleSessionLengthInput(e.target.value)}
+                className="w-28"
+              />
+              <span className="text-sm text-muted-foreground self-center">
+                {sessionLength === 0 ? 'Unlimited' : 'duels'}
+              </span>
+            </div>
+            <div className="flex gap-1 flex-wrap">
+              {SESSION_PRESETS.map((n) => (
+                <Button
+                  key={n}
+                  type="button"
+                  size="sm"
+                  variant={sessionLength === n ? 'default' : 'outline'}
+                  onClick={() => setSessionLength(n)}
+                >
+                  {n}
+                </Button>
+              ))}
+              <Button
+                type="button"
+                size="sm"
+                variant={sessionLength === 0 ? 'default' : 'outline'}
+                onClick={() => setSessionLength(0)}
+              >
+                Unlimited
+              </Button>
+            </div>
           </div>
+
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={onClose}>
+            <Button type="button" variant="outline" onClick={() => { reset(); onClose(); }}>
               Cancel
             </Button>
             <Button type="submit" disabled={!name.trim()}>

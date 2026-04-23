@@ -11,8 +11,9 @@ import {
 } from '@/components/ui/select';
 import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
-import { Download } from 'lucide-react';
+import { Download, Sparkles } from 'lucide-react';
 import { useState } from 'react';
+import { Link } from 'react-router';
 
 export default function AppSettingsPage() {
   const [settings, setSettings] = useState(getSettings);
@@ -76,8 +77,21 @@ export default function AppSettingsPage() {
           </SelectContent>
         </Select>
         <p className="text-xs text-muted-foreground">
-          Swipe mode shows one card at a time — swipe right to pick, left to reject.
+          Swipe mode shows both items side by side — drag a card up to pick it.
         </p>
+      </div>
+
+      <Separator />
+
+      {/* About / Features */}
+      <div className="space-y-2">
+        <h2 className="text-sm font-semibold text-muted-foreground">About</h2>
+        <Button asChild variant="outline" size="sm">
+          <Link to="/features">
+            <Sparkles className="h-4 w-4 mr-1" />
+            What's in DuelList
+          </Link>
+        </Button>
       </div>
 
       <Separator />

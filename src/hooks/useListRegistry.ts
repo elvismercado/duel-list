@@ -73,15 +73,30 @@ export function useListRegistry() {
   }, []);
 
   const createList = useCallback(
-    (name: string, kFactor: number, sessionLength: number): string => {
+    (
+      name: string,
+      kFactor: number,
+      sessionLength: number,
+      templateItems?: string[],
+    ): string => {
       const id = generateShortId();
+      const today = new Date().toISOString().slice(0, 10);
+      const items = (templateItems ?? []).map((itemName) => ({
+        id: generateShortId(),
+        name: itemName,
+        eloScore: 1000,
+        prevEloScore: 1000,
+        prevRank: 0,
+        comparisonCount: 0,
+        added: today,
+      }));
       const config: ListConfig = {
         id,
         name,
         kFactor,
         sessionLength,
-        created: new Date().toISOString().slice(0, 10),
-        items: [],
+        created: today,
+        items,
       };
       saveList(config);
       refresh();

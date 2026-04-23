@@ -7,7 +7,9 @@ const Welcome = lazy(() => import('@/pages/Welcome'));
 const Rankings = lazy(() => import('@/pages/Rankings'));
 const Duel = lazy(() => import('@/pages/Duel'));
 const ListSettings = lazy(() => import('@/pages/ListSettings'));
+const History = lazy(() => import('@/pages/History'));
 const AppSettings = lazy(() => import('@/pages/AppSettings'));
+const Features = lazy(() => import('@/pages/Features'));
 const NotFound = lazy(() => import('@/pages/NotFound'));
 
 function withSuspense(node: React.ReactNode) {
@@ -27,7 +29,9 @@ const router = createBrowserRouter([
       { path: '/list/:id', element: withSuspense(<Rankings />) },
       { path: '/list/:id/duel', element: withSuspense(<Duel />) },
       { path: '/list/:id/settings', element: withSuspense(<ListSettings />) },
+      { path: '/list/:id/history', element: withSuspense(<History />) },
       { path: '/settings', element: withSuspense(<AppSettings />) },
+      { path: '/features', element: withSuspense(<Features />) },
       { path: '*', element: withSuspense(<NotFound />) },
     ],
   },

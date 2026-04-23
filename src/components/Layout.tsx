@@ -80,7 +80,7 @@ export default function Layout() {
           {S.app.name}
         </button>
       </header>
-      <main className="flex-1">
+      <main className="flex-1 pb-8" style={{ paddingBottom: 'max(2rem, env(safe-area-inset-bottom))' }}>
         <Outlet />
       </main>
     </div>

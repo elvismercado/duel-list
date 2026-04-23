@@ -11,109 +11,129 @@ interface SwipeModeProps {
   itemB: Item;
   duelCount: number;
   sessionLength: number;
+  showElo: boolean;
   onPick: (winner: Item | null) => void;
   onSkip: () => void;
 }
 
-const SWIPE_THRESHOLD = 100;
+const SWIPE_THRESHOLD = 80;
+
+interface SwipeCardProps {
+  item: Item;
+  showElo: boolean;
+  onPick: () => void;
+  exiting: boolean;
+}
+
+function SwipeCard({ item, showElo, onPick, exiting }: SwipeCardProps) {
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
+  const upHint = useTransform(y, [-120, -40, 0], [1, 0.4, 0]);
+  const tilt = useTransform(x, [-100, 100], [-8, 8]);
+
+  function handleDragEnd(_e: unknown, info: PanInfo) {
+    if (info.offset.y < -SWIPE_THRESHOLD || Math.abs(info.offset.x) > SWIPE_THRESHOLD) {
+      onPick();
+    }
+  }
+
+  return (
+    <motion.div
+      drag={exiting ? false : true}
+      dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
+      dragElastic={0.7}
+      style={{ x, y, rotate: tilt }}
+      animate={
+        exiting
+          ? { y: -500, opacity: 0, transition: { duration: 0.25 } }
+          : undefined
+      }
+      onDragEnd={handleDragEnd}
+      className="touch-none"
+    >
+      <Card
+        role="button"
+        tabIndex={0}
+        aria-label={`Pick ${item.name}`}
+        onClick={onPick}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            onPick();
+          }
+        }}
+        className="cursor-grab active:cursor-grabbing select-none focus-visible:ring-2 focus-visible:ring-ring h-56 sm:h-64"
+      >
+        <CardContent className="h-full flex flex-col items-center justify-center p-4 text-center relative">
+          <p className="font-semibold text-base sm:text-lg">{item.name}</p>
+          {showElo && (
+            <p className="text-xs text-muted-foreground mt-1">
+              {Math.round(item.eloScore)} ELO
+            </p>
+          )}
+          <motion.div
+            style={{ opacity: upHint }}
+            className="absolute top-3 left-1/2 -translate-x-1/2 border-2 border-green-500 text-green-500 px-3 py-1 rounded font-bold text-xs"
+          >
+            PICK
+          </motion.div>
+        </CardContent>
+      </Card>
+    </motion.div>
+  );
+}
 
 export function SwipeMode({
   itemA,
   itemB,
   duelCount,
   sessionLength,
+  showElo,
   onPick,
   onSkip,
 }: SwipeModeProps) {
-  const x = useMotionValue(0);
-  const rotate = useTransform(x, [-200, 200], [-15, 15]);
-  const opacity = useTransform(x, [-200, -100, 0, 100, 200], [0.5, 1, 1, 1, 0.5]);
-  const leftHint = useTransform(x, [-150, -50, 0], [1, 0.6, 0]);
-  const rightHint = useTransform(x, [0, 50, 150], [0, 0.6, 1]);
+  const [exiting, setExiting] = useState<'a' | 'b' | null>(null);
 
-  const [exiting, setExiting] = useState<'left' | 'right' | null>(null);
+  function handlePickA() {
+    if (exiting) return;
+    setExiting('a');
+    setTimeout(() => onPick(itemA), 220);
+  }
 
-  function handleDragEnd(_e: unknown, info: PanInfo) {
-    if (info.offset.x > SWIPE_THRESHOLD) {
-      setExiting('right');
-      // Right swipe = pick A (top card represents A; goes off to the right as winner)
-      setTimeout(() => onPick(itemA), 200);
-    } else if (info.offset.x < -SWIPE_THRESHOLD) {
-      setExiting('left');
-      setTimeout(() => onPick(itemB), 200);
-    }
+  function handlePickB() {
+    if (exiting) return;
+    setExiting('b');
+    setTimeout(() => onPick(itemB), 220);
   }
 
   return (
     <div className="p-4 max-w-lg mx-auto space-y-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-lg font-semibold">Swipe to choose</h1>
+        <h1 className="text-lg font-semibold">Swipe up to pick</h1>
         {sessionLength > 0 && (
-          <span className="text-sm text-muted-foreground tabular-nums" aria-live="polite" aria-atomic="true">
+          <span
+            className="text-sm text-muted-foreground tabular-nums"
+            aria-live="polite"
+            aria-atomic="true"
+          >
             {duelCount}/{sessionLength}
           </span>
         )}
       </div>
 
-      <div className="relative h-72">
-        {/* Bottom card (item B) */}
-        <Card className="absolute inset-0 scale-95 opacity-80">
-          <CardContent className="h-full flex flex-col items-center justify-center p-6 text-center">
-            <p className="font-semibold text-lg">{itemB.name}</p>
-            <p className="text-xs text-muted-foreground mt-1">
-              {Math.round(itemB.eloScore)} ELO
-            </p>
-          </CardContent>
-        </Card>
-
-        {/* Top draggable card (item A) */}
-        <motion.div
-          className="absolute inset-0"
-          drag={exiting ? false : 'x'}
-          dragConstraints={{ left: 0, right: 0 }}
-          dragElastic={0.7}
-          style={{ x, rotate, opacity }}
-          animate={
-            exiting === 'right'
-              ? { x: 500, opacity: 0 }
-              : exiting === 'left'
-                ? { x: -500, opacity: 0 }
-                : undefined
-          }
-          transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-          onDragEnd={handleDragEnd}
-        >
-          <Card className="h-full cursor-grab active:cursor-grabbing">
-            <CardContent className="h-full flex flex-col items-center justify-center p-6 text-center relative">
-              <p className="font-semibold text-lg">{itemA.name}</p>
-              <p className="text-xs text-muted-foreground mt-1">
-                {Math.round(itemA.eloScore)} ELO
-              </p>
-              <motion.div
-                style={{ opacity: rightHint }}
-                className="absolute top-4 left-4 border-2 border-green-500 text-green-500 px-3 py-1 rounded font-bold text-sm rotate-[-15deg]"
-              >
-                PICK
-              </motion.div>
-              <motion.div
-                style={{ opacity: leftHint }}
-                className="absolute top-4 right-4 border-2 border-red-500 text-red-500 px-3 py-1 rounded font-bold text-sm rotate-[15deg]"
-              >
-                NOPE
-              </motion.div>
-            </CardContent>
-          </Card>
-        </motion.div>
-      </div>
-
-      {/* Button fallback for keyboard / accessibility */}
-      <div className="flex gap-2 justify-center flex-wrap">
-        <Button variant="outline" size="sm" onClick={() => onPick(itemA)} aria-label={`Pick ${itemA.name}`}>
-          ← Pick {itemA.name}
-        </Button>
-        <Button variant="outline" size="sm" onClick={() => onPick(itemB)} aria-label={`Pick ${itemB.name}`}>
-          Pick {itemB.name} →
-        </Button>
+      <div className="grid grid-cols-2 gap-3">
+        <SwipeCard
+          item={itemA}
+          showElo={showElo}
+          onPick={handlePickA}
+          exiting={exiting === 'a'}
+        />
+        <SwipeCard
+          item={itemB}
+          showElo={showElo}
+          onPick={handlePickB}
+          exiting={exiting === 'b'}
+        />
       </div>
 
       <div className="flex gap-2 justify-center">
@@ -128,7 +148,7 @@ export function SwipeMode({
       </div>
 
       <p className="text-xs text-center text-muted-foreground">
-        Swipe right to pick · swipe left to reject · ← / → keys also work
+        Swipe up or tap to pick · ← / → keys work too
       </p>
     </div>
   );

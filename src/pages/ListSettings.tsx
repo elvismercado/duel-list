@@ -15,7 +15,15 @@ import {
 } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
-import { Undo2, Download, Trash2, Link, Unlink } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Undo2, Download, Trash2, Link, Unlink, Pencil, Check, Archive } from 'lucide-react';
+
+const SESSION_PRESETS = [5, 10, 20, 50];
 
 export default function ListSettings() {
   const { id } = useParams<{ id: string }>();
@@ -28,6 +36,8 @@ export default function ListSettings() {
   const { list, save, restoreItem, deleteList } = useList(id!, onSave);
   const { exportList, exportHistory } = useExport();
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [removedOpen, setRemovedOpen] = useState(false);
+  const [editingName, setEditingName] = useState(false);
 
   if (!list) {
     return (
@@ -59,14 +69,17 @@ export default function ListSettings() {
   function handleNameBlur() {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     if (nameValue !== list!.name) saveName(nameValue);
+    setEditingName(false);
   }
 
   function handleKFactorChange(value: string) {
     save({ ...list!, kFactor: parseInt(value, 10) });
   }
 
-  function handleSessionLengthChange(value: string) {
-    save({ ...list!, sessionLength: parseInt(value, 10) });
+  function handleSessionLengthChange(raw: string) {
+    const n = parseInt(raw, 10);
+    if (Number.isNaN(n) || n < 0) return;
+    save({ ...list!, sessionLength: n });
   }
 
   function handleDelete() {
@@ -78,14 +91,50 @@ export default function ListSettings() {
     <div className="p-4 max-w-lg mx-auto space-y-6">
       <h1 className="text-2xl font-bold">{S.settings.title}</h1>
 
-      {/* Name */}
+      {/* Name — read-only display with edit button */}
       <div className="space-y-2">
         <label className="text-sm font-medium">Name</label>
-        <Input
-          value={nameValue}
-          onChange={(e) => setNameValue(e.target.value)}
-          onBlur={handleNameBlur}
-        />
+        {editingName ? (
+          <div className="flex gap-2">
+            <Input
+              value={nameValue}
+              onChange={(e) => setNameValue(e.target.value)}
+              onBlur={handleNameBlur}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.currentTarget.blur();
+                }
+                if (e.key === 'Escape') {
+                  setNameValue(list.name);
+                  setEditingName(false);
+                }
+              }}
+              autoFocus
+            />
+            <Button
+              variant="outline"
+              size="icon"
+              className="min-h-[44px] min-w-[44px] shrink-0"
+              onClick={handleNameBlur}
+              aria-label="Save name"
+            >
+              <Check className="h-4 w-4" />
+            </Button>
+          </div>
+        ) : (
+          <div className="flex items-center gap-2 rounded-md border bg-card px-3 py-2">
+            <span className="flex-1 truncate">{list.name}</span>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 min-h-[44px] min-w-[44px] shrink-0"
+              onClick={() => setEditingName(true)}
+              aria-label="Edit name"
+            >
+              <Pencil className="h-4 w-4" />
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* K-Factor */}
@@ -106,55 +155,47 @@ export default function ListSettings() {
         </Select>
       </div>
 
-      {/* Session Length */}
+      {/* Session Length — number input + preset chips */}
       <div className="space-y-2">
-        <label className="text-sm font-medium">
+        <label className="text-sm font-medium" htmlFor="session-length-input">
           {S.settings.sessionLengthLabel}
         </label>
-        <Select
-          value={String(list.sessionLength)}
-          onValueChange={handleSessionLengthChange}
-        >
-          <SelectTrigger>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="5">5 duels</SelectItem>
-            <SelectItem value="10">10 duels</SelectItem>
-            <SelectItem value="20">20 duels</SelectItem>
-            <SelectItem value="0">Unlimited</SelectItem>
-          </SelectContent>
-        </Select>
+        <div className="flex gap-2">
+          <Input
+            id="session-length-input"
+            type="number"
+            min={0}
+            max={500}
+            value={list.sessionLength}
+            onChange={(e) => handleSessionLengthChange(e.target.value)}
+            className="w-28"
+          />
+          <span className="text-sm text-muted-foreground self-center">
+            {list.sessionLength === 0 ? 'Unlimited' : 'duels'}
+          </span>
+        </div>
+        <div className="flex gap-1 flex-wrap">
+          {SESSION_PRESETS.map((n) => (
+            <Button
+              key={n}
+              size="sm"
+              variant={list.sessionLength === n ? 'default' : 'outline'}
+              onClick={() => handleSessionLengthChange(String(n))}
+            >
+              {n}
+            </Button>
+          ))}
+          <Button
+            size="sm"
+            variant={list.sessionLength === 0 ? 'default' : 'outline'}
+            onClick={() => handleSessionLengthChange('0')}
+          >
+            Unlimited
+          </Button>
+        </div>
       </div>
 
       <Separator />
-
-      {/* Removed Items */}
-      {removedItems.length > 0 && (
-        <div className="space-y-2">
-          <h2 className="text-sm font-semibold text-muted-foreground">
-            Removed items
-          </h2>
-          {removedItems.map((item) => (
-            <div
-              key={item.id}
-              className="flex items-center justify-between rounded-md border border-dashed p-2"
-            >
-              <span className="truncate text-sm">{item.name}</span>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-7 w-7 min-h-[44px] min-w-[44px]"
-                onClick={() => restoreItem(item.id)}
-                aria-label={`Restore ${item.name}`}
-              >
-                <Undo2 className="h-4 w-4" />
-              </Button>
-            </div>
-          ))}
-          <Separator />
-        </div>
-      )}
 
       {/* Export */}
       <div className="space-y-2">
@@ -220,6 +261,22 @@ export default function ListSettings() {
 
       <Separator />
 
+      {/* Removed Items — behind a button, opens modal */}
+      {removedItems.length > 0 && (
+        <div className="space-y-2">
+          <Button
+            variant="outline"
+            className="w-full justify-start"
+            onClick={() => setRemovedOpen(true)}
+          >
+            <Archive className="h-4 w-4 mr-2" />
+            Removed items ({removedItems.length})
+          </Button>
+        </div>
+      )}
+
+      <Separator />
+
       {/* Danger Zone */}
       <div className="space-y-2">
         <h2 className="text-sm font-semibold text-destructive">Danger zone</h2>
@@ -241,6 +298,39 @@ export default function ListSettings() {
         onConfirm={handleDelete}
         onCancel={() => setDeleteOpen(false)}
       />
+
+      <Dialog open={removedOpen} onOpenChange={setRemovedOpen}>
+        <DialogContent className="max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Removed items</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2">
+            {removedItems.length === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                No removed items.
+              </p>
+            ) : (
+              removedItems.map((item) => (
+                <div
+                  key={item.id}
+                  className="flex items-center justify-between rounded-md border border-dashed p-2"
+                >
+                  <span className="truncate text-sm">{item.name}</span>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7 min-h-[44px] min-w-[44px]"
+                    onClick={() => restoreItem(item.id)}
+                    aria-label={`Restore ${item.name}`}
+                  >
+                    <Undo2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              ))
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

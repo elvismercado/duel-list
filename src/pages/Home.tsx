@@ -10,7 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Plus, Upload, Settings, FolderOpen } from 'lucide-react';
+import { Plus, Settings, FolderOpen } from 'lucide-react';
 import { ListCard } from '@/components/ListCard';
 import { ListCreateDialog } from '@/components/ListCreateDialog';
 import { ImportConflictDialog } from '@/components/ImportConflictDialog';
@@ -19,6 +19,22 @@ import { useFileSync } from '@/hooks/useFileSync';
 import { saveFileHandle } from '@/lib/storage';
 import { generateShortId } from '@/lib/markdown';
 import type { ListConfig } from '@/types';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  TouchSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  SortableContext,
+  arrayMove,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
 
 export default function Home() {
   const settings = getSettings();
@@ -35,8 +51,6 @@ export default function Home() {
   } = useListRegistry();
   const [createOpen, setCreateOpen] = useState(false);
   const [reorderMode, setReorderMode] = useState(false);
-  const [draggingId, setDraggingId] = useState<string | null>(null);
-  const dragOverIdRef = useRef<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { supported, openFromFile } = useFileSync(undefined);
   const [conflict, setConflict] = useState<{
@@ -45,16 +59,27 @@ export default function Home() {
     handle?: FileSystemFileHandle;
   } | null>(null);
 
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 150, tolerance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
+
   if (!settings.firstRunDone) {
     return <Navigate to="/welcome" replace />;
   }
 
-  function handleCreate(name: string, kFactor: number, sessionLength: number) {
-    const id = createList(name, kFactor, sessionLength);
+  function handleCreate(
+    name: string,
+    kFactor: number,
+    sessionLength: number,
+    templateItems?: string[],
+  ) {
+    const id = createList(name, kFactor, sessionLength, templateItems);
     navigate(`/list/${id}`);
   }
 
-  function handleImport(e: React.ChangeEvent<HTMLInputElement>) {
+  function handleFileInput(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
     const reader = new FileReader();
@@ -71,12 +96,16 @@ export default function Home() {
     e.target.value = '';
   }
 
-  async function handleOpenFile() {
+  /** Unified open button: prefers File System Access API, falls back to <input type="file">. */
+  async function handleOpen() {
+    if (!supported) {
+      fileInputRef.current?.click();
+      return;
+    }
     const result = await openFromFile();
     if (!result) return;
     const existingId = result.list.id;
     if (existingId) {
-      // Check if a list with this ID already exists
       const { getList } = await import('@/lib/storage');
       const existing = getList(existingId);
       if (existing) {
@@ -102,17 +131,14 @@ export default function Home() {
     navigate(`/list/${id}`);
   }
 
-  function reorder(fromId: string, toId: string) {
-    if (fromId === toId) return;
+  function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
     const ids = lists.map((l) => l.id);
-    const fromIdx = ids.indexOf(fromId);
-    const toIdx = ids.indexOf(toId);
+    const fromIdx = ids.indexOf(active.id as string);
+    const toIdx = ids.indexOf(over.id as string);
     if (fromIdx === -1 || toIdx === -1) return;
-    const next = [...ids];
-    const [moved] = next.splice(fromIdx, 1);
-    if (moved === undefined) return;
-    next.splice(toIdx, 0, moved);
-    updateCustomOrder(next);
+    updateCustomOrder(arrayMove(ids, fromIdx, toIdx));
   }
 
   function moveBy(id: string, delta: -1 | 1) {
@@ -120,12 +146,7 @@ export default function Home() {
     const idx = ids.indexOf(id);
     const nextIdx = idx + delta;
     if (idx === -1 || nextIdx < 0 || nextIdx >= ids.length) return;
-    const next = [...ids];
-    const a = next[idx]!;
-    const b = next[nextIdx]!;
-    next[idx] = b;
-    next[nextIdx] = a;
-    updateCustomOrder(next);
+    updateCustomOrder(arrayMove(ids, idx, nextIdx));
   }
 
   return (
@@ -146,21 +167,15 @@ export default function Home() {
               <Plus className="h-4 w-4 mr-2" />
               {S.home.createList}
             </Button>
-            <Button variant="outline" onClick={() => fileInputRef.current?.click()}>
-              <Upload className="h-4 w-4 mr-2" />
-              {S.home.importList}
+            <Button variant="outline" onClick={handleOpen}>
+              <FolderOpen className="h-4 w-4 mr-2" />
+              Open file
             </Button>
-            {supported && (
-              <Button variant="outline" onClick={handleOpenFile}>
-                <FolderOpen className="h-4 w-4 mr-2" />
-                Open file
-              </Button>
-            )}
           </div>
         </div>
       ) : (
         <>
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-2 flex-wrap">
             <Select
               value={sortOrder}
               onValueChange={(v) =>
@@ -177,7 +192,7 @@ export default function Home() {
                 <SelectItem value="custom">Custom</SelectItem>
               </SelectContent>
             </Select>
-            <div className="flex gap-2">
+            <div className="flex gap-2 flex-wrap">
               {sortOrder === 'custom' && (
                 <Button
                   size="sm"
@@ -192,51 +207,36 @@ export default function Home() {
                 <Plus className="h-4 w-4 mr-1" />
                 New
               </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => fileInputRef.current?.click()}
-              >
-                <Upload className="h-4 w-4 mr-1" />
-                Import
+              <Button size="sm" variant="outline" onClick={handleOpen}>
+                <FolderOpen className="h-4 w-4 mr-1" />
+                Open
               </Button>
-              {supported && (
-                <Button size="sm" variant="outline" onClick={handleOpenFile}>
-                  <FolderOpen className="h-4 w-4 mr-1" />
-                  Open
-                </Button>
-              )}
             </div>
           </div>
 
-          <div className="space-y-2">
-            {lists.map((entry, idx) => (
-              <ListCard
-                key={entry.id}
-                entry={entry}
-                onClick={() => navigate(`/list/${entry.id}`)}
-                reorderMode={reorderMode && sortOrder === 'custom'}
-                isDragging={draggingId === entry.id}
-                onDragStart={() => setDraggingId(entry.id)}
-                onDragOver={() => {
-                  dragOverIdRef.current = entry.id;
-                }}
-                onDrop={() => {
-                  if (draggingId && dragOverIdRef.current) {
-                    reorder(draggingId, dragOverIdRef.current);
-                  }
-                  setDraggingId(null);
-                  dragOverIdRef.current = null;
-                }}
-                onDragEnd={() => {
-                  setDraggingId(null);
-                  dragOverIdRef.current = null;
-                }}
-                onMoveUp={idx > 0 ? () => moveBy(entry.id, -1) : undefined}
-                onMoveDown={idx < lists.length - 1 ? () => moveBy(entry.id, 1) : undefined}
-              />
-            ))}
-          </div>
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEnd}
+          >
+            <SortableContext
+              items={lists.map((l) => l.id)}
+              strategy={verticalListSortingStrategy}
+            >
+              <div className="space-y-2">
+                {lists.map((entry, idx) => (
+                  <ListCard
+                    key={entry.id}
+                    entry={entry}
+                    onClick={() => navigate(`/list/${entry.id}`)}
+                    reorderMode={reorderMode && sortOrder === 'custom'}
+                    onMoveUp={idx > 0 ? () => moveBy(entry.id, -1) : undefined}
+                    onMoveDown={idx < lists.length - 1 ? () => moveBy(entry.id, 1) : undefined}
+                  />
+                ))}
+              </div>
+            </SortableContext>
+          </DndContext>
         </>
       )}
 
@@ -245,7 +245,7 @@ export default function Home() {
         type="file"
         accept=".md,.markdown,.txt"
         className="hidden"
-        onChange={handleImport}
+        onChange={handleFileInput}
       />
 
       <ListCreateDialog

@@ -134,3 +134,37 @@
 ### Outstanding (deferred from G5)
 - [ ] Real PWA icon artwork (replace placeholder `public/icon-*.png` files)
 - [ ] Add `public/screenshots/home-narrow.png` and `public/screenshots/duel-narrow.png` (720×1280)
+
+## Phase H: Feedback Round 1 — COMPLETE
+
+> Last updated: 2026-04-22
+
+Fixes + UX polish + small features driven by hands-on testing feedback.
+
+### Bugs (Wave 1)
+- [x] **H1.1 Skip not working** — `selectNextPair` no longer early-returns on the recent-skips queue (it would re-serve the just-skipped pair). Skips now apply a score *penalty* (`skipPenalty * 100_000`) and the picked pair is removed from `recentSkips` so penalties don't compound.
+- [x] **H1.2 Drag-and-drop on touch** — Replaced HTML5 native DnD with `@dnd-kit` (`core`, `sortable`, `utilities` 3.2.2). `ListCard` is now sortable via `useSortable`; `Home` wraps its list in `DndContext` + `SortableContext` with `PointerSensor` (5 px), `TouchSensor` (150 ms / 5 px), `KeyboardSensor`. Up/Down buttons retained for a11y.
+- [x] **H1.3 Mobile cutoff** — `index.html` viewport now `viewport-fit=cover`; `Layout` `<main>` adds `padding-bottom: max(2rem, env(safe-area-inset-bottom))`.
+- [x] **H1.4 Swipe mode rewritten** — Old Tinder-stack replaced with side-by-side grid. Each `SwipeCard` is an independent `motion.div` (`useMotionValue` x/y). Swipe up (or any 80 px drag) picks; tap also picks. `showElo` prop respects new `displayMode` field.
+
+### UX polish (Wave 2)
+- [x] **H2.1 Merged Open + Import** — Single "Open file…" button that prefers File System Access and falls back to `<input type=file>` when unsupported.
+- [x] **H2.2 Name behind edit button** — `ListSettings` now displays the name as a read-only chip with an edit pencil; `Input` only renders when editing.
+- [x] **H2.3 Removed-items modal** — Removed-items list moved out of the rankings page and behind a button in `ListSettings` that opens a `Dialog` with restore actions.
+- [x] **H2.4 Inline rename contrast** — Replaced bare `<input>` with a proper shadcn `Input` (`bg-background`) and a check button to confirm.
+- [x] **H2.5 Not-linked indicator** — `Rankings` header now shows `FileQuestion` (muted) when File System Access is supported but the list isn't linked, alongside the existing `FileCheck` (linked) and `FileX` (broken) indicators.
+
+### Features (Wave 3)
+- [x] **H3.3 Custom session length** — `ListCreateDialog` and `ListSettings` now use a `number` input + preset chips (5/10/20/50/Unlimited).
+- [x] **H3.2 Rank vs ELO toggle** — Added `ListConfig.displayMode: 'rank' | 'elo'`. Toggle button in Rankings header switches between the two; in `'rank'` mode the ELO score column is hidden. Persisted per list.
+- [x] **H3.1 Duel history viewer** — New `HistoryDialog` parses the per-list history Markdown into date sections and renders entries with bolded winners. History button added to Rankings header.
+- [x] **H3.4 Sample templates** — `ListCreateDialog` shows template chips (Anime / Pizza / Movies / Vacation / Snacks / Hobbies) sourced from `samples.ts`; selecting one pre-fills the name and seeds the items on create.
+- [x] **H3.5 Features showcase** — New `/features` route with a grid of 10 feature cards. Linked from `AppSettings` ("What's in DuelList") and Welcome final step ("See all features").
+
+### Verification
+- [x] `tsc --noEmit` clean
+- [x] `vite build` succeeds — PWA precache 40 entries, `sw.js` + `workbox` generated. Largest chunk (vendor) 293.76 kB / 95.20 kB gz; `Duel` chunk 135 kB / 44 kB gz; new `Features` chunk 5.65 kB / 2.50 kB gz; `samples` 1.43 kB / 0.84 kB gz.
+
+### Deferred (intentionally out of scope)
+- [ ] Internationalization (i18n) — strings are already centralized in `src/lib/strings.ts`; framework swap pending demand.
+- [ ] Public sample-list catalog / suggestions feed.
