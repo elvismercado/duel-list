@@ -14,6 +14,7 @@ import { useFileSync } from '@/hooks/useFileSync';
 import { RankChip } from '@/components/RankChip';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { AddItemsDialog } from '@/components/AddItemsDialog';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { ItemDetailsDialog } from '@/components/ItemDetailsDialog';
@@ -405,33 +406,35 @@ export default function Rankings() {
             )}
           </Button>
           {removedExpanded && (
-            <ul className="space-y-1">
-              {removedItems.map((item) => (
-                <li
-                  key={item.id}
-                  className="flex items-center gap-2 px-3 py-2 rounded-md bg-muted/30"
-                  title={S.ranking.restoreKeepsStatsHint}
-                >
-                  <div className="flex-1 min-w-0">
-                    <div className="truncate text-sm text-muted-foreground line-through">
-                      {item.name}
-                    </div>
-                    <div className="text-xs text-muted-foreground/80">
-                      {S.ranking.removedItemMeta(item.eloScore, item.comparisonCount)}
-                    </div>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => restoreItem(item.id)}
-                    aria-label={S.ranking.restoreItemAria(item.name)}
+            <ScrollArea className="max-h-72 pr-2">
+              <ul className="space-y-1">
+                {removedItems.map((item) => (
+                  <li
+                    key={item.id}
+                    className="flex items-center gap-2 px-3 py-2 rounded-md bg-muted/30"
+                    title={S.ranking.restoreKeepsStatsHint}
                   >
-                    <Undo2 className="h-4 w-4 mr-1" />
-                    {S.ranking.restoreAction}
-                  </Button>
-                </li>
-              ))}
-            </ul>
+                    <div className="flex-1 min-w-0">
+                      <div className="truncate text-sm text-muted-foreground line-through">
+                        {item.name}
+                      </div>
+                      <div className="text-xs text-muted-foreground/80">
+                        {S.ranking.removedItemMeta(item.eloScore, item.comparisonCount)}
+                      </div>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => restoreItem(item.id)}
+                      aria-label={S.ranking.restoreItemAria(item.name)}
+                    >
+                      <Undo2 className="h-4 w-4 mr-1" />
+                      {S.ranking.restoreAction}
+                    </Button>
+                  </li>
+                ))}
+              </ul>
+            </ScrollArea>
           )}
         </div>
       )}

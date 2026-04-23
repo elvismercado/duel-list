@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { S } from '@/lib/strings';
 import { getSettings } from '@/lib/storage';
 import { formatTimeOfDay } from '@/lib/datetime';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import type { Item } from '@/types';
 import {
   computeItemStats,
@@ -158,27 +159,29 @@ export function ItemDetailsDialog({
                 {S.ranking.detailsNoDuelsYet}
               </p>
             ) : (
-              <ul className="space-y-1">
-                {lastDuels.map((d, i) => (
-                  <li
-                    key={i}
-                    className="flex items-center gap-2 rounded-md border bg-card px-2 py-1.5 text-sm"
-                  >
-                    <OutcomeBadge outcome={d.outcome} />
-                    <span className="text-muted-foreground shrink-0">
-                      {outcomeLabel(d.outcome)}
-                    </span>
-                    <span className="truncate flex-1 min-w-0">
-                      {d.opponentName}
-                    </span>
-                    {d.tsIso && (
-                      <span className="text-xs text-muted-foreground tabular-nums shrink-0">
-                        {formatShort(d.tsIso)}
+              <ScrollArea className="max-h-64 pr-2">
+                <ul className="space-y-1">
+                  {lastDuels.map((d, i) => (
+                    <li
+                      key={i}
+                      className="flex items-center gap-2 rounded-md border bg-card px-2 py-1.5 text-sm"
+                    >
+                      <OutcomeBadge outcome={d.outcome} />
+                      <span className="text-muted-foreground shrink-0">
+                        {outcomeLabel(d.outcome)}
                       </span>
-                    )}
-                  </li>
-                ))}
-              </ul>
+                      <span className="truncate flex-1 min-w-0">
+                        {d.opponentName}
+                      </span>
+                      {d.tsIso && (
+                        <span className="text-xs text-muted-foreground tabular-nums shrink-0">
+                          {formatShort(d.tsIso)}
+                        </span>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </ScrollArea>
             )}
           </div>
         </div>
