@@ -2,6 +2,7 @@ import { useCallback } from 'react';
 import { serializeMarkdown } from '@/lib/markdown';
 import { getAllLists, getList, getHistory } from '@/lib/storage';
 import { downloadFile, downloadZip, slugify } from '@/lib/download';
+import { formatLocalDate } from '@/lib/datetime';
 import type { ListConfig } from '@/types';
 
 export function useExport() {
@@ -37,7 +38,7 @@ export function useExport() {
       }
     }
 
-    const date = new Date().toISOString().slice(0, 10);
+    const date = formatLocalDate();
     await downloadZip(files, `duellist-export-${date}.zip`);
   }, []);
 
@@ -50,7 +51,7 @@ export function useExport() {
       }
     }
     const json = JSON.stringify(data, null, 2);
-    const date = new Date().toISOString().slice(0, 10);
+    const date = formatLocalDate();
     downloadFile(json, `duellist-backup-${date}.json`, 'application/json');
   }, []);
 

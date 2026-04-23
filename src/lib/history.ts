@@ -1,5 +1,6 @@
 import type { DuelRecord, Item } from '@/types';
 import { getHistory, saveHistory } from '@/lib/storage';
+import { formatLocalDate } from '@/lib/datetime';
 
 // ---------------------------------------------------------------------------
 // Duel record creation (in-memory session tracking)
@@ -32,36 +33,20 @@ export function appendDuelToHistory(
 ): void {
   const now = new Date();
   const today = formatLocalDate(now);
-  const time = formatLocalTime(now);
+  const iso = now.toISOString(); // e.g. 2026-04-23T14:32:05.847Z
 
   let entry: string;
   if (winner) {
     // Preserve presentation order. ">" = left won, "<" = right won.
     const op = winner.id === itemA.id ? '>' : '<';
-    entry = `- ${itemA.name} [${itemA.id}] ${op} ${itemB.name} [${itemB.id}] @${time}`;
+    entry = `- ${itemA.name} [${itemA.id}] ${op} ${itemB.name} [${itemB.id}] @${iso}`;
   } else {
-    entry = `- ${itemA.name} [${itemA.id}] = ${itemB.name} [${itemB.id}] @${time}`;
+    entry = `- ${itemA.name} [${itemA.id}] = ${itemB.name} [${itemB.id}] @${iso}`;
   }
 
   const current = getHistory(listId);
   const updated = tailParseAndAppend(current, entry, today, listName);
   saveHistory(listId, updated);
-}
-
-// Local YYYY-MM-DD (so duels at 23:30 stay on "today" for the user).
-function formatLocalDate(d: Date): string {
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  return `${y}-${m}-${day}`;
-}
-
-// Local HH:MM:SS, 24h.
-function formatLocalTime(d: Date): string {
-  const h = String(d.getHours()).padStart(2, '0');
-  const m = String(d.getMinutes()).padStart(2, '0');
-  const s = String(d.getSeconds()).padStart(2, '0');
-  return `${h}:${m}:${s}`;
 }
 
 // ---------------------------------------------------------------------------
@@ -128,7 +113,7 @@ export function tailParseAndAppend(
 // ---------------------------------------------------------------------------
 
 const DUEL_LINE_RE =
-  /^- .+ \[([a-z0-9]{4})\] [><=] .+ \[([a-z0-9]{4})\](?: @\d{2}:\d{2}(?::\d{2})?)?$/;
+  /^- .+ \[([a-z0-9]{4})\] [><=] .+ \[([a-z0-9]{4})\](?: @\S+)?$/;
 
 export function parseRecentPairs(
   historyString: string,

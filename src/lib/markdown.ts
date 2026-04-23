@@ -1,5 +1,6 @@
 import { parse as yamlParse, stringify as yamlStringify } from 'yaml';
 import type { Item, ListConfig } from '@/types';
+import { formatLocalDate } from '@/lib/datetime';
 
 // ---------------------------------------------------------------------------
 // Public API
@@ -15,7 +16,7 @@ export function parseMarkdown(raw: string): ListConfig {
   const id = frontmatter.id ?? generateShortId();
   const sessionLength = frontmatter.sessionLength ?? 10;
   const kFactor = frontmatter.kFactor ?? 32;
-  const created = frontmatter.created ?? new Date().toISOString().slice(0, 10);
+  const created = frontmatter.created ?? formatLocalDate();
 
   const { active, removed } = parseItems(content);
 
@@ -141,7 +142,7 @@ function parseItems(content: string): { active: Item[]; removed: Item[] } {
 function parseItemSection(section: string): Item[] {
   const items: Item[] = [];
   const seenIds = new Set<string>();
-  const today = new Date().toISOString().slice(0, 10);
+  const today = formatLocalDate();
 
   let match: RegExpExecArray | null;
   const re = new RegExp(ITEM_RE.source, ITEM_RE.flags);

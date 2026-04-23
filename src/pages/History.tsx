@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { S } from '@/lib/strings';
 import { getList, getHistory } from '@/lib/storage';
+import { formatLocalDate, parseTimestampSuffix } from '@/lib/datetime';
 import { useExport } from '@/hooks/useExport';
 import {
   ArrowLeft,
@@ -18,7 +19,8 @@ type ParsedEntry = {
   a: string;
   b: string;
   winner: string | null; // null => tie
-  time: string | null;   // HH:MM (local) when present in source
+  tsIso: string | null;  // full ISO-8601 UTC when present (preferred for sort)
+  time: string | null;   // HH:MM (local) for display
 };
 
 type Section = {
@@ -354,10 +356,18 @@ function parseHistorySections(md: string): Section[] {
     }
   }
   // Newest date first, and within each date newest entry first.
+  // Prefer ms-precise ISO; fall back to HH:MM string compare; finally to
+  // file-order reverse for legacy entries with no timestamp at all.
   for (const s of sections) {
-    const allTimed = s.entries.length > 0 && s.entries.every((e) => e.time);
+    const allTimed =
+      s.entries.length > 0 &&
+      s.entries.every((e) => e.tsIso !== null || e.time !== null);
     if (allTimed) {
-      s.entries.sort((x, y) => (y.time ?? '').localeCompare(x.time ?? ''));
+      s.entries.sort((x, y) => {
+        const xKey = x.tsIso ?? x.time ?? '';
+        const yKey = y.tsIso ?? y.time ?? '';
+        return yKey.localeCompare(xKey);
+      });
     } else {
       s.entries.reverse();
     }
@@ -366,35 +376,28 @@ function parseHistorySections(md: string): Section[] {
 }
 
 function parseEntry(raw: string): ParsedEntry | null {
-  // Strip trailing optional time suffix "@HH:MM[:SS]"
-  let working = raw;
-  let time: string | null = null;
-  const timeMatch = / @(\d{2}:\d{2})(?::\d{2})?\s*$/.exec(working);
-  if (timeMatch) {
-    time = timeMatch[1]!;
-    working = working.slice(0, timeMatch.index);
-  }
-  const stripped = working.replace(/\s*\[[a-z0-9]{2,8}\]/gi, '').trim();
+  const { body, tsIso, localTime } = parseTimestampSuffix(raw);
+  const stripped = body.replace(/\s*\[[a-z0-9]{2,8}\]/gi, '').trim();
   // Left won: "A > B"
   const left = /^(.+?)\s*>\s*(.+)$/.exec(stripped);
   if (left) {
     const a = left[1]!.trim();
     const b = left[2]!.trim();
-    return { raw, a, b, winner: a, time };
+    return { raw, a, b, winner: a, tsIso, time: localTime };
   }
   // Right won: "A < B"
   const right = /^(.+?)\s*<\s*(.+)$/.exec(stripped);
   if (right) {
     const a = right[1]!.trim();
     const b = right[2]!.trim();
-    return { raw, a, b, winner: b, time };
+    return { raw, a, b, winner: b, tsIso, time: localTime };
   }
   // Tie: "A = B"
   const tie = /^(.+?)\s*=\s*(.+)$/.exec(stripped);
   if (tie) {
     const a = tie[1]!.trim();
     const b = tie[2]!.trim();
-    return { raw, a, b, winner: null, time };
+    return { raw, a, b, winner: null, tsIso, time: localTime };
   }
   return null;
 }
@@ -451,7 +454,7 @@ function computeDailyCounts(
   for (let i = days - 1; i >= 0; i--) {
     const d = new Date(today);
     d.setDate(d.getDate() - i);
-    const key = d.toISOString().slice(0, 10);
+    const key = formatLocalDate(d);
     out.push({ date: key, count: counts.get(key) ?? 0 });
   }
   return out;

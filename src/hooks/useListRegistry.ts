@@ -9,6 +9,7 @@ import {
   type ListEntry,
 } from '@/lib/storage';
 import { generateShortId, parseMarkdown } from '@/lib/markdown';
+import { formatLocalDate } from '@/lib/datetime';
 import type { ListConfig } from '@/types';
 
 export type ImportResult =
@@ -80,7 +81,7 @@ export function useListRegistry() {
       templateItems?: string[],
     ): string => {
       const id = generateShortId();
-      const today = new Date().toISOString().slice(0, 10);
+      const today = formatLocalDate();
       const items = (templateItems ?? []).map((itemName) => ({
         id: generateShortId(),
         name: itemName,

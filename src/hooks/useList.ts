@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import { getList, saveList as storageSave, deleteList as storageDelete } from '@/lib/storage';
 import type { Item, ListConfig } from '@/types';
 import { generateShortId } from '@/lib/markdown';
+import { formatLocalDate } from '@/lib/datetime';
 
 export function useList(id: string, onSave?: (list: ListConfig) => void) {
   const [list, setList] = useState<ListConfig | null>(() => getList(id));
@@ -22,7 +23,7 @@ export function useList(id: string, onSave?: (list: ListConfig) => void) {
   const addItems = useCallback(
     (names: string[]) => {
       if (!list) return;
-      const today = new Date().toISOString().slice(0, 10);
+      const today = formatLocalDate();
       const existingIds = new Set(list.items.map((i) => i.id));
 
       const newItems: Item[] = names
@@ -80,7 +81,7 @@ export function useList(id: string, onSave?: (list: ListConfig) => void) {
   const restoreItem = useCallback(
     (itemId: string) => {
       if (!list) return;
-      const today = new Date().toISOString().slice(0, 10);
+      const today = formatLocalDate();
       const updated = {
         ...list,
         items: list.items.map((i) =>
