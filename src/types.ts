@@ -48,6 +48,7 @@ export interface AppSettings {
   homeSortOrder: HomeSortMode;
   customListOrder: string[];
   duelMode: 'side-by-side' | 'swipe';
+  timeFormat: '12h' | '24h';
   reminders: ReminderSettings;
 }
 
@@ -78,6 +79,9 @@ export interface ReminderSettings {
   /** Quiet hours window — no reminders during [start, end). 0-23 each. */
   quietHoursStart: number;
   quietHoursEnd: number;
+  /** Minute (0-59) component of the quiet hours window endpoints. */
+  quietHoursStartMinute: number;
+  quietHoursEndMinute: number;
   channel: ReminderChannel;
   /** List IDs excluded from the reminder rotation. */
   perListOptOut: string[];

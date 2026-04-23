@@ -49,15 +49,16 @@ export function cadenceToIntervalMs(
 /** True when `now` is OUTSIDE the quiet-hours window (i.e. allowed). */
 export function inAllowedHours(date: Date, settings: ReminderSettings): boolean {
   if (!settings.quietHoursEnabled) return true;
-  const h = date.getHours();
-  const { quietHoursStart: s, quietHoursEnd: e } = settings;
+  const nowMin = date.getHours() * 60 + date.getMinutes();
+  const s = settings.quietHoursStart * 60 + (settings.quietHoursStartMinute ?? 0);
+  const e = settings.quietHoursEnd * 60 + (settings.quietHoursEndMinute ?? 0);
   if (s === e) return true; // disabled
   if (s < e) {
-    // simple range, e.g. 1..6
-    return h < s || h >= e;
+    // simple range, e.g. 01:00..06:00
+    return nowMin < s || nowMin >= e;
   }
-  // wrap-around range, e.g. 22..8 → quiet when h>=22 OR h<8
-  return h < s && h >= e;
+  // wrap-around range, e.g. 22:00..08:00 → quiet when now>=s OR now<e
+  return nowMin < s && nowMin >= e;
 }
 
 export function isReminderDue(

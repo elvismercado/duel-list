@@ -3,8 +3,8 @@ import { Link, useParams, useNavigate, useSearchParams } from 'react-router';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { S } from '@/lib/strings';
-import { getList, getHistory } from '@/lib/storage';
-import { formatLocalDate, parseTimestampSuffix } from '@/lib/datetime';
+import { getList, getHistory, getSettings } from '@/lib/storage';
+import { formatLocalDate, formatTimeOfDay, parseTimestampSuffix } from '@/lib/datetime';
 import { useExport } from '@/hooks/useExport';
 import {
   ArrowLeft,
@@ -305,7 +305,9 @@ function DuelRow({ entry }: { entry: ParsedEntry }) {
       </div>
       {entry.time && (
         <div className="text-[10px] text-muted-foreground text-right pr-1 tabular-nums">
-          {entry.time}
+          {entry.tsIso
+            ? formatTimeOfDay(new Date(entry.tsIso), getSettings().timeFormat ?? '24h')
+            : entry.time}
         </div>
       )}
     </div>

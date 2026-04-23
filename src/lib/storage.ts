@@ -114,6 +114,8 @@ const DEFAULT_REMINDERS: AppSettings['reminders'] = {
   quietHoursEnabled: false,
   quietHoursStart: 22,
   quietHoursEnd: 8,
+  quietHoursStartMinute: 0,
+  quietHoursEndMinute: 0,
   channel: 'in-app',
   perListOptOut: [],
   lastShownAt: null,
@@ -158,6 +160,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   homeSortOrder: 'recent-desc',
   customListOrder: [],
   duelMode: 'side-by-side',
+  timeFormat: '24h',
   reminders: DEFAULT_REMINDERS,
 };
 

@@ -1,6 +1,7 @@
 import { S } from '@/lib/strings';
 import { getSettings, updateSettings, getStorageUsage } from '@/lib/storage';
 import { useExport } from '@/hooks/useExport';
+import { formatHourMinute } from '@/lib/datetime';
 import { Button } from '@/components/ui/button';
 import {
   Select,
@@ -14,7 +15,7 @@ import { Separator } from '@/components/ui/separator';
 import { Download, Sparkles, Compass, Bell, HelpCircle } from 'lucide-react';
 import { useState } from 'react';
 import { Link } from 'react-router';
-import type { CustomCadenceUnit, ReminderSettings } from '@/types';
+import type { AppSettings, CustomCadenceUnit, ReminderSettings } from '@/types';
 
 function cadenceShortLabel(r: ReminderSettings): string {
   switch (r.cadence) {
@@ -38,10 +39,8 @@ function unitShortLabel(unit: CustomCadenceUnit): string {
   }
 }
 
-function timeShortLabel(r: ReminderSettings): string {
-  return `${r.preferredHour.toString().padStart(2, '0')}:${r.preferredMinute
-    .toString()
-    .padStart(2, '0')}`;
+function timeShortLabel(r: ReminderSettings, fmt: AppSettings['timeFormat']): string {
+  return formatHourMinute(r.preferredHour, r.preferredMinute, fmt);
 }
 
 export default function AppSettingsPage() {
@@ -110,6 +109,29 @@ export default function AppSettingsPage() {
         </p>
       </div>
 
+      {/* Time format */}
+      <div className="space-y-2">
+        <label className="text-sm font-medium">{S.settings.timeFormatLabel}</label>
+        <Select
+          value={settings.timeFormat ?? '24h'}
+          onValueChange={(v) => {
+            updateSettings({ timeFormat: v as '12h' | '24h' });
+            setSettings(getSettings());
+          }}
+        >
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="24h">{S.settings.timeFormat24h}</SelectItem>
+            <SelectItem value="12h">{S.settings.timeFormat12h}</SelectItem>
+          </SelectContent>
+        </Select>
+        <p className="text-xs text-muted-foreground">
+          {S.settings.timeFormatHelp}
+        </p>
+      </div>
+
       <Separator />
 
       {/* About / Features */}
@@ -171,7 +193,7 @@ export default function AppSettingsPage() {
               {settings.reminders.enabled
                 ? S.settings.remindersStatusActive(
                     cadenceShortLabel(settings.reminders),
-                    timeShortLabel(settings.reminders),
+                    timeShortLabel(settings.reminders, settings.timeFormat ?? '24h'),
                   )
                 : S.settings.remindersStatusOff}
             </span>

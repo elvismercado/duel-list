@@ -8,6 +8,8 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { S } from '@/lib/strings';
+import { getSettings } from '@/lib/storage';
+import { formatTimeOfDay } from '@/lib/datetime';
 import type { Item } from '@/types';
 import {
   computeItemStats,
@@ -255,7 +257,6 @@ function formatShort(iso: string): string {
   if (isNaN(d.getTime())) return '';
   const m = String(d.getMonth() + 1).padStart(2, '0');
   const day = String(d.getDate()).padStart(2, '0');
-  const h = String(d.getHours()).padStart(2, '0');
-  const min = String(d.getMinutes()).padStart(2, '0');
-  return `${m}-${day} ${h}:${min}`;
+  const time = formatTimeOfDay(d, getSettings().timeFormat ?? '24h');
+  return `${m}-${day} ${time}`;
 }

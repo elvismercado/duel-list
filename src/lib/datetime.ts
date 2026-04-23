@@ -24,6 +24,28 @@ export function formatLocalTime(d: Date): string {
   return `${h}:${m}`;
 }
 
+export type TimeFormat = '12h' | '24h';
+
+/** Format a Date's clock time according to the user's preferred format. */
+export function formatTimeOfDay(d: Date, fmt: TimeFormat): string {
+  return formatHourMinute(d.getHours(), d.getMinutes(), fmt);
+}
+
+/** Format raw hour (0-23) and minute (0-59) ints. */
+export function formatHourMinute(
+  hour: number,
+  minute: number,
+  fmt: TimeFormat,
+): string {
+  const m = String(minute).padStart(2, '0');
+  if (fmt === '24h') {
+    return `${String(hour).padStart(2, '0')}:${m}`;
+  }
+  const period = hour >= 12 ? 'PM' : 'AM';
+  const h12 = hour % 12 === 0 ? 12 : hour % 12;
+  return `${h12}:${m} ${period}`;
+}
+
 /**
  * Extract a trailing ` @<value>` timestamp suffix from a history entry line.
  * Recognises:

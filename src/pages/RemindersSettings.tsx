@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { S } from '@/lib/strings';
 import { getSettings, updateSettings, getAllLists, getList } from '@/lib/storage';
+import { formatHourMinute } from '@/lib/datetime';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
@@ -31,6 +32,7 @@ export default function RemindersSettingsPage() {
   const [settings, setSettings] = useState(getSettings);
   const navigate = useNavigate();
   const r = settings.reminders;
+  const fmt = settings.timeFormat ?? '24h';
 
   function patch(p: Partial<ReminderSettings>) {
     updateSettings({ reminders: { ...r, ...p } });
@@ -171,35 +173,29 @@ export default function RemindersSettingsPage() {
               onChange={handlePreferredPreset}
               ariaLabel={S.settings.remindersPreferredHourLabel}
               options={[
-                { value: '9', label: S.settings.remindersPreferredHourMorning },
-                { value: '12', label: S.settings.remindersPreferredHourMidday },
-                { value: '19', label: S.settings.remindersPreferredHourEvening },
-                { value: '21', label: S.settings.remindersPreferredHourNight },
+                { value: '9', label: S.settings.remindersPreferredHourMorning(formatHourMinute(9, 0, fmt)) },
+                { value: '12', label: S.settings.remindersPreferredHourMidday(formatHourMinute(12, 0, fmt)) },
+                { value: '19', label: S.settings.remindersPreferredHourEvening(formatHourMinute(19, 0, fmt)) },
+                { value: '21', label: S.settings.remindersPreferredHourNight(formatHourMinute(21, 0, fmt)) },
                 { value: 'custom', label: S.settings.remindersPreferredHourCustom },
               ]}
             />
             {preferredMode === 'custom' && (
               <div className="space-y-1">
-                <label htmlFor="preferred-time" className="text-xs text-muted-foreground">
+                <span className="text-xs text-muted-foreground">
                   {S.settings.remindersPreferredTimeCustomLabel}
-                </label>
-                <Input
-                  id="preferred-time"
-                  type="time"
-                  value={`${pad(r.preferredHour)}:${pad(r.preferredMinute)}`}
-                  onChange={(e) => {
-                    const [h, m] = e.target.value.split(':').map((v) => parseInt(v, 10));
-                    if (Number.isFinite(h) && Number.isFinite(m)) {
-                      patch({ preferredHour: h, preferredMinute: m });
-                    }
-                  }}
-                  className="w-32"
+                </span>
+                <PreferredTimePicker
+                  hour={r.preferredHour}
+                  minute={r.preferredMinute}
+                  fmt={fmt}
+                  onChange={(h, m) => patch({ preferredHour: h, preferredMinute: m })}
                 />
               </div>
             )}
             <p className="text-xs text-muted-foreground">
               {S.settings.remindersPreferredCurrent(
-                `${pad(r.preferredHour)}:${pad(r.preferredMinute)}`,
+                formatHourMinute(r.preferredHour, r.preferredMinute, fmt),
               )}
             </p>
           </div>
@@ -223,36 +219,44 @@ export default function RemindersSettingsPage() {
               <>
                 <div className="flex items-center gap-2">
                   <Select
-                    value={String(r.quietHoursStart)}
-                    onValueChange={(v) =>
-                      patch({ quietHoursStart: parseInt(v, 10) })
-                    }
+                    value={String(r.quietHoursStart * 60 + (r.quietHoursStartMinute ?? 0))}
+                    onValueChange={(v) => {
+                      const total = parseInt(v, 10);
+                      patch({
+                        quietHoursStart: Math.floor(total / 60),
+                        quietHoursStartMinute: total % 60,
+                      });
+                    }}
                   >
                     <SelectTrigger className="w-auto">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      {Array.from({ length: 24 }, (_, i) => (
-                        <SelectItem key={i} value={String(i)}>
-                          {pad(i)}:00
+                      {QUIET_HOUR_STEPS.map(([h, m]) => (
+                        <SelectItem key={h * 60 + m} value={String(h * 60 + m)}>
+                          {formatHourMinute(h, m, fmt)}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                   <span className="text-xs text-muted-foreground">→</span>
                   <Select
-                    value={String(r.quietHoursEnd)}
-                    onValueChange={(v) =>
-                      patch({ quietHoursEnd: parseInt(v, 10) })
-                    }
+                    value={String(r.quietHoursEnd * 60 + (r.quietHoursEndMinute ?? 0))}
+                    onValueChange={(v) => {
+                      const total = parseInt(v, 10);
+                      patch({
+                        quietHoursEnd: Math.floor(total / 60),
+                        quietHoursEndMinute: total % 60,
+                      });
+                    }}
                   >
                     <SelectTrigger className="w-auto">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      {Array.from({ length: 24 }, (_, i) => (
-                        <SelectItem key={i} value={String(i)}>
-                          {pad(i)}:00
+                      {QUIET_HOUR_STEPS.map(([h, m]) => (
+                        <SelectItem key={h * 60 + m} value={String(h * 60 + m)}>
+                          {formatHourMinute(h, m, fmt)}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -363,4 +367,104 @@ function unitLabel(unit: CustomCadenceUnit): string {
     case 'month': return S.settings.remindersUnitMonth;
     case 'year': return S.settings.remindersUnitYear;
   }
+}
+
+const MINUTE_STEPS = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55] as const;
+
+const QUIET_HOUR_STEPS: ReadonlyArray<readonly [number, number]> = Array.from(
+  { length: 96 },
+  (_, i) => [Math.floor(i / 4), (i % 4) * 15] as const,
+);
+
+function PreferredTimePicker({
+  hour,
+  minute,
+  fmt,
+  onChange,
+}: {
+  hour: number;
+  minute: number;
+  fmt: '12h' | '24h';
+  onChange: (h: number, m: number) => void;
+}) {
+  // Snap displayed minute to nearest 5-min step for selection display.
+  const snappedMinute = MINUTE_STEPS.reduce((best, step) =>
+    Math.abs(step - minute) < Math.abs(best - minute) ? step : best,
+  0);
+
+  if (fmt === '24h') {
+    return (
+      <div className="flex items-center gap-1">
+        <Select
+          value={String(hour)}
+          onValueChange={(v) => onChange(parseInt(v, 10), snappedMinute)}
+        >
+          <SelectTrigger className="w-auto" aria-label="Hour"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            {Array.from({ length: 24 }, (_, i) => (
+              <SelectItem key={i} value={String(i)}>{pad(i)}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <span className="text-muted-foreground">:</span>
+        <Select
+          value={String(snappedMinute)}
+          onValueChange={(v) => onChange(hour, parseInt(v, 10))}
+        >
+          <SelectTrigger className="w-auto" aria-label="Minute"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            {MINUTE_STEPS.map((m) => (
+              <SelectItem key={m} value={String(m)}>{pad(m)}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+    );
+  }
+
+  // 12h mode
+  const period: 'AM' | 'PM' = hour >= 12 ? 'PM' : 'AM';
+  const hour12 = hour % 12 === 0 ? 12 : hour % 12;
+  const setFrom12 = (h12: number, m: number, p: 'AM' | 'PM') => {
+    const h24 = (h12 % 12) + (p === 'PM' ? 12 : 0);
+    onChange(h24, m);
+  };
+
+  return (
+    <div className="flex items-center gap-1">
+      <Select
+        value={String(hour12)}
+        onValueChange={(v) => setFrom12(parseInt(v, 10), snappedMinute, period)}
+      >
+        <SelectTrigger className="w-auto" aria-label="Hour"><SelectValue /></SelectTrigger>
+        <SelectContent>
+          {Array.from({ length: 12 }, (_, i) => i + 1).map((h) => (
+            <SelectItem key={h} value={String(h)}>{h}</SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      <span className="text-muted-foreground">:</span>
+      <Select
+        value={String(snappedMinute)}
+        onValueChange={(v) => setFrom12(hour12, parseInt(v, 10), period)}
+      >
+        <SelectTrigger className="w-auto" aria-label="Minute"><SelectValue /></SelectTrigger>
+        <SelectContent>
+          {MINUTE_STEPS.map((m) => (
+            <SelectItem key={m} value={String(m)}>{pad(m)}</SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      <Select
+        value={period}
+        onValueChange={(v) => setFrom12(hour12, snappedMinute, v as 'AM' | 'PM')}
+      >
+        <SelectTrigger className="w-auto" aria-label="AM or PM"><SelectValue /></SelectTrigger>
+        <SelectContent>
+          <SelectItem value="AM">AM</SelectItem>
+          <SelectItem value="PM">PM</SelectItem>
+        </SelectContent>
+      </Select>
+    </div>
+  );
 }
