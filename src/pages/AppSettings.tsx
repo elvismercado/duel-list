@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/select';
 import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
-import { Download, Sparkles, Compass, Bell } from 'lucide-react';
+import { Download, Sparkles, Compass, Bell, HelpCircle } from 'lucide-react';
 import { useState } from 'react';
 import { Link } from 'react-router';
 import type { CustomCadenceUnit, ReminderSettings } from '@/types';
@@ -126,6 +126,12 @@ export default function AppSettingsPage() {
             <Link to="/welcome">
               <Compass className="h-4 w-4 mr-1" />
               {S.settings.replayOnboarding}
+            </Link>
+          </Button>
+          <Button asChild variant="outline" size="sm">
+            <Link to="/settings/glossary">
+              <HelpCircle className="h-4 w-4 mr-1" />
+              {S.glossary.openLink}
             </Link>
           </Button>
         </div>
