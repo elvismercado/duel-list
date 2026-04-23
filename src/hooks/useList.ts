@@ -81,21 +81,10 @@ export function useList(id: string, onSave?: (list: ListConfig) => void) {
   const restoreItem = useCallback(
     (itemId: string) => {
       if (!list) return;
-      const today = formatLocalDate();
       const updated = {
         ...list,
         items: list.items.map((i) =>
-          i.id === itemId
-            ? {
-                ...i,
-                removed: undefined,
-                eloScore: 1000,
-                prevEloScore: 1000,
-                prevRank: 0,
-                comparisonCount: 0,
-                added: today,
-              }
-            : i,
+          i.id === itemId ? { ...i, removed: undefined } : i,
         ),
       };
       save(updated);

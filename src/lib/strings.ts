@@ -137,6 +137,14 @@ export const S = {
     removeItemTitle: 'Remove item',
     removeItemMessage: (name: string) =>
       `Remove "${name}" from the ranking? You can restore it later.`,
+    removedHeading: (n: number) => `Removed (${n})`,
+    removedExpandAria: 'Show removed items',
+    removedCollapseAria: 'Hide removed items',
+    restoreItemAria: (name: string) => `Restore ${name}`,
+    restoreAction: 'Restore',
+    removedItemMeta: (elo: number, duels: number) =>
+      `${Math.round(elo)} ELO · ${duels} ${duels === 1 ? 'duel' : 'duels'}`,
+    restoreKeepsStatsHint: 'Restoring keeps these stats.',
     topItemPrefix: (name: string) => `#1 ${name}`,
     itemsCount: (n: number) => `${n} items`,
     sortLabel: 'Sort',

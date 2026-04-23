@@ -54,6 +54,9 @@ import {
   ArrowDownNarrowWide,
   ArrowUpWideNarrow,
   ArrowUpDown,
+  ChevronDown,
+  ChevronUp,
+  Undo2,
 } from 'lucide-react';
 
 const SORT_FIELDS: SortField[] = ['rank', 'elo', 'added', 'name'];
@@ -92,12 +95,13 @@ export default function Rankings() {
     (list: import('@/types').ListConfig) => { syncToFile(list); },
     [syncToFile],
   );
-  const { list, save, addItems, renameItem, removeItem, setItemNotes } = useList(id!, onSave);
+  const { list, save, addItems, renameItem, removeItem, restoreItem, setItemNotes } = useList(id!, onSave);
   const [addOpen, setAddOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState('');
   const [removeTarget, setRemoveTarget] = useState<{ id: string; name: string } | null>(null);
   const [detailsId, setDetailsId] = useState<string | null>(null);
+  const [removedExpanded, setRemovedExpanded] = useState(false);
   const historyMd = useMemo(() => (id ? getHistory(id) : ''), [id, detailsId]);
 
   if (!list) {
@@ -111,6 +115,7 @@ export default function Rankings() {
 
   const rankedByElo = sortItemsByElo(list.items.filter((i) => !i.removed));
   const rankById = new Map(rankedByElo.map((it, idx) => [it.id, idx + 1]));
+  const removedItems = sortItemsByElo(list.items.filter((i) => i.removed));
   const urlSort = searchParams.get('sort');
   const validSortModes: SortMode[] = [
     'rank-desc', 'rank-asc', 'elo-desc', 'elo-asc',
@@ -355,6 +360,58 @@ export default function Rankings() {
             </li>
           ))}
         </ul>
+      )}
+
+      {removedItems.length > 0 && (
+        <div className="space-y-2 pt-2">
+          <Button
+            variant="ghost"
+            className="w-full justify-between text-muted-foreground"
+            onClick={() => setRemovedExpanded((v) => !v)}
+            aria-expanded={removedExpanded}
+            aria-label={
+              removedExpanded
+                ? S.ranking.removedCollapseAria
+                : S.ranking.removedExpandAria
+            }
+          >
+            <span>{S.ranking.removedHeading(removedItems.length)}</span>
+            {removedExpanded ? (
+              <ChevronUp className="h-4 w-4" />
+            ) : (
+              <ChevronDown className="h-4 w-4" />
+            )}
+          </Button>
+          {removedExpanded && (
+            <ul className="space-y-1">
+              {removedItems.map((item) => (
+                <li
+                  key={item.id}
+                  className="flex items-center gap-2 px-3 py-2 rounded-md bg-muted/30"
+                  title={S.ranking.restoreKeepsStatsHint}
+                >
+                  <div className="flex-1 min-w-0">
+                    <div className="truncate text-sm text-muted-foreground line-through">
+                      {item.name}
+                    </div>
+                    <div className="text-xs text-muted-foreground/80">
+                      {S.ranking.removedItemMeta(item.eloScore, item.comparisonCount)}
+                    </div>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => restoreItem(item.id)}
+                    aria-label={S.ranking.restoreItemAria(item.name)}
+                  >
+                    <Undo2 className="h-4 w-4 mr-1" />
+                    {S.ranking.restoreAction}
+                  </Button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
       )}
 
       <AddItemsDialog
