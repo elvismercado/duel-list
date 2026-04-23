@@ -28,6 +28,7 @@ import {
   Hash,
   Trophy,
   Check,
+  Swords,
 } from 'lucide-react';
 
 export default function Rankings() {
@@ -169,8 +170,11 @@ export default function Rankings() {
               key={item.id}
               className="flex items-center gap-3 rounded-md border p-3 bg-card"
             >
-              <span className="text-muted-foreground font-mono text-sm w-6 text-right shrink-0">
-                {idx + 1}
+              <span
+                className="text-muted-foreground font-mono text-sm w-12 text-right shrink-0 tabular-nums"
+                title={displayMode === 'rank' ? 'Rank' : 'ELO score'}
+              >
+                {displayMode === 'rank' ? `#${idx + 1}` : Math.round(item.eloScore)}
               </span>
               {editingId === item.id ? (
                 <div className="flex items-center gap-1 flex-1 min-w-0">
@@ -201,9 +205,13 @@ export default function Rankings() {
               ) : (
                 <span className="flex-1 truncate">{item.name}</span>
               )}
-              {displayMode === 'elo' && (
-                <span className="text-xs text-muted-foreground tabular-nums">
-                  {Math.round(item.eloScore)}
+              {item.comparisonCount > 0 && (
+                <span
+                  className="flex items-center gap-1 text-xs text-muted-foreground tabular-nums shrink-0"
+                  title={`${item.comparisonCount} ${item.comparisonCount === 1 ? 'duel' : 'duels'} played`}
+                >
+                  <Swords className="h-3.5 w-3.5" aria-hidden="true" />
+                  {item.comparisonCount}
                 </span>
               )}
               <DropdownMenu>

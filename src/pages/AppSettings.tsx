@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/select';
 import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
-import { Download, Sparkles } from 'lucide-react';
+import { Download, Sparkles, Compass } from 'lucide-react';
 import { useState } from 'react';
 import { Link } from 'react-router';
 
@@ -86,12 +86,20 @@ export default function AppSettingsPage() {
       {/* About / Features */}
       <div className="space-y-2">
         <h2 className="text-sm font-semibold text-muted-foreground">About</h2>
-        <Button asChild variant="outline" size="sm">
-          <Link to="/features">
-            <Sparkles className="h-4 w-4 mr-1" />
-            What's in DuelList
-          </Link>
-        </Button>
+        <div className="flex gap-2 flex-wrap">
+          <Button asChild variant="outline" size="sm">
+            <Link to="/features">
+              <Sparkles className="h-4 w-4 mr-1" />
+              What's in DuelList
+            </Link>
+          </Button>
+          <Button asChild variant="outline" size="sm">
+            <Link to="/welcome">
+              <Compass className="h-4 w-4 mr-1" />
+              Replay onboarding
+            </Link>
+          </Button>
+        </div>
       </div>
 
       <Separator />
