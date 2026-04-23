@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { S } from '@/lib/strings';
-import { getSettings, updateSettings, getAllLists } from '@/lib/storage';
+import { getSettings, updateSettings, getAllLists, getList } from '@/lib/storage';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
@@ -116,7 +116,6 @@ export default function RemindersSettingsPage() {
               onChange={(v) => patch({ cadence: v })}
               ariaLabel={S.settings.remindersCadenceLabel}
               options={[
-                { value: 'off', label: S.settings.remindersCadenceOff },
                 { value: 'daily', label: S.settings.remindersCadenceDaily },
                 { value: 'weekly', label: S.settings.remindersCadenceWeekly },
                 { value: 'monthly', label: S.settings.remindersCadenceMonthly },
@@ -198,6 +197,11 @@ export default function RemindersSettingsPage() {
                 />
               </div>
             )}
+            <p className="text-xs text-muted-foreground">
+              {S.settings.remindersPreferredCurrent(
+                `${pad(r.preferredHour)}:${pad(r.preferredMinute)}`,
+              )}
+            </p>
           </div>
 
           {/* Quiet hours */}
@@ -293,27 +297,50 @@ export default function RemindersSettingsPage() {
               <p className="text-xs text-muted-foreground">
                 {S.settings.remindersPerListHelp}
               </p>
-              <div className="space-y-1">
+              <div className="space-y-2">
                 {allLists.map((entry) => {
                   const skipped = r.perListOptOut.includes(entry.id);
+                  const list = getList(entry.id);
+                  const itemCount =
+                    list?.items.filter((i) => !i.removed).length ?? 0;
                   return (
-                    <label
+                    <button
                       key={entry.id}
-                      className="flex items-center gap-2 text-sm cursor-pointer"
+                      type="button"
+                      onClick={() => {
+                        const set = new Set(r.perListOptOut);
+                        if (skipped) set.delete(entry.id);
+                        else set.add(entry.id);
+                        patch({ perListOptOut: Array.from(set) });
+                      }}
+                      aria-pressed={skipped}
+                      className="w-full flex items-center gap-3 rounded-lg border bg-muted/30 hover:bg-muted/60 transition-colors p-3 text-left"
                     >
-                      <input
-                        type="checkbox"
-                        checked={skipped}
-                        onChange={() => {
-                          const set = new Set(r.perListOptOut);
-                          if (skipped) set.delete(entry.id);
-                          else set.add(entry.id);
-                          patch({ perListOptOut: Array.from(set) });
-                        }}
-                        className="h-4 w-4"
-                      />
-                      <span className="truncate">{entry.name}</span>
-                    </label>
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium text-sm truncate">{entry.name}</div>
+                        <div className="text-xs text-muted-foreground">
+                          {S.settings.remindersPerListItemsCount(itemCount)}
+                        </div>
+                      </div>
+                      <div
+                        className={
+                          'inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full ' +
+                          (skipped
+                            ? 'bg-muted text-muted-foreground'
+                            : 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300')
+                        }
+                      >
+                        <span
+                          className={
+                            'h-1.5 w-1.5 rounded-full ' +
+                            (skipped ? 'bg-muted-foreground/50' : 'bg-emerald-500')
+                          }
+                        />
+                        {skipped
+                          ? S.settings.remindersPerListSkipped
+                          : S.settings.remindersPerListReminding}
+                      </div>
+                    </button>
                   );
                 })}
               </div>

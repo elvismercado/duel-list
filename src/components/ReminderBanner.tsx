@@ -17,15 +17,17 @@ export function ReminderBanner({ candidate, onSnooze, onSkip }: ReminderBannerPr
 
   return (
     <Card className="border-primary/30 bg-primary/5">
-      <CardContent className="p-3 flex items-center gap-3">
-        <Swords className="h-5 w-5 text-primary shrink-0" />
-        <div className="flex-1 min-w-0">
-          <p className="font-medium text-sm">{S.reminders.bannerTitle}</p>
-          <p className="text-xs text-muted-foreground truncate">
-            {S.reminders.bannerSubtitle(candidate.entry.name, days)}
-          </p>
+      <CardContent className="p-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
+        <div className="flex items-start gap-3 flex-1 min-w-0">
+          <Swords className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+          <div className="flex-1 min-w-0">
+            <p className="font-medium text-sm">{S.reminders.bannerTitle}</p>
+            <p className="text-xs text-muted-foreground sm:truncate">
+              {S.reminders.bannerSubtitle(candidate.entry.name, days)}
+            </p>
+          </div>
         </div>
-        <div className="flex items-center gap-1 shrink-0">
+        <div className="flex items-center gap-1 shrink-0 self-end sm:self-auto">
           <Button
             size="sm"
             onClick={() => navigate(`/list/${candidate.entry.id}/duel`)}

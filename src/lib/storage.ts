@@ -144,6 +144,11 @@ function migrateReminders(
       merged.customUnit = 'week';
     }
   }
+  // 'off' is no longer a UI option; the master enabled toggle handles disable.
+  // Remap to 'daily' so users land on a valid preset.
+  if (merged.cadence === 'off') {
+    merged.cadence = 'daily';
+  }
   return merged;
 }
 
