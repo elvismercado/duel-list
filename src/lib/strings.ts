@@ -149,6 +149,9 @@ export const S = {
     removedItemMeta: (elo: number, duels: number) =>
       `${Math.round(elo)} ELO · ${duels} ${duels === 1 ? 'duel' : 'duels'}`,
     restoreKeepsStatsHint: 'Restoring keeps these stats.',
+    movedUp: (n: number) => `Moved up ${n}`,
+    movedDown: (n: number) => `Moved down ${n}`,
+    noChange: 'No change',
     topItemPrefix: (name: string) => `#1 ${name}`,
     itemsCount: (n: number) => `${n} items`,
     sortLabel: 'Sort',

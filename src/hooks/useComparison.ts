@@ -18,10 +18,25 @@ export function useComparison(list: ListConfig, onDuel?: (list: ListConfig) => v
 
   const initSession = useCallback((): SessionState => {
     const active = list.items.filter((i) => !i.removed);
-    const { prevRank } = captureSessionSnapshot(active);
+    const { prevElo, prevRank } = captureSessionSnapshot(active);
     const historyStr = getHistory(list.id);
     const recentPairs = parseRecentPairs(historyStr, active.length);
     recentSkips.current = new Map();
+
+    // Persist the snapshot so the Rankings view can render trend arrows
+    // that survive page reloads. Only writes when values actually change.
+    let dirty = false;
+    const snapshotItems = list.items.map((item) => {
+      const r = prevRank.get(item.id);
+      const e = prevElo.get(item.id);
+      if (r === undefined || e === undefined) return item;
+      if (item.prevRank === r && item.prevEloScore === e) return item;
+      dirty = true;
+      return { ...item, prevRank: r, prevEloScore: e };
+    });
+    if (dirty) {
+      saveList({ ...list, items: snapshotItems });
+    }
 
     const pair = selectNextPair(active, recentPairs, recentSkips.current);
 

@@ -1,8 +1,6 @@
 if you go throug this list, then make sure you do it one at a time
 
-- since this app is called duellist then dueling should be more prominent.
-    - think of ways to make dueling more prominent
-    - maybe start a random duel from the home page?
+- start dueling should also be more prominent in the item list itself
 - is the resizable shadcn component somethiong we could use for our layouts?
     - maybe multiple layouts for portrait vs landscape, and of course from mobile phone to tablet to desktop
 - could we benefit from the scrollarea component?
@@ -14,3 +12,4 @@ if you go throug this list, then make sure you do it one at a time
     - or the glossary
     - or the lists view
     - or the list (item list) view
+- do we need skeleton loading anywhere?

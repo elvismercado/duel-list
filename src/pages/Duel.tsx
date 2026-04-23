@@ -10,6 +10,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { SkipForward, Equal, Trophy, TrendingUp, TrendingDown, ArrowLeft } from 'lucide-react';
 import { SwipeMode } from '@/components/SwipeMode';
+import { RankChip } from '@/components/RankChip';
 import { getSettings } from '@/lib/storage';
 
 export default function Duel() {
@@ -126,9 +127,7 @@ function DuelSession({
                 key={item.id}
                 className="flex items-center gap-3 rounded-md border p-3"
               >
-                <span className="text-lg font-bold w-6 text-right">
-                  {i + 1}
-                </span>
+                <RankChip position={i + 1} />
                 <span className="flex-1 truncate">{item.name}</span>
                 <span className="text-sm text-muted-foreground tabular-nums">
                   {Math.round(item.eloScore)}

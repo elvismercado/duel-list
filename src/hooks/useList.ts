@@ -84,7 +84,9 @@ export function useList(id: string, onSave?: (list: ListConfig) => void) {
       const updated = {
         ...list,
         items: list.items.map((i) =>
-          i.id === itemId ? { ...i, removed: undefined } : i,
+          i.id === itemId
+            ? { ...i, removed: undefined, prevRank: 0, prevEloScore: i.eloScore }
+            : i,
         ),
       };
       save(updated);

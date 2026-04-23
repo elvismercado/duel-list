@@ -11,6 +11,7 @@ import {
 } from '@/lib/ranking';
 import { useList } from '@/hooks/useList';
 import { useFileSync } from '@/hooks/useFileSync';
+import { RankChip } from '@/components/RankChip';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { AddItemsDialog } from '@/components/AddItemsDialog';
@@ -57,6 +58,8 @@ import {
   ChevronDown,
   ChevronUp,
   Undo2,
+  TrendingUp,
+  TrendingDown,
 } from 'lucide-react';
 
 const SORT_FIELDS: SortField[] = ['rank', 'elo', 'added', 'name'];
@@ -279,17 +282,26 @@ export default function Rankings() {
         </div>
       ) : (
         <ul className="space-y-1">
-          {activeItems.map((item) => (
+          {activeItems.map((item) => {
+            const currentRank = rankById.get(item.id) ?? 0;
+            const showChip = displayMode === 'rank' && currentRank >= 1 && currentRank <= 3;
+            return (
             <li
               key={item.id}
               className="flex items-center gap-3 rounded-md border p-3 bg-card"
             >
-              <span
-                className="text-muted-foreground font-mono text-sm w-12 text-right shrink-0 tabular-nums"
-                title={displayMode === 'rank' ? S.ranking.rankTooltip : S.ranking.eloTooltip}
-              >
-                {displayMode === 'rank' ? `#${rankById.get(item.id) ?? '?'}` : Math.round(item.eloScore)}
-              </span>
+              {showChip ? (
+                <span className="w-12 flex justify-end shrink-0">
+                  <RankChip position={currentRank} />
+                </span>
+              ) : (
+                <span
+                  className="text-muted-foreground font-mono text-sm w-12 text-right shrink-0 tabular-nums"
+                  title={displayMode === 'rank' ? S.ranking.rankTooltip : S.ranking.eloTooltip}
+                >
+                  {displayMode === 'rank' ? `#${currentRank || '?'}` : Math.round(item.eloScore)}
+                </span>
+              )}
               {editingId === item.id ? (
                 <div className="flex items-center gap-1 flex-1 min-w-0">
                   <Input
@@ -319,15 +331,24 @@ export default function Rankings() {
               ) : (
                 <span className="flex-1 truncate">{item.name}</span>
               )}
-              {item.comparisonCount > 0 && (
+              {item.comparisonCount > 0 ? (
                 <span
-                  className="flex items-center gap-1 text-xs text-muted-foreground tabular-nums shrink-0"
+                  className="inline-flex items-center justify-end gap-1 w-10 text-xs text-muted-foreground tabular-nums shrink-0"
                   title={S.ranking.duelsPlayed(item.comparisonCount)}
                 >
                   <Swords className="h-3.5 w-3.5" aria-hidden="true" />
                   {item.comparisonCount}
                 </span>
+              ) : (
+                <span className="w-10 shrink-0" aria-hidden="true" />
               )}
+              <TrendBadge
+                delta={
+                  item.prevRank > 0
+                    ? item.prevRank - (currentRank || item.prevRank)
+                    : null
+                }
+              />
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="icon" className="h-7 w-7 min-h-[44px] min-w-[44px]" aria-label={S.ranking.optionsAria(item.name)}>
@@ -358,7 +379,8 @@ export default function Rankings() {
                 </DropdownMenuContent>
               </DropdownMenu>
             </li>
-          ))}
+            );
+          })}
         </ul>
       )}
 
@@ -445,5 +467,49 @@ export default function Rankings() {
         }}
       />
     </div>
+  );
+}
+
+function TrendBadge({ delta }: { delta: number | null }) {
+  // Always reserve the same width so the duel-count column and dropdown
+  // stay aligned across rows whether or not a trend is shown.
+  const wrapper =
+    'inline-flex items-center justify-end gap-0.5 shrink-0 w-10 text-xs tabular-nums';
+  if (delta === null) {
+    return <span className={wrapper} aria-hidden="true" />;
+  }
+  if (delta === 0) {
+    return (
+      <span
+        className={`${wrapper} text-muted-foreground`}
+        title={S.ranking.noChange}
+        aria-label={S.ranking.noChange}
+      >
+        –
+      </span>
+    );
+  }
+  if (delta > 0) {
+    return (
+      <span
+        className={`${wrapper} text-emerald-600 dark:text-emerald-400`}
+        title={S.ranking.movedUp(delta)}
+        aria-label={S.ranking.movedUp(delta)}
+      >
+        <TrendingUp className="h-3.5 w-3.5" aria-hidden="true" />
+        {delta}
+      </span>
+    );
+  }
+  const down = Math.abs(delta);
+  return (
+    <span
+      className={`${wrapper} text-destructive`}
+      title={S.ranking.movedDown(down)}
+      aria-label={S.ranking.movedDown(down)}
+    >
+      <TrendingDown className="h-3.5 w-3.5" aria-hidden="true" />
+      {down}
+    </span>
   );
 }
