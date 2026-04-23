@@ -54,6 +54,12 @@ const ACTIVITY_ARIA: Record<ActivityBucket, string> = {
   never: S.list.activityNever,
 };
 
+const PODIUM_CHIP_CLASS: readonly string[] = [
+  'bg-amber-400/20 text-amber-700 dark:text-amber-300',
+  'bg-slate-400/25 text-slate-700 dark:text-slate-300',
+  'bg-orange-400/20 text-orange-800 dark:text-orange-300',
+];
+
 export function ListCard({
   entry,
   onClick,
@@ -158,14 +164,19 @@ export function ListCard({
         ) : duelCount === 0 ? (
           <p className="text-xs text-muted-foreground">{S.list.noDuelsYet}</p>
         ) : (
-          <div className="flex items-center gap-3 text-xs">
+          <div className="flex items-center gap-2 text-xs flex-wrap">
             {topThree.map((item, i) => (
               <span
                 key={item.id}
-                className="inline-flex items-center gap-1 min-w-0 truncate"
+                className="inline-flex items-center gap-1.5 min-w-0"
                 aria-label={S.list.podiumPositionAria(i + 1, item.name)}
               >
-                <span className="text-muted-foreground tabular-nums">{i + 1}.</span>
+                <span
+                  className={`inline-flex h-5 min-w-[1.75rem] items-center justify-center rounded-full px-1.5 text-[11px] font-semibold tabular-nums ${PODIUM_CHIP_CLASS[i]}`}
+                  aria-hidden="true"
+                >
+                  #{i + 1}
+                </span>
                 <span className="truncate">{item.name}</span>
               </span>
             ))}
