@@ -18,6 +18,7 @@ type ParsedEntry = {
   a: string;
   b: string;
   winner: string | null; // null => tie
+  time: string | null;   // HH:MM (local) when present in source
 };
 
 type Section = {
@@ -276,19 +277,26 @@ function DuelRow({ entry }: { entry: ParsedEntry }) {
   const aWon = !tie && entry.winner === entry.a;
   const bWon = !tie && entry.winner === entry.b;
   return (
-    <div className="flex items-stretch gap-2 text-sm">
-      <NameChip name={entry.a} won={aWon} dimmed={!tie && !aWon} />
-      <div
-        className={`shrink-0 self-center text-[10px] font-bold tracking-wider px-1.5 py-0.5 rounded ${
-          tie
-            ? 'bg-muted text-muted-foreground'
-            : 'bg-foreground/10 text-foreground/70'
-        }`}
-        aria-label={tie ? S.history.tieAria : S.history.versusAria}
-      >
-        {tie ? S.history.tieBadge : S.history.vsBadge}
+    <div className="space-y-0.5">
+      <div className="flex items-stretch gap-2 text-sm">
+        <NameChip name={entry.a} won={aWon} dimmed={!tie && !aWon} />
+        <div
+          className={`shrink-0 self-center text-[10px] font-bold tracking-wider px-1.5 py-0.5 rounded ${
+            tie
+              ? 'bg-muted text-muted-foreground'
+              : 'bg-foreground/10 text-foreground/70'
+          }`}
+          aria-label={tie ? S.history.tieAria : S.history.versusAria}
+        >
+          {tie ? S.history.tieBadge : S.history.vsBadge}
+        </div>
+        <NameChip name={entry.b} won={bWon} dimmed={!tie && !bWon} alignRight />
       </div>
-      <NameChip name={entry.b} won={bWon} dimmed={!tie && !bWon} alignRight />
+      {entry.time && (
+        <div className="text-[10px] text-muted-foreground text-right pr-1 tabular-nums">
+          {entry.time}
+        </div>
+      )}
     </div>
   );
 }
@@ -346,32 +354,47 @@ function parseHistorySections(md: string): Section[] {
     }
   }
   // Newest date first, and within each date newest entry first.
-  for (const s of sections) s.entries.reverse();
+  for (const s of sections) {
+    const allTimed = s.entries.length > 0 && s.entries.every((e) => e.time);
+    if (allTimed) {
+      s.entries.sort((x, y) => (y.time ?? '').localeCompare(x.time ?? ''));
+    } else {
+      s.entries.reverse();
+    }
+  }
   return sections.reverse();
 }
 
 function parseEntry(raw: string): ParsedEntry | null {
-  const stripped = raw.replace(/\s*\[[a-z0-9]{2,8}\]/gi, '').trim();
+  // Strip trailing optional time suffix "@HH:MM[:SS]"
+  let working = raw;
+  let time: string | null = null;
+  const timeMatch = / @(\d{2}:\d{2})(?::\d{2})?\s*$/.exec(working);
+  if (timeMatch) {
+    time = timeMatch[1]!;
+    working = working.slice(0, timeMatch.index);
+  }
+  const stripped = working.replace(/\s*\[[a-z0-9]{2,8}\]/gi, '').trim();
   // Left won: "A > B"
   const left = /^(.+?)\s*>\s*(.+)$/.exec(stripped);
   if (left) {
     const a = left[1]!.trim();
     const b = left[2]!.trim();
-    return { raw, a, b, winner: a };
+    return { raw, a, b, winner: a, time };
   }
   // Right won: "A < B"
   const right = /^(.+?)\s*<\s*(.+)$/.exec(stripped);
   if (right) {
     const a = right[1]!.trim();
     const b = right[2]!.trim();
-    return { raw, a, b, winner: b };
+    return { raw, a, b, winner: b, time };
   }
   // Tie: "A = B"
   const tie = /^(.+?)\s*=\s*(.+)$/.exec(stripped);
   if (tie) {
     const a = tie[1]!.trim();
     const b = tie[2]!.trim();
-    return { raw, a, b, winner: null };
+    return { raw, a, b, winner: null, time };
   }
   return null;
 }
