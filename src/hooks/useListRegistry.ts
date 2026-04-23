@@ -10,7 +10,7 @@ import {
 } from '@/lib/storage';
 import { generateShortId, parseMarkdown } from '@/lib/markdown';
 import { formatLocalDate } from '@/lib/datetime';
-import type { ListConfig } from '@/types';
+import type { ListConfig, HomeSortMode } from '@/types';
 
 export type ImportResult =
   | { status: 'ok'; id: string }
@@ -18,19 +18,27 @@ export type ImportResult =
 
 function sortEntries(
   entries: ListEntry[],
-  order: string,
+  order: HomeSortMode,
   customOrder: string[],
 ): ListEntry[] {
+  const reverse = <T,>(a: T[]): T[] => a.reverse();
   switch (order) {
-    case 'a-z':
+    case 'name-asc':
       return [...entries].sort((a, b) => a.name.localeCompare(b.name));
-    case 'created': {
+    case 'name-desc':
+      return [...entries].sort((a, b) => b.name.localeCompare(a.name));
+    case 'created-desc':
       return [...entries].sort((a, b) => {
         const aList = getList(a.id);
         const bList = getList(b.id);
         return (bList?.created ?? '').localeCompare(aList?.created ?? '');
       });
-    }
+    case 'created-asc':
+      return [...entries].sort((a, b) => {
+        const aList = getList(a.id);
+        const bList = getList(b.id);
+        return (aList?.created ?? '').localeCompare(bList?.created ?? '');
+      });
     case 'custom': {
       const idxMap = new Map(customOrder.map((id, idx) => [id, idx]));
       return [...entries].sort((a, b) => {
@@ -39,7 +47,12 @@ function sortEntries(
         return ai - bi;
       });
     }
-    default: // 'recent'
+    case 'recent-asc':
+      return reverse(
+        [...entries].sort((a, b) => (b.lastOpened ?? 0) - (a.lastOpened ?? 0)),
+      );
+    case 'recent-desc':
+    default:
       return [...entries].sort(
         (a, b) => (b.lastOpened ?? 0) - (a.lastOpened ?? 0),
       );
@@ -59,7 +72,7 @@ export function useListRegistry() {
   }, []);
 
   const changeSortOrder = useCallback(
-    (order: 'recent' | 'a-z' | 'created' | 'custom') => {
+    (order: HomeSortMode) => {
       updateSettings({ homeSortOrder: order });
       setSortOrder(order);
       const s = getSettings();

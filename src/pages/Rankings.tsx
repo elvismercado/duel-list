@@ -1,7 +1,14 @@
 import { useState, useCallback, useMemo } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router';
 import { S } from '@/lib/strings';
-import { sortItemsByElo, applyDisplaySort } from '@/lib/ranking';
+import {
+  sortItemsByElo,
+  applyDisplaySort,
+  splitSortMode,
+  joinSortMode,
+  type SortField,
+  type SortDir,
+} from '@/lib/ranking';
 import { useList } from '@/hooks/useList';
 import { useFileSync } from '@/hooks/useFileSync';
 import { Button } from '@/components/ui/button';
@@ -40,29 +47,41 @@ import {
   Trophy,
   Check,
   Swords,
+  ArrowDown01,
+  ArrowUp10,
+  ArrowDownAZ,
+  ArrowUpAZ,
+  ArrowDownNarrowWide,
+  ArrowUpWideNarrow,
+  ArrowUpDown,
 } from 'lucide-react';
 
-const SORT_MODES: SortMode[] = [
-  'rank-desc',
-  'rank-asc',
-  'elo-desc',
-  'elo-asc',
-  'added-desc',
-  'added-asc',
-  'name-asc',
-  'name-desc',
-];
+const SORT_FIELDS: SortField[] = ['rank', 'elo', 'added', 'name'];
 
-const SORT_LABELS: Record<SortMode, string> = {
-  'rank-desc': S.ranking.sortRankDesc,
-  'rank-asc': S.ranking.sortRankAsc,
-  'elo-desc': S.ranking.sortEloDesc,
-  'elo-asc': S.ranking.sortEloAsc,
-  'added-desc': S.ranking.sortAddedDesc,
-  'added-asc': S.ranking.sortAddedAsc,
-  'name-asc': S.ranking.sortNameAsc,
-  'name-desc': S.ranking.sortNameDesc,
+const FIELD_LABELS: Record<SortField, string> = {
+  rank: S.ranking.sortFieldRank,
+  elo: S.ranking.sortFieldElo,
+  added: S.ranking.sortFieldAdded,
+  name: S.ranking.sortFieldName,
 };
+
+const DIR_ARIA: Record<SortField, Record<SortDir, string>> = {
+  rank: { desc: S.ranking.sortDirAriaRankDesc, asc: S.ranking.sortDirAriaRankAsc },
+  elo: { desc: S.ranking.sortDirAriaEloDesc, asc: S.ranking.sortDirAriaEloAsc },
+  added: { desc: S.ranking.sortDirAriaAddedDesc, asc: S.ranking.sortDirAriaAddedAsc },
+  name: { desc: S.ranking.sortDirAriaNameDesc, asc: S.ranking.sortDirAriaNameAsc },
+};
+
+function DirectionIcon({ field, dir, className }: { field: SortField; dir: SortDir; className?: string }) {
+  if (field === 'name') {
+    return dir === 'asc' ? <ArrowDownAZ className={className} /> : <ArrowUpAZ className={className} />;
+  }
+  if (field === 'added') {
+    return dir === 'desc' ? <ArrowDownNarrowWide className={className} /> : <ArrowUpWideNarrow className={className} />;
+  }
+  // rank / elo — numeric
+  return dir === 'desc' ? <ArrowDown01 className={className} /> : <ArrowUp10 className={className} />;
+}
 
 export default function Rankings() {
   const { id } = useParams<{ id: string }>();
@@ -93,10 +112,15 @@ export default function Rankings() {
   const rankedByElo = sortItemsByElo(list.items.filter((i) => !i.removed));
   const rankById = new Map(rankedByElo.map((it, idx) => [it.id, idx + 1]));
   const urlSort = searchParams.get('sort');
+  const validSortModes: SortMode[] = [
+    'rank-desc', 'rank-asc', 'elo-desc', 'elo-asc',
+    'added-desc', 'added-asc', 'name-asc', 'name-desc',
+  ];
   const sortMode: SortMode =
-    (SORT_MODES as string[]).includes(urlSort ?? '')
+    (validSortModes as string[]).includes(urlSort ?? '')
       ? (urlSort as SortMode)
       : list.sortMode ?? 'rank-desc';
+  const { field: sortField, dir: sortDir } = splitSortMode(sortMode);
   const activeItems = applyDisplaySort(rankedByElo, sortMode);
   const canDuel = rankedByElo.length >= 2;
   const displayMode: 'rank' | 'elo' = list.displayMode ?? 'rank';
@@ -187,37 +211,56 @@ export default function Rankings() {
       )}
 
       {activeItems.length > 0 && (
-        <div className="flex items-center justify-end gap-2 flex-wrap">
-          <Select value={sortMode} onValueChange={(v) => handleSortChange(v as SortMode)}>
-            <SelectTrigger className="w-auto h-9" aria-label={S.ranking.sortLabel}>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {SORT_MODES.map((m) => (
-                <SelectItem key={m} value={m}>
-                  {SORT_LABELS[m]}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={toggleDisplayMode}
-            aria-label={displayMode === 'rank' ? S.ranking.switchToElo : S.ranking.switchToRank}
-          >
-            {displayMode === 'rank' ? (
-              <>
-                <Hash className="h-4 w-4 mr-1" />
-                {S.ranking.rank}
-              </>
-            ) : (
-              <>
-                <Trophy className="h-4 w-4 mr-1" />
-                {S.ranking.elo}
-              </>
-            )}
-          </Button>
+        <div className="flex items-center justify-between gap-2 flex-wrap">
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              onClick={toggleDisplayMode}
+              aria-label={displayMode === 'rank' ? S.ranking.switchToElo : S.ranking.switchToRank}
+            >
+              {displayMode === 'rank' ? (
+                <>
+                  <Hash className="h-4 w-4 mr-1" />
+                  {S.ranking.rank}
+                </>
+              ) : (
+                <>
+                  <Trophy className="h-4 w-4 mr-1" />
+                  {S.ranking.elo}
+                </>
+              )}
+            </Button>
+          </div>
+          <div className="flex items-center gap-2">
+            <Select
+              value={sortField}
+              onValueChange={(v) => handleSortChange(joinSortMode(v as SortField, sortDir))}
+            >
+              <SelectTrigger className="w-auto" aria-label={S.ranking.sortLabel}>
+                <ArrowUpDown className="h-4 w-4 mr-1 opacity-70" />
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {SORT_FIELDS.map((f) => (
+                  <SelectItem key={f} value={f}>
+                    {FIELD_LABELS[f]}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() =>
+                handleSortChange(joinSortMode(sortField, sortDir === 'desc' ? 'asc' : 'desc'))
+              }
+              aria-label={DIR_ARIA[sortField][sortDir]}
+              aria-pressed={sortDir === 'asc'}
+              title={DIR_ARIA[sortField][sortDir]}
+            >
+              <DirectionIcon field={sortField} dir={sortDir} className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
       )}
 

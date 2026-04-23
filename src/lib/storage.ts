@@ -107,15 +107,39 @@ export function saveHistory(listId: string, markdown: string): void {
 const DEFAULT_SETTINGS: AppSettings = {
   firstRunDone: false,
   theme: 'system',
-  homeSortOrder: 'recent',
+  homeSortOrder: 'recent-desc',
   customListOrder: [],
   duelMode: 'side-by-side',
 };
 
+// Migrate legacy homeSortOrder values to the new field+direction shape.
+function migrateHomeSort(value: unknown): AppSettings['homeSortOrder'] {
+  switch (value) {
+    case 'recent': return 'recent-desc';
+    case 'a-z': return 'name-asc';
+    case 'created': return 'created-desc';
+    case 'recent-desc':
+    case 'recent-asc':
+    case 'name-asc':
+    case 'name-desc':
+    case 'created-desc':
+    case 'created-asc':
+    case 'custom':
+      return value;
+    default:
+      return 'recent-desc';
+  }
+}
+
 export function getSettings(): AppSettings {
   const raw = localStorage.getItem(KEY_SETTINGS);
   if (!raw) return { ...DEFAULT_SETTINGS };
-  return { ...DEFAULT_SETTINGS, ...(JSON.parse(raw) as Partial<AppSettings>) };
+  const parsed = JSON.parse(raw) as Partial<AppSettings> & { homeSortOrder?: unknown };
+  return {
+    ...DEFAULT_SETTINGS,
+    ...parsed,
+    homeSortOrder: migrateHomeSort(parsed.homeSortOrder),
+  };
 }
 
 export function updateSettings(partial: Partial<AppSettings>): void {

@@ -45,7 +45,18 @@ export type SortMode =
 export interface AppSettings {
   firstRunDone: boolean;
   theme: 'light' | 'dark' | 'system';
-  homeSortOrder: 'recent' | 'a-z' | 'created' | 'custom';
+  homeSortOrder: HomeSortMode;
   customListOrder: string[];
   duelMode: 'side-by-side' | 'swipe';
 }
+
+export type HomeSortMode =
+  | 'recent-desc'
+  | 'recent-asc'
+  | 'name-asc'
+  | 'name-desc'
+  | 'created-desc'
+  | 'created-asc'
+  | 'custom';
+
+export type HomeSortField = 'recent' | 'name' | 'created' | 'custom';

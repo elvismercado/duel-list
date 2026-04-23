@@ -10,7 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Plus, Settings, FolderOpen } from 'lucide-react';
+import { Plus, Settings, FolderOpen, ArrowDownAZ, ArrowUpAZ, ArrowDownNarrowWide, ArrowUpWideNarrow, ArrowUpDown } from 'lucide-react';
 import { ListCard } from '@/components/ListCard';
 import { ListCreateDialog } from '@/components/ListCreateDialog';
 import { ImportConflictDialog } from '@/components/ImportConflictDialog';
@@ -18,7 +18,7 @@ import { useListRegistry } from '@/hooks/useListRegistry';
 import { useFileSync } from '@/hooks/useFileSync';
 import { saveFileHandle } from '@/lib/storage';
 import { generateShortId } from '@/lib/markdown';
-import type { ListConfig } from '@/types';
+import type { ListConfig, HomeSortMode, HomeSortField } from '@/types';
 import {
   DndContext,
   closestCenter,
@@ -35,6 +35,44 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
+
+function homeSortField(mode: HomeSortMode): HomeSortField {
+  if (mode === 'custom') return 'custom';
+  return mode.split('-')[0] as HomeSortField;
+}
+
+function homeSortDir(mode: HomeSortMode): 'asc' | 'desc' {
+  if (mode === 'custom') return 'desc';
+  return (mode.split('-')[1] as 'asc' | 'desc') ?? 'desc';
+}
+
+function joinHomeSort(field: HomeSortField, dir: 'asc' | 'desc'): HomeSortMode {
+  if (field === 'custom') return 'custom';
+  // 'name' has no -desc default outside this UI but the union supports both
+  return `${field}-${dir}` as HomeSortMode;
+}
+
+function homeSortDirAria(mode: HomeSortMode): string {
+  switch (mode) {
+    case 'recent-desc': return S.home.sortDirAriaRecentDesc;
+    case 'recent-asc': return S.home.sortDirAriaRecentAsc;
+    case 'name-asc': return S.home.sortDirAriaNameAsc;
+    case 'name-desc': return S.home.sortDirAriaNameDesc;
+    case 'created-desc': return S.home.sortDirAriaCreatedDesc;
+    case 'created-asc': return S.home.sortDirAriaCreatedAsc;
+    default: return S.home.sortDirAriaRecentDesc;
+  }
+}
+
+function HomeDirIcon({ mode, className }: { mode: HomeSortMode; className?: string }) {
+  const field = homeSortField(mode);
+  const dir = homeSortDir(mode);
+  if (field === 'name') {
+    return dir === 'asc' ? <ArrowDownAZ className={className} /> : <ArrowUpAZ className={className} />;
+  }
+  // recent / created — newest = desc
+  return dir === 'desc' ? <ArrowDownNarrowWide className={className} /> : <ArrowUpWideNarrow className={className} />;
+}
 
 export default function Home() {
   const settings = getSettings();
@@ -176,26 +214,17 @@ export default function Home() {
       ) : (
         <>
           <div className="flex items-center justify-between gap-2 flex-wrap">
-            <Select
-              value={sortOrder}
-              onValueChange={(v) =>
-                changeSortOrder(v as 'recent' | 'a-z' | 'created' | 'custom')
-              }
-            >
-              <SelectTrigger className="w-[140px]">
-                <SelectValue placeholder={S.home.sortBy} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="recent">{S.home.sortRecent}</SelectItem>
-                <SelectItem value="a-z">{S.home.sortAZ}</SelectItem>
-                <SelectItem value="created">{S.home.sortCreated}</SelectItem>
-                <SelectItem value="custom">{S.home.sortCustom}</SelectItem>
-              </SelectContent>
-            </Select>
-            <div className="flex gap-2 flex-wrap">
+            <div className="flex items-center gap-2 flex-wrap">
+              <Button onClick={() => setCreateOpen(true)}>
+                <Plus className="h-4 w-4 mr-1" />
+                {S.home.new}
+              </Button>
+              <Button variant="outline" onClick={handleOpen}>
+                <FolderOpen className="h-4 w-4 mr-1" />
+                {S.home.open}
+              </Button>
               {sortOrder === 'custom' && (
                 <Button
-                  size="sm"
                   variant={reorderMode ? 'default' : 'outline'}
                   onClick={() => setReorderMode((v) => !v)}
                   aria-pressed={reorderMode}
@@ -203,14 +232,41 @@ export default function Home() {
                   {reorderMode ? S.home.done : S.home.reorder}
                 </Button>
               )}
-              <Button size="sm" onClick={() => setCreateOpen(true)}>
-                <Plus className="h-4 w-4 mr-1" />
-                {S.home.new}
-              </Button>
-              <Button size="sm" variant="outline" onClick={handleOpen}>
-                <FolderOpen className="h-4 w-4 mr-1" />
-                {S.home.open}
-              </Button>
+            </div>
+            <div className="flex items-center gap-2">
+              <Select
+                value={homeSortField(sortOrder)}
+                onValueChange={(v) =>
+                  changeSortOrder(joinHomeSort(v as HomeSortField, homeSortDir(sortOrder)))
+                }
+              >
+                <SelectTrigger className="w-auto" aria-label={S.home.sortLabel}>
+                  <ArrowUpDown className="h-4 w-4 mr-1 opacity-70" />
+                  <SelectValue placeholder={S.home.sortBy} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="recent">{S.home.sortFieldRecent}</SelectItem>
+                  <SelectItem value="name">{S.home.sortFieldName}</SelectItem>
+                  <SelectItem value="created">{S.home.sortFieldCreated}</SelectItem>
+                  <SelectItem value="custom">{S.home.sortFieldCustom}</SelectItem>
+                </SelectContent>
+              </Select>
+              {homeSortField(sortOrder) !== 'custom' && (
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => {
+                    const field = homeSortField(sortOrder);
+                    const dir = homeSortDir(sortOrder);
+                    changeSortOrder(joinHomeSort(field, dir === 'desc' ? 'asc' : 'desc'));
+                  }}
+                  aria-label={homeSortDirAria(sortOrder)}
+                  aria-pressed={homeSortDir(sortOrder) === 'asc'}
+                  title={homeSortDirAria(sortOrder)}
+                >
+                  <HomeDirIcon mode={sortOrder} className="h-4 w-4" />
+                </Button>
+              )}
             </div>
           </div>
 

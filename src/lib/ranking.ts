@@ -87,6 +87,18 @@ export function applyDisplaySort(
   }
 }
 
+export type SortField = 'rank' | 'elo' | 'added' | 'name';
+export type SortDir = 'asc' | 'desc';
+
+export function splitSortMode(mode: SortMode): { field: SortField; dir: SortDir } {
+  const [field, dir] = mode.split('-') as [SortField, SortDir];
+  return { field, dir };
+}
+
+export function joinSortMode(field: SortField, dir: SortDir): SortMode {
+  return `${field}-${dir}` as SortMode;
+}
+
 // ---------------------------------------------------------------------------
 // Session snapshot helpers
 // ---------------------------------------------------------------------------
