@@ -1,9 +1,28 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Link, useParams, useNavigate } from 'react-router';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { getList, getHistory } from '@/lib/storage';
 import { useExport } from '@/hooks/useExport';
-import { ArrowLeft, Download } from 'lucide-react';
+import {
+  ArrowLeft,
+  Download,
+  Trophy,
+  Search,
+  X,
+} from 'lucide-react';
+
+type ParsedEntry = {
+  raw: string;
+  a: string;
+  b: string;
+  winner: string | null; // null => tie
+};
+
+type Section = {
+  date: string; // YYYY-MM-DD
+  entries: ParsedEntry[];
+};
 
 export default function History() {
   const { id } = useParams<{ id: string }>();
@@ -11,6 +30,29 @@ export default function History() {
   const { exportHistory } = useExport();
   const list = id ? getList(id) : null;
   const [content] = useState(() => (id ? getHistory(id) : ''));
+  const [query, setQuery] = useState('');
+
+  const sections = useMemo(() => parseHistorySections(content), [content]);
+  const total = useMemo(
+    () => sections.reduce((sum, s) => sum + s.entries.length, 0),
+    [sections],
+  );
+  const stats = useMemo(() => computeStats(sections), [sections]);
+  const daily = useMemo(() => computeDailyCounts(sections, 30), [sections]);
+
+  const filteredSections = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return sections;
+    return sections
+      .map((s) => ({
+        date: s.date,
+        entries: s.entries.filter(
+          (e) =>
+            e.a.toLowerCase().includes(q) || e.b.toLowerCase().includes(q),
+        ),
+      }))
+      .filter((s) => s.entries.length > 0);
+  }, [sections, query]);
 
   if (!list || !id) {
     return (
@@ -21,13 +63,21 @@ export default function History() {
     );
   }
 
-  const sections = parseHistorySections(content);
-  const total = countDuels(content);
+  const filteredCount = filteredSections.reduce(
+    (sum, s) => sum + s.entries.length,
+    0,
+  );
 
   return (
     <div className="p-4 max-w-lg mx-auto space-y-4">
       <div className="flex items-center gap-2">
-        <Button asChild variant="ghost" size="icon" className="min-h-[44px] min-w-[44px]" aria-label="Back to list">
+        <Button
+          asChild
+          variant="ghost"
+          size="icon"
+          className="min-h-[44px] min-w-[44px]"
+          aria-label="Back to list"
+        >
           <Link to={`/list/${id}`}>
             <ArrowLeft className="h-5 w-5" />
           </Link>
@@ -59,37 +109,230 @@ export default function History() {
           </Button>
         </div>
       ) : (
-        <div className="space-y-4">
-          <p className="text-xs text-muted-foreground">
-            {total} {total === 1 ? 'duel' : 'duels'} recorded.
-          </p>
-          {sections.map((section) => (
-            <section key={section.date} className="space-y-1">
-              <h2 className="text-sm font-semibold sticky top-0 bg-background py-1">
-                {section.date}
-              </h2>
-              <ul className="space-y-1 text-sm">
-                {section.entries.map((entry, idx) => (
-                  <li key={idx} className="border-l-2 pl-2">
-                    {renderEntry(entry)}
-                  </li>
-                ))}
-              </ul>
-            </section>
-          ))}
+        <>
+          <div className="grid grid-cols-2 gap-2">
+            <StatTile label="Total duels" value={String(stats.total)} />
+            <StatTile label="Ties" value={String(stats.ties)} />
+            <StatTile
+              label="Top winner"
+              value={stats.topWinner ? stats.topWinner.name : '—'}
+              subtitle={
+                stats.topWinner
+                  ? `${stats.topWinner.wins} ${stats.topWinner.wins === 1 ? 'win' : 'wins'}`
+                  : undefined
+              }
+            />
+            <StatTile
+              label="Biggest rivalry"
+              value={
+                stats.biggestRivalry
+                  ? `${stats.biggestRivalry.a} · ${stats.biggestRivalry.b}`
+                  : '—'
+              }
+              subtitle={
+                stats.biggestRivalry
+                  ? `${stats.biggestRivalry.count} ${stats.biggestRivalry.count === 1 ? 'meeting' : 'meetings'}`
+                  : undefined
+              }
+            />
+          </div>
+
+          {daily.some((d) => d.count > 0) && (
+            <div className="rounded-lg border bg-card p-3 space-y-2">
+              <div className="flex items-center justify-between text-xs text-muted-foreground">
+                <span>Last 30 days</span>
+                <span>
+                  {daily.reduce((s, d) => s + d.count, 0)} duels
+                </span>
+              </div>
+              <Sparkline data={daily} />
+            </div>
+          )}
+
+          <div className="relative">
+            <Search className="h-4 w-4 absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+            <Input
+              type="search"
+              placeholder="Filter by name…"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              className="pl-8 pr-8"
+              aria-label="Filter duels by name"
+            />
+            {query && (
+              <button
+                type="button"
+                onClick={() => setQuery('')}
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                aria-label="Clear filter"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+
+          {filteredCount === 0 ? (
+            <div className="text-center py-8 space-y-2">
+              <p className="text-muted-foreground text-sm">
+                No duels match “{query}”.
+              </p>
+              <Button variant="outline" size="sm" onClick={() => setQuery('')}>
+                Clear filter
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <p className="text-xs text-muted-foreground">
+                Showing {filteredCount} of {total}{' '}
+                {total === 1 ? 'duel' : 'duels'}.
+              </p>
+              {filteredSections.map((section) => (
+                <section key={section.date} className="space-y-1">
+                  <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground sticky top-0 bg-background py-1 z-10">
+                    {section.date}
+                  </h2>
+                  <ul className="space-y-1">
+                    {section.entries.map((entry, idx) => (
+                      <li key={idx}>
+                        <DuelRow entry={entry} />
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              ))}
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
+function StatTile({
+  label,
+  value,
+  subtitle,
+}: {
+  label: string;
+  value: string;
+  subtitle?: string;
+}) {
+  return (
+    <div className="rounded-lg border bg-card p-3">
+      <div className="text-xs text-muted-foreground">{label}</div>
+      <div className="text-lg font-semibold truncate" title={value}>
+        {value}
+      </div>
+      {subtitle && (
+        <div className="text-xs text-muted-foreground truncate">
+          {subtitle}
         </div>
       )}
     </div>
   );
 }
 
-function parseHistorySections(
-  md: string,
-): { date: string; entries: string[] }[] {
+function Sparkline({ data }: { data: { date: string; count: number }[] }) {
+  const max = Math.max(1, ...data.map((d) => d.count));
+  const w = 100;
+  const h = 32;
+  const gap = 1;
+  const barW = (w - gap * (data.length - 1)) / data.length;
+  return (
+    <svg
+      viewBox={`0 0 ${w} ${h}`}
+      preserveAspectRatio="none"
+      className="w-full h-8"
+      role="img"
+      aria-label="Duels per day, last 30 days"
+    >
+      {data.map((d, i) => {
+        const barH = d.count === 0 ? 1 : (d.count / max) * (h - 2);
+        const x = i * (barW + gap);
+        const y = h - barH;
+        const opacity =
+          d.count === 0 ? 0.15 : 0.35 + (d.count / max) * 0.65;
+        return (
+          <rect
+            key={d.date}
+            x={x}
+            y={y}
+            width={barW}
+            height={barH}
+            rx={0.5}
+            className="fill-primary"
+            opacity={opacity}
+          >
+            <title>{`${d.date}: ${d.count} ${d.count === 1 ? 'duel' : 'duels'}`}</title>
+          </rect>
+        );
+      })}
+    </svg>
+  );
+}
+
+function DuelRow({ entry }: { entry: ParsedEntry }) {
+  const tie = entry.winner === null;
+  const aWon = !tie && entry.winner === entry.a;
+  const bWon = !tie && entry.winner === entry.b;
+  return (
+    <div className="flex items-stretch gap-2 text-sm">
+      <NameChip name={entry.a} won={aWon} dimmed={!tie && !aWon} />
+      <div
+        className={`shrink-0 self-center text-[10px] font-bold tracking-wider px-1.5 py-0.5 rounded ${
+          tie
+            ? 'bg-muted text-muted-foreground'
+            : 'bg-foreground/10 text-foreground/70'
+        }`}
+        aria-label={tie ? 'Tie' : 'versus'}
+      >
+        {tie ? 'TIE' : 'VS'}
+      </div>
+      <NameChip name={entry.b} won={bWon} dimmed={!tie && !bWon} alignRight />
+    </div>
+  );
+}
+
+function NameChip({
+  name,
+  won,
+  dimmed,
+  alignRight,
+}: {
+  name: string;
+  won: boolean;
+  dimmed: boolean;
+  alignRight?: boolean;
+}) {
+  return (
+    <div
+      className={`flex-1 min-w-0 rounded-md border px-2 py-1 flex items-center gap-1.5 ${
+        alignRight ? 'flex-row-reverse text-right' : ''
+      } ${
+        won
+          ? 'border-amber-500 bg-amber-50 text-amber-950 dark:bg-amber-500/10 dark:text-amber-100 font-semibold'
+          : dimmed
+            ? 'border-border bg-card text-muted-foreground'
+            : 'border-border bg-card text-foreground'
+      }`}
+      title={name}
+    >
+      {won && (
+        <Trophy
+          className="h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400"
+          aria-label="Winner"
+        />
+      )}
+      <span className="truncate min-w-0 flex-1">{name}</span>
+    </div>
+  );
+}
+
+function parseHistorySections(md: string): Section[] {
   if (!md.trim()) return [];
   const lines = md.split('\n');
-  const sections: { date: string; entries: string[] }[] = [];
-  let current: { date: string; entries: string[] } | null = null;
+  const sections: Section[] = [];
+  let current: Section | null = null;
   for (const line of lines) {
     const m = /^##\s+(.+)$/.exec(line);
     if (m) {
@@ -98,38 +341,93 @@ function parseHistorySections(
       continue;
     }
     if (current && line.startsWith('- ')) {
-      current.entries.push(line.slice(2));
+      const parsed = parseEntry(line.slice(2));
+      if (parsed) current.entries.push(parsed);
     }
   }
   return sections.reverse();
 }
 
-function countDuels(md: string): number {
-  const m = /^>\s*Auto-generated by DuelList\.\s*(\d+)\s*duels recorded\./m.exec(
-    md,
-  );
-  return m ? parseInt(m[1]!, 10) : 0;
-}
-
-function renderEntry(raw: string): React.ReactNode {
-  const stripped = raw.replace(/\s*\[[a-z0-9]{2,8}\]/gi, '');
-  const win = /^(.+?)\s*>\s*(.+)$/.exec(stripped);
-  if (win) {
-    return (
-      <>
-        <strong>{win[1]}</strong>
-        <span className="text-muted-foreground"> beat </span>
-        <span>{win[2]}</span>
-      </>
-    );
+function parseEntry(raw: string): ParsedEntry | null {
+  const stripped = raw.replace(/\s*\[[a-z0-9]{2,8}\]/gi, '').trim();
+  // Left won: "A > B"
+  const left = /^(.+?)\s*>\s*(.+)$/.exec(stripped);
+  if (left) {
+    const a = left[1]!.trim();
+    const b = left[2]!.trim();
+    return { raw, a, b, winner: a };
   }
+  // Right won: "A < B"
+  const right = /^(.+?)\s*<\s*(.+)$/.exec(stripped);
+  if (right) {
+    const a = right[1]!.trim();
+    const b = right[2]!.trim();
+    return { raw, a, b, winner: b };
+  }
+  // Tie: "A = B"
   const tie = /^(.+?)\s*=\s*(.+)$/.exec(stripped);
   if (tie) {
-    return (
-      <span className="text-muted-foreground">
-        {tie[1]} = {tie[2]} (tied)
-      </span>
-    );
+    const a = tie[1]!.trim();
+    const b = tie[2]!.trim();
+    return { raw, a, b, winner: null };
   }
-  return stripped;
+  return null;
+}
+
+type Stats = {
+  total: number;
+  ties: number;
+  topWinner: { name: string; wins: number } | null;
+  biggestRivalry: { a: string; b: string; count: number } | null;
+};
+
+function computeStats(sections: Section[]): Stats {
+  let total = 0;
+  let ties = 0;
+  const wins = new Map<string, number>();
+  const rivalries = new Map<string, { a: string; b: string; count: number }>();
+  for (const s of sections) {
+    for (const e of s.entries) {
+      total++;
+      if (e.winner === null) {
+        ties++;
+      } else {
+        wins.set(e.winner, (wins.get(e.winner) ?? 0) + 1);
+      }
+      const sorted = [e.a, e.b].sort();
+      const x = sorted[0]!;
+      const y = sorted[1]!;
+      const key = `${x}\u0000${y}`;
+      const r = rivalries.get(key);
+      if (r) r.count++;
+      else rivalries.set(key, { a: x, b: y, count: 1 });
+    }
+  }
+  let topWinner: Stats['topWinner'] = null;
+  for (const [name, w] of wins) {
+    if (!topWinner || w > topWinner.wins) topWinner = { name, wins: w };
+  }
+  let biggestRivalry: Stats['biggestRivalry'] = null;
+  for (const r of rivalries.values()) {
+    if (!biggestRivalry || r.count > biggestRivalry.count) biggestRivalry = r;
+  }
+  if (biggestRivalry && biggestRivalry.count < 2) biggestRivalry = null;
+  return { total, ties, topWinner, biggestRivalry };
+}
+
+function computeDailyCounts(
+  sections: Section[],
+  days: number,
+): { date: string; count: number }[] {
+  const counts = new Map<string, number>();
+  for (const s of sections) counts.set(s.date, s.entries.length);
+  const out: { date: string; count: number }[] = [];
+  const today = new Date();
+  for (let i = days - 1; i >= 0; i--) {
+    const d = new Date(today);
+    d.setDate(d.getDate() - i);
+    const key = d.toISOString().slice(0, 10);
+    out.push({ date: key, count: counts.get(key) ?? 0 });
+  }
+  return out;
 }

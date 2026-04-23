@@ -34,8 +34,9 @@ export function appendDuelToHistory(
 
   let entry: string;
   if (winner) {
-    const loser = winner.id === itemA.id ? itemB : itemA;
-    entry = `- ${winner.name} [${winner.id}] > ${loser.name} [${loser.id}]`;
+    // Preserve presentation order. ">" = left won, "<" = right won.
+    const op = winner.id === itemA.id ? '>' : '<';
+    entry = `- ${itemA.name} [${itemA.id}] ${op} ${itemB.name} [${itemB.id}]`;
   } else {
     entry = `- ${itemA.name} [${itemA.id}] = ${itemB.name} [${itemB.id}]`;
   }
@@ -109,7 +110,7 @@ export function tailParseAndAppend(
 // ---------------------------------------------------------------------------
 
 const DUEL_LINE_RE =
-  /^- .+ \[([a-z0-9]{4})\] [>=] .+ \[([a-z0-9]{4})\]$/;
+  /^- .+ \[([a-z0-9]{4})\] [><=] .+ \[([a-z0-9]{4})\]$/;
 
 export function parseRecentPairs(
   historyString: string,
