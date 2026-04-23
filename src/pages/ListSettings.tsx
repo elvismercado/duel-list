@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router';
 import { S } from '@/lib/strings';
 import { useList } from '@/hooks/useList';
 import { useExport } from '@/hooks/useExport';
+import { useFileSync } from '@/hooks/useFileSync';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -14,12 +15,17 @@ import {
 } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
-import { Undo2, Download, Trash2 } from 'lucide-react';
+import { Undo2, Download, Trash2, Link, Unlink } from 'lucide-react';
 
 export default function ListSettings() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { list, save, restoreItem, deleteList } = useList(id!);
+  const { supported, isSynced, needsRelink, linkFile, unlinkFile, syncToFile } = useFileSync(id);
+  const onSave = useCallback(
+    (l: import('@/types').ListConfig) => { syncToFile(l); },
+    [syncToFile],
+  );
+  const { list, save, restoreItem, deleteList } = useList(id!, onSave);
   const { exportList, exportHistory } = useExport();
   const [deleteOpen, setDeleteOpen] = useState(false);
 
@@ -135,7 +141,7 @@ export default function ListSettings() {
       {/* Export */}
       <div className="space-y-2">
         <h2 className="text-sm font-semibold text-muted-foreground">Export</h2>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
           <Button
             variant="outline"
             size="sm"
@@ -154,6 +160,45 @@ export default function ListSettings() {
           </Button>
         </div>
       </div>
+
+      {/* File Sync */}
+      {supported && (
+        <>
+          <Separator />
+          <div className="space-y-2">
+            <h2 className="text-sm font-semibold text-muted-foreground">
+              File sync
+            </h2>
+            {isSynced ? (
+              <div className="space-y-2">
+                <p className="text-sm text-muted-foreground">
+                  Linked — changes sync to file automatically.
+                </p>
+                <Button variant="outline" size="sm" onClick={unlinkFile}>
+                  <Unlink className="h-4 w-4 mr-1" />
+                  Unlink file
+                </Button>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {needsRelink && (
+                  <p className="text-sm text-destructive">
+                    File sync lost — permission denied. Re-link to restore.
+                  </p>
+                )}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => list && linkFile(list)}
+                >
+                  <Link className="h-4 w-4 mr-1" />
+                  Link to file
+                </Button>
+              </div>
+            )}
+          </div>
+        </>
+      )}
 
       <Separator />
 

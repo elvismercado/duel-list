@@ -15,12 +15,24 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
+      workbox: {
+        globPatterns: ['**/*.{js,css,html,svg,woff2}'],
+      },
       manifest: {
         name: 'DuelList',
         short_name: 'DuelList',
         description: 'Rank anything — one duel at a time.',
-        theme_color: '#ffffff',
+        start_url: '/',
+        display: 'standalone',
+        theme_color: '#18181b',
+        background_color: '#ffffff',
         icons: [
+          {
+            src: '/favicon.svg',
+            sizes: 'any',
+            type: 'image/svg+xml',
+            purpose: 'any',
+          },
           {
             src: '/icon-192.png',
             sizes: '192x192',
@@ -30,6 +42,12 @@ export default defineConfig({
             src: '/icon-512.png',
             sizes: '512x512',
             type: 'image/png',
+          },
+          {
+            src: '/icon-maskable-512.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'maskable',
           },
         ],
       },

@@ -93,10 +93,22 @@
 - [x] CSS animations: winner-grow, slide-in-up in `src/index.css`
 - [x] Build verification — `tsc --noEmit` + `vite build` pass with zero errors
 
-## Phase E: File Sync & PWA — NOT STARTED
+## Phase E: File Sync & PWA — COMPLETE
 
-- [ ] File System Access API integration
-- [ ] PWA service worker & offline support
+- [x] `src/lib/file-sync.ts` — File System Access API wrappers (writeToFileHandle, readFromFileHandle, pickFileForSave, pickFileForOpen, requestPermission, createCompanionHandle, isFileSystemAccessSupported)
+- [x] `src/file-system-access.d.ts` — TypeScript type declarations for File System Access API (queryPermission, requestPermission, showSaveFilePicker, showOpenFilePicker)
+- [x] `src/hooks/useFileSync.ts` — file sync hook (linkFile, unlinkFile, syncToFile, syncHistoryToFile, openFromFile, linkExistingHandle). Loads persisted handles from IndexedDB, verifies permissions, auto-creates companion `.duellist.md`
+- [x] `src/hooks/useList.ts` — added `onSave` callback parameter for file sync integration
+- [x] `src/hooks/useComparison.ts` — added `onDuel` callback parameter, calls after `saveList` + `appendDuelToHistory`
+- [x] `src/pages/Rankings.tsx` — sync indicator icons (FileCheck/FileX) in header, wired `useFileSync` → `useList` via `onSave`
+- [x] `src/pages/Duel.tsx` — wired `useFileSync` → `useComparison` via `onDuel` (syncs both list and history after each duel)
+- [x] `src/pages/ListSettings.tsx` — "Link to file" / "Unlink file" UI under Export section, file sync status, re-link prompt on permission loss
+- [x] `src/pages/Home.tsx` — "Open from file" button (File System Access API), opens file picker, parses markdown, stores handle, navigates to list
+- [x] PWA: `public/favicon.svg` — SVG icon (dark square with "D")
+- [x] PWA: `public/icon-192.png`, `public/icon-512.png`, `public/icon-maskable-512.png` — placeholder PNG icons
+- [x] PWA: `vite.config.ts` — updated VitePWA config: `start_url`, `display: standalone`, `background_color`, `theme_color`, maskable icon, workbox globPatterns
+- [x] PWA: `index.html` — added `<meta name="theme-color">`, `<meta name="description">`, `<link rel="icon">`, `<link rel="apple-touch-icon">`
+- [x] Build verification — `tsc --noEmit` passes, `vite build` produces `dist/sw.js` + `dist/manifest.webmanifest` with 13 precache entries
 
 ## Phase F: Polish — NOT STARTED
 

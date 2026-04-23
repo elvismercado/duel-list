@@ -3,7 +3,7 @@ import { getList, saveList as storageSave, deleteList as storageDelete } from '@
 import type { Item, ListConfig } from '@/types';
 import { generateShortId } from '@/lib/markdown';
 
-export function useList(id: string) {
+export function useList(id: string, onSave?: (list: ListConfig) => void) {
   const [list, setList] = useState<ListConfig | null>(() => getList(id));
 
   const reload = useCallback(() => {
@@ -14,8 +14,9 @@ export function useList(id: string) {
     (updated: ListConfig) => {
       storageSave(updated);
       setList(updated);
+      onSave?.(updated);
     },
-    [],
+    [onSave],
   );
 
   const addItems = useCallback(

@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router';
 import { S } from '@/lib/strings';
 import { sortItemsByElo } from '@/lib/ranking';
 import { useList } from '@/hooks/useList';
+import { useFileSync } from '@/hooks/useFileSync';
 import { Button } from '@/components/ui/button';
 import { AddItemsDialog } from '@/components/AddItemsDialog';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
@@ -12,12 +13,17 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Plus, Play, Settings, MoreVertical, Undo2, Trash2, Pencil } from 'lucide-react';
+import { Plus, Play, Settings, MoreVertical, Undo2, Trash2, Pencil, FileCheck, FileX } from 'lucide-react';
 
 export default function Rankings() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { list, addItems, renameItem, removeItem, restoreItem } = useList(id!);
+  const { supported, isSynced, needsRelink, syncToFile } = useFileSync(id);
+  const onSave = useCallback(
+    (list: import('@/types').ListConfig) => { syncToFile(list); },
+    [syncToFile],
+  );
+  const { list, addItems, renameItem, removeItem, restoreItem } = useList(id!, onSave);
   const [addOpen, setAddOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState('');
@@ -46,7 +52,15 @@ export default function Rankings() {
   return (
     <div className="p-4 max-w-lg mx-auto space-y-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold truncate">{list.name}</h1>
+        <div className="flex items-center gap-2">
+          <h1 className="text-2xl font-bold truncate">{list.name}</h1>
+          {supported && isSynced && (
+            <FileCheck className="h-4 w-4 text-green-500 shrink-0" />
+          )}
+          {supported && needsRelink && (
+            <FileX className="h-4 w-4 text-destructive shrink-0" />
+          )}
+        </div>
         <div className="flex gap-1">
           <Button
             size="icon"

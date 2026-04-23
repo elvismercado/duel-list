@@ -13,7 +13,7 @@ interface SessionState {
   prevRankMap: Map<string, number>;
 }
 
-export function useComparison(list: ListConfig) {
+export function useComparison(list: ListConfig, onDuel?: (list: ListConfig) => void) {
   const recentSkips = useRef(new Map<string, number>());
 
   const initSession = useCallback((): SessionState => {
@@ -69,7 +69,11 @@ export function useComparison(list: ListConfig) {
       saveList(updatedList);
 
       // Record history
+      // Record history
       appendDuelToHistory(list.id, list.name, itemA, itemB, winner);
+
+      // Notify caller for file sync
+      onDuel?.(updatedList);
 
       const record = createDuelRecord(itemA, itemB, winner, Date.now());
       const newCount = session.duelCount + 1;

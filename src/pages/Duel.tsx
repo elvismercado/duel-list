@@ -2,6 +2,7 @@ import { useEffect, useCallback, useState } from 'react';
 import { useParams, useNavigate } from 'react-router';
 import { S } from '@/lib/strings';
 import { useList } from '@/hooks/useList';
+import { useFileSync } from '@/hooks/useFileSync';
 import { useComparison } from '@/hooks/useComparison';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -12,6 +13,14 @@ import { SkipForward, Equal, Trophy, TrendingUp, TrendingDown, ArrowLeft } from 
 export default function Duel() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { syncToFile, syncHistoryToFile } = useFileSync(id);
+  const onDuel = useCallback(
+    (updated: import('@/types').ListConfig) => {
+      syncToFile(updated);
+      syncHistoryToFile();
+    },
+    [syncToFile, syncHistoryToFile],
+  );
   const { list, reload } = useList(id!);
 
   if (!list) {
@@ -34,15 +43,17 @@ export default function Duel() {
     );
   }
 
-  return <DuelSession list={list} onReload={reload} />;
+  return <DuelSession list={list} onReload={reload} onDuel={onDuel} />;
 }
 
 function DuelSession({
   list,
   onReload,
+  onDuel,
 }: {
   list: import('@/types').ListConfig;
   onReload: () => void;
+  onDuel?: (list: import('@/types').ListConfig) => void;
 }) {
   const navigate = useNavigate();
   const {
@@ -54,7 +65,7 @@ function DuelSession({
     restartSession,
     biggestMovers,
     topThree,
-  } = useComparison(list);
+  } = useComparison(list, onDuel);
 
   const [lastWinner, setLastWinner] = useState<string | null>(null);
 
