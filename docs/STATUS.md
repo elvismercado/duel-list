@@ -110,8 +110,14 @@
 - [x] PWA: `index.html` — added `<meta name="theme-color">`, `<meta name="description">`, `<link rel="icon">`, `<link rel="apple-touch-icon">`
 - [x] Build verification — `tsc --noEmit` passes, `vite build` produces `dist/sw.js` + `dist/manifest.webmanifest` with 13 precache entries
 
-## Phase F: Polish — NOT STARTED
+## Phase F: Essential Polish — COMPLETE
 
-- [ ] CSS transitions & animations
-- [ ] Responsive design pass
-- [ ] Accessibility audit
+- [x] **Dark mode persistence** — `Layout.tsx` reads persisted theme on mount via `applyTheme()`, listens for `prefers-color-scheme` media query changes for "system" mode. `AppSettings.tsx` fixed to apply system mode correctly.
+- [x] **Storage quota banner** — `Layout.tsx` shows persistent warning banner via `isQuotaNearLimit()` with link to export settings when >80% full.
+- [x] **Post-duel animations** — Added `loser-shrink` keyframe/class in `index.css`. Winner card scales up (1.08), loser shrinks (0.92 + fade). Animation timeout increased from 300ms to 600ms.
+- [x] **ARIA labels** — Added `aria-label` to all icon-only buttons: Rankings.tsx (add, settings, item menu, restore), Home.tsx (settings), ListSettings.tsx (restore). Added `aria-label` to inline rename input in Rankings.tsx.
+- [x] **Interactive card a11y** — Duel cards and ListCard: `role="button"`, `tabIndex={0}`, `onKeyDown` (Enter/Space), `aria-label`, `focus-visible:ring-2`.
+- [x] **Aria-live regions** — `aria-live="polite"` on session complete summary and duel counter in Duel.tsx.
+- [x] **Touch targets** — `min-h-[44px] min-w-[44px]` on all icon buttons: Layout (back), Rankings (add, settings, ⋮ menu, restore), Home (settings), ListSettings (restore).
+- [x] **List name debounce + blur** — ListSettings.tsx uses local `nameValue` state with 500ms debounce auto-save and immediate save on blur.
+- [x] Build verification — `tsc --noEmit` passes, `vite build` succeeds (13 precache entries, sw.js generated).

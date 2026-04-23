@@ -65,16 +65,18 @@ export default function Rankings() {
           <Button
             size="icon"
             variant="ghost"
+            className="min-h-[44px] min-w-[44px]"
             onClick={() => setAddOpen(true)}
-            title="Add items"
+            aria-label="Add items"
           >
             <Plus className="h-5 w-5" />
           </Button>
           <Button
             size="icon"
             variant="ghost"
+            className="min-h-[44px] min-w-[44px]"
             onClick={() => navigate(`/list/${id}/settings`)}
-            title="Settings"
+            aria-label="List settings"
           >
             <Settings className="h-5 w-5" />
           </Button>
@@ -119,6 +121,7 @@ export default function Rankings() {
                     if (e.key === 'Enter') handleRename(item.id);
                     if (e.key === 'Escape') setEditingId(null);
                   }}
+                  aria-label={`Rename ${item.name}`}
                   autoFocus
                 />
               ) : (
@@ -129,7 +132,7 @@ export default function Rankings() {
               </span>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-7 w-7">
+                  <Button variant="ghost" size="icon" className="h-7 w-7 min-h-[44px] min-w-[44px]" aria-label={`Options for ${item.name}`}>
                     <MoreVertical className="h-4 w-4" />
                   </Button>
                 </DropdownMenuTrigger>
@@ -174,9 +177,9 @@ export default function Rankings() {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-7 w-7"
+                  className="h-7 w-7 min-h-[44px] min-w-[44px]"
                   onClick={() => restoreItem(item.id)}
-                  title="Restore"
+                  aria-label={`Restore ${item.name}`}
                 >
                   <Undo2 className="h-4 w-4" />
                 </Button>

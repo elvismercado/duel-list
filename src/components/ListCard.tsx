@@ -29,8 +29,12 @@ export function ListCard({ entry, onClick }: ListCardProps) {
 
   return (
     <Card
-      className="cursor-pointer hover:bg-accent/50 transition-colors"
+      role="button"
+      tabIndex={0}
+      aria-label={entry.name}
+      className="cursor-pointer hover:bg-accent/50 focus-visible:ring-2 focus-visible:ring-ring transition-colors"
       onClick={onClick}
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick(); } }}
     >
       <CardContent className="p-4 space-y-1">
         <div className="flex items-center justify-between">

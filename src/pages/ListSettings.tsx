@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router';
 import { S } from '@/lib/strings';
 import { useList } from '@/hooks/useList';
@@ -40,8 +40,25 @@ export default function ListSettings() {
 
   const removedItems = list.items.filter((i) => i.removed);
 
-  function handleNameChange(name: string) {
-    save({ ...list!, name });
+  // Debounced name save
+  const [nameValue, setNameValue] = useState(list.name);
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>(null);
+  const saveName = useCallback(
+    (name: string) => {
+      save({ ...list!, name });
+    },
+    [list, save],
+  );
+
+  useEffect(() => {
+    if (nameValue === list.name) return;
+    debounceRef.current = setTimeout(() => saveName(nameValue), 500);
+    return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
+  }, [nameValue, list.name, saveName]);
+
+  function handleNameBlur() {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    if (nameValue !== list!.name) saveName(nameValue);
   }
 
   function handleKFactorChange(value: string) {
@@ -65,8 +82,9 @@ export default function ListSettings() {
       <div className="space-y-2">
         <label className="text-sm font-medium">Name</label>
         <Input
-          value={list.name}
-          onChange={(e) => handleNameChange(e.target.value)}
+          value={nameValue}
+          onChange={(e) => setNameValue(e.target.value)}
+          onBlur={handleNameBlur}
         />
       </div>
 
@@ -126,9 +144,9 @@ export default function ListSettings() {
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-7 w-7"
+                className="h-7 w-7 min-h-[44px] min-w-[44px]"
                 onClick={() => restoreItem(item.id)}
-                title="Restore"
+                aria-label={`Restore ${item.name}`}
               >
                 <Undo2 className="h-4 w-4" />
               </Button>

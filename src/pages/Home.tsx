@@ -70,7 +70,7 @@ export default function Home() {
     <div className="p-4 max-w-lg mx-auto space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">{S.app.name}</h1>
-        <Button variant="ghost" size="icon" onClick={() => navigate('/settings')}>
+        <Button variant="ghost" size="icon" className="min-h-[44px] min-w-[44px]" onClick={() => navigate('/settings')} aria-label="App settings">
           <Settings className="h-5 w-5" />
         </Button>
       </div>

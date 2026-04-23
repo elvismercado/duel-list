@@ -77,8 +77,8 @@ function DuelSession({
       setLastWinner(winner?.id ?? 'tie');
       const updated = recordDuel(winner);
       if (updated) onReload();
-      // Clear animation after a short delay
-      setTimeout(() => setLastWinner(null), 300);
+      // Let animation play, then clear for next pair
+      setTimeout(() => setLastWinner(null), 600);
     },
     [recordDuel, onReload],
   );
@@ -105,7 +105,7 @@ function DuelSession({
     const movers = biggestMovers();
     const top = topThree();
     return (
-      <div className="p-4 max-w-lg mx-auto space-y-6">
+      <div className="p-4 max-w-lg mx-auto space-y-6" aria-live="polite">
         <div className="text-center space-y-2">
           <Trophy className="h-10 w-10 mx-auto text-yellow-500" />
           <h1 className="text-2xl font-bold">{S.duel.sessionComplete}</h1>
@@ -200,7 +200,7 @@ function DuelSession({
       <div className="flex items-center justify-between">
         <h1 className="text-lg font-semibold truncate">{list.name}</h1>
         {list.sessionLength > 0 && (
-          <span className="text-sm text-muted-foreground tabular-nums">
+          <span className="text-sm text-muted-foreground tabular-nums" aria-live="polite" aria-atomic="true">
             {duelCount}/{list.sessionLength}
           </span>
         )}
@@ -212,10 +212,14 @@ function DuelSession({
 
       <div className="grid grid-cols-2 gap-3">
         <Card
-          className={`cursor-pointer hover:border-primary transition-all ${
+          role="button"
+          tabIndex={0}
+          aria-label={`Pick ${itemA.name}`}
+          className={`cursor-pointer hover:border-primary focus-visible:ring-2 focus-visible:ring-ring transition-all ${
             lastWinner === itemA.id ? 'animate-winner-grow' : ''
-          }`}
+          }${lastWinner && lastWinner !== 'tie' && lastWinner !== itemA.id ? ' animate-loser-shrink' : ''}`}
           onClick={() => handlePick(itemA)}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handlePick(itemA); } }}
         >
           <CardContent className="p-6 text-center">
             <p className="font-semibold text-lg">{itemA.name}</p>
@@ -226,10 +230,14 @@ function DuelSession({
         </Card>
 
         <Card
-          className={`cursor-pointer hover:border-primary transition-all ${
+          role="button"
+          tabIndex={0}
+          aria-label={`Pick ${itemB.name}`}
+          className={`cursor-pointer hover:border-primary focus-visible:ring-2 focus-visible:ring-ring transition-all ${
             lastWinner === itemB.id ? 'animate-winner-grow' : ''
-          }`}
+          }${lastWinner && lastWinner !== 'tie' && lastWinner !== itemB.id ? ' animate-loser-shrink' : ''}`}
           onClick={() => handlePick(itemB)}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handlePick(itemB); } }}
         >
           <CardContent className="p-6 text-center">
             <p className="font-semibold text-lg">{itemB.name}</p>
