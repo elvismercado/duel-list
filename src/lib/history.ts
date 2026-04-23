@@ -140,3 +140,108 @@ export function parseRecentPairs(
 export function createPairKey(id1: string, id2: string): string {
   return id1 < id2 ? `${id1}:${id2}` : `${id2}:${id1}`;
 }
+
+// ---------------------------------------------------------------------------
+// Per-item history scan
+// ---------------------------------------------------------------------------
+
+export type ItemDuelRecord = {
+  tsIso: string | null;
+  opponentId: string;
+  opponentName: string;
+  outcome: 'win' | 'loss' | 'tie';
+};
+
+// Captures: nameA, idA, op, nameB, idB, optional @<ts>
+const FULL_DUEL_LINE_RE =
+  /^- (.+?) \[([a-z0-9]{4})\] ([><=]) (.+?) \[([a-z0-9]{4})\](?: @(\S+))?$/;
+
+function* iterDuelLines(historyString: string): Generator<{
+  nameA: string;
+  idA: string;
+  op: '>' | '<' | '=';
+  nameB: string;
+  idB: string;
+  tsIso: string | null;
+}> {
+  if (!historyString) return;
+  const lines = historyString.split('\n');
+  for (const line of lines) {
+    const m = FULL_DUEL_LINE_RE.exec(line);
+    if (!m) continue;
+    const tsRaw = m[6] ?? null;
+    const tsIso = tsRaw && /^\d{4}-\d{2}-\d{2}T/.test(tsRaw) ? tsRaw : null;
+    yield {
+      nameA: m[1]!,
+      idA: m[2]!,
+      op: m[3] as '>' | '<' | '=',
+      nameB: m[4]!,
+      idB: m[5]!,
+      tsIso,
+    };
+  }
+}
+
+/**
+ * Return up to `limit` duels involving `itemId`, newest first.
+ * Iterates the file bottom-up; matches are name-stable across renames because
+ * the lookup key is the item ID.
+ */
+export function parseHistoryByItem(
+  historyString: string,
+  itemId: string,
+  limit = 10,
+): ItemDuelRecord[] {
+  const records: ItemDuelRecord[] = [];
+  const all = [...iterDuelLines(historyString)];
+  for (let i = all.length - 1; i >= 0 && records.length < limit; i--) {
+    const e = all[i]!;
+    const isA = e.idA === itemId;
+    const isB = e.idB === itemId;
+    if (!isA && !isB) continue;
+    let outcome: 'win' | 'loss' | 'tie';
+    if (e.op === '=') outcome = 'tie';
+    else if (e.op === '>') outcome = isA ? 'win' : 'loss';
+    else outcome = isB ? 'win' : 'loss';
+    records.push({
+      tsIso: e.tsIso,
+      opponentId: isA ? e.idB : e.idA,
+      opponentName: isA ? e.nameB : e.nameA,
+      outcome,
+    });
+  }
+  return records;
+}
+
+export type ItemStats = {
+  wins: number;
+  losses: number;
+  ties: number;
+  total: number;
+  lastDuelTs: number | null;
+};
+
+export function computeItemStats(
+  historyString: string,
+  itemId: string,
+): ItemStats {
+  let wins = 0;
+  let losses = 0;
+  let ties = 0;
+  let lastDuelTs: number | null = null;
+  for (const e of iterDuelLines(historyString)) {
+    const isA = e.idA === itemId;
+    const isB = e.idB === itemId;
+    if (!isA && !isB) continue;
+    if (e.op === '=') ties++;
+    else if (e.op === '>') (isA ? wins++ : losses++);
+    else (isB ? wins++ : losses++);
+    if (e.tsIso) {
+      const ts = new Date(e.tsIso).getTime();
+      if (!isNaN(ts) && (lastDuelTs === null || ts > lastDuelTs)) {
+        lastDuelTs = ts;
+      }
+    }
+  }
+  return { wins, losses, ties, total: wins + losses + ties, lastDuelTs };
+}

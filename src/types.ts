@@ -8,6 +8,8 @@ export interface Item {
   comparisonCount: number;
   added: string;
   removed?: boolean;
+  /** Free-text user notes about this item. Empty/undefined when none. */
+  notes?: string;
 }
 
 export interface DuelRecord {
@@ -26,7 +28,19 @@ export interface ListConfig {
   items: Item[];
   /** Display mode for ranked items: rank position (default) or ELO score. */
   displayMode?: 'rank' | 'elo';
+  /** Sort order applied to the rankings list view. */
+  sortMode?: SortMode;
 }
+
+export type SortMode =
+  | 'rank-desc'
+  | 'rank-asc'
+  | 'elo-desc'
+  | 'elo-asc'
+  | 'added-desc'
+  | 'added-asc'
+  | 'name-asc'
+  | 'name-desc';
 
 export interface AppSettings {
   firstRunDone: boolean;

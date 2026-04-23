@@ -1,5 +1,5 @@
 import { parse as yamlParse, stringify as yamlStringify } from 'yaml';
-import type { Item, ListConfig } from '@/types';
+import type { Item, ListConfig, SortMode } from '@/types';
 import { formatLocalDate } from '@/lib/datetime';
 
 // ---------------------------------------------------------------------------
@@ -32,6 +32,7 @@ export function parseMarkdown(raw: string): ListConfig {
     kFactor,
     created,
     items: [...active, ...removed],
+    ...(frontmatter.sortMode ? { sortMode: frontmatter.sortMode } : {}),
   };
 }
 
@@ -82,11 +83,24 @@ interface ParsedFrontmatter {
   sessionLength?: number;
   kFactor?: number;
   created?: string;
+  sortMode?: SortMode;
 }
+
+const SORT_MODES: SortMode[] = [
+  'rank-desc',
+  'rank-asc',
+  'elo-desc',
+  'elo-asc',
+  'added-desc',
+  'added-asc',
+  'name-asc',
+  'name-desc',
+];
 
 function parseFrontmatter(yaml: string): ParsedFrontmatter {
   const obj = yamlParse(yaml) as Record<string, unknown> | null;
   if (!obj || typeof obj !== 'object') return {};
+  const sortRaw = obj.sort_mode;
   return {
     id: typeof obj.id === 'string' ? obj.id : undefined,
     name: typeof obj.name === 'string' ? obj.name : undefined,
@@ -97,6 +111,10 @@ function parseFrontmatter(yaml: string): ParsedFrontmatter {
     kFactor:
       typeof obj.k_factor === 'number' ? obj.k_factor : undefined,
     created: typeof obj.created === 'string' ? obj.created : undefined,
+    sortMode:
+      typeof sortRaw === 'string' && (SORT_MODES as string[]).includes(sortRaw)
+        ? (sortRaw as SortMode)
+        : undefined,
   };
 }
 
@@ -108,6 +126,9 @@ function stringifyFrontmatter(config: ListConfig): string {
     k_factor: config.kFactor,
     created: config.created,
   };
+  if (config.sortMode) {
+    obj.sort_mode = config.sortMode;
+  }
   return yamlStringify(obj, { indent: 2 });
 }
 
@@ -125,6 +146,7 @@ interface ItemJson {
   comparisons?: number;
   added?: string;
   removed?: boolean;
+  notes?: string;
 }
 
 function parseItems(content: string): { active: Item[]; removed: Item[] } {
@@ -176,6 +198,7 @@ function parseItemSection(section: string): Item[] {
       comparisonCount: json.comparisons ?? 0,
       added: json.added ?? today,
       removed: json.removed ?? undefined,
+      notes: typeof json.notes === 'string' && json.notes.length > 0 ? json.notes : undefined,
     });
   }
 
@@ -197,6 +220,9 @@ function serializeItemJson(item: Item): string {
   };
   if (item.removed) {
     obj.removed = true;
+  }
+  if (item.notes && item.notes.length > 0) {
+    obj.notes = item.notes;
   }
   return JSON.stringify(obj);
 }

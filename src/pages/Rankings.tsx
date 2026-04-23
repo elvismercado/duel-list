@@ -1,13 +1,16 @@
-import { useState, useCallback } from 'react';
-import { useParams, useNavigate } from 'react-router';
+import { useState, useCallback, useMemo } from 'react';
+import { useParams, useNavigate, useSearchParams } from 'react-router';
 import { S } from '@/lib/strings';
-import { sortItemsByElo } from '@/lib/ranking';
+import { sortItemsByElo, applyDisplaySort } from '@/lib/ranking';
 import { useList } from '@/hooks/useList';
 import { useFileSync } from '@/hooks/useFileSync';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { AddItemsDialog } from '@/components/AddItemsDialog';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
+import { ItemDetailsDialog } from '@/components/ItemDetailsDialog';
+import { getHistory } from '@/lib/storage';
+import type { SortMode } from '@/types';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,12 +18,20 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
   Plus,
   Play,
   Settings,
   MoreVertical,
   Trash2,
   Pencil,
+  Info,
   FileCheck,
   FileX,
   FileQuestion,
@@ -31,19 +42,44 @@ import {
   Swords,
 } from 'lucide-react';
 
+const SORT_MODES: SortMode[] = [
+  'rank-desc',
+  'rank-asc',
+  'elo-desc',
+  'elo-asc',
+  'added-desc',
+  'added-asc',
+  'name-asc',
+  'name-desc',
+];
+
+const SORT_LABELS: Record<SortMode, string> = {
+  'rank-desc': S.ranking.sortRankDesc,
+  'rank-asc': S.ranking.sortRankAsc,
+  'elo-desc': S.ranking.sortEloDesc,
+  'elo-asc': S.ranking.sortEloAsc,
+  'added-desc': S.ranking.sortAddedDesc,
+  'added-asc': S.ranking.sortAddedAsc,
+  'name-asc': S.ranking.sortNameAsc,
+  'name-desc': S.ranking.sortNameDesc,
+};
+
 export default function Rankings() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { supported, isSynced, needsRelink, syncToFile } = useFileSync(id);
   const onSave = useCallback(
     (list: import('@/types').ListConfig) => { syncToFile(list); },
     [syncToFile],
   );
-  const { list, save, addItems, renameItem, removeItem } = useList(id!, onSave);
+  const { list, save, addItems, renameItem, removeItem, setItemNotes } = useList(id!, onSave);
   const [addOpen, setAddOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState('');
   const [removeTarget, setRemoveTarget] = useState<{ id: string; name: string } | null>(null);
+  const [detailsId, setDetailsId] = useState<string | null>(null);
+  const historyMd = useMemo(() => (id ? getHistory(id) : ''), [id, detailsId]);
 
   if (!list) {
     return (
@@ -54,9 +90,17 @@ export default function Rankings() {
     );
   }
 
-  const activeItems = sortItemsByElo(list.items.filter((i) => !i.removed));
-  const canDuel = activeItems.length >= 2;
+  const rankedByElo = sortItemsByElo(list.items.filter((i) => !i.removed));
+  const rankById = new Map(rankedByElo.map((it, idx) => [it.id, idx + 1]));
+  const urlSort = searchParams.get('sort');
+  const sortMode: SortMode =
+    (SORT_MODES as string[]).includes(urlSort ?? '')
+      ? (urlSort as SortMode)
+      : list.sortMode ?? 'rank-desc';
+  const activeItems = applyDisplaySort(rankedByElo, sortMode);
+  const canDuel = rankedByElo.length >= 2;
   const displayMode: 'rank' | 'elo' = list.displayMode ?? 'rank';
+  const detailsItem = detailsId ? list.items.find((i) => i.id === detailsId) ?? null : null;
 
   function handleRename(itemId: string) {
     const trimmed = editValue.trim();
@@ -68,6 +112,16 @@ export default function Rankings() {
 
   function toggleDisplayMode() {
     save({ ...list!, displayMode: displayMode === 'rank' ? 'elo' : 'rank' });
+  }
+
+  function handleSortChange(next: SortMode) {
+    const params = new URLSearchParams(searchParams);
+    if (next === 'rank-desc') params.delete('sort');
+    else params.set('sort', next);
+    setSearchParams(params, { replace: true });
+    if ((list?.sortMode ?? 'rank-desc') !== next) {
+      save({ ...list!, sortMode: next });
+    }
   }
 
   return (
@@ -133,7 +187,19 @@ export default function Rankings() {
       )}
 
       {activeItems.length > 0 && (
-        <div className="flex justify-end">
+        <div className="flex items-center justify-end gap-2 flex-wrap">
+          <Select value={sortMode} onValueChange={(v) => handleSortChange(v as SortMode)}>
+            <SelectTrigger className="w-auto h-9" aria-label={S.ranking.sortLabel}>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {SORT_MODES.map((m) => (
+                <SelectItem key={m} value={m}>
+                  {SORT_LABELS[m]}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           <Button
             variant="outline"
             size="sm"
@@ -165,7 +231,7 @@ export default function Rankings() {
         </div>
       ) : (
         <ul className="space-y-1">
-          {activeItems.map((item, idx) => (
+          {activeItems.map((item) => (
             <li
               key={item.id}
               className="flex items-center gap-3 rounded-md border p-3 bg-card"
@@ -174,7 +240,7 @@ export default function Rankings() {
                 className="text-muted-foreground font-mono text-sm w-12 text-right shrink-0 tabular-nums"
                 title={displayMode === 'rank' ? S.ranking.rankTooltip : S.ranking.eloTooltip}
               >
-                {displayMode === 'rank' ? `#${idx + 1}` : Math.round(item.eloScore)}
+                {displayMode === 'rank' ? `#${rankById.get(item.id) ?? '?'}` : Math.round(item.eloScore)}
               </span>
               {editingId === item.id ? (
                 <div className="flex items-center gap-1 flex-1 min-w-0">
@@ -221,6 +287,10 @@ export default function Rankings() {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => setDetailsId(item.id)}>
+                    <Info className="h-4 w-4 mr-2" />
+                    {S.ranking.detailsAction}
+                  </DropdownMenuItem>
                   <DropdownMenuItem
                     onClick={() => {
                       setEditingId(item.id);
@@ -261,6 +331,18 @@ export default function Rankings() {
           setRemoveTarget(null);
         }}
         onCancel={() => setRemoveTarget(null)}
+      />
+
+      <ItemDetailsDialog
+        open={!!detailsItem}
+        onClose={() => setDetailsId(null)}
+        listId={id!}
+        item={detailsItem}
+        rank={detailsItem ? rankById.get(detailsItem.id) ?? 0 : 0}
+        historyMd={historyMd}
+        onSaveNotes={(text) => {
+          if (detailsItem) setItemNotes(detailsItem.id, text);
+        }}
       />
     </div>
   );

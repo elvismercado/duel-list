@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Link, useParams, useNavigate } from 'react-router';
+import { Link, useParams, useNavigate, useSearchParams } from 'react-router';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { S } from '@/lib/strings';
@@ -34,7 +34,16 @@ export default function History() {
   const { exportHistory } = useExport();
   const list = id ? getList(id) : null;
   const [content] = useState(() => (id ? getHistory(id) : ''));
-  const [query, setQuery] = useState('');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [query, setQueryRaw] = useState(() => searchParams.get('q') ?? '');
+
+  const setQuery = (next: string) => {
+    setQueryRaw(next);
+    const params = new URLSearchParams(searchParams);
+    if (next) params.set('q', next);
+    else params.delete('q');
+    setSearchParams(params, { replace: true });
+  };
 
   const sections = useMemo(() => parseHistorySections(content), [content]);
   const total = useMemo(

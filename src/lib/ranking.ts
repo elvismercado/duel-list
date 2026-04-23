@@ -1,4 +1,5 @@
 import type { Item } from '@/types';
+import type { SortMode } from '@/types';
 
 // ---------------------------------------------------------------------------
 // ELO calculation
@@ -55,6 +56,35 @@ export function getItemRank(
 ): number {
   const idx = sortedItems.findIndex((i) => i.id === targetItemId);
   return idx === -1 ? -1 : idx + 1;
+}
+
+/**
+ * Reorder a canonical-by-ELO array for display only. Rank numbers (1..N) come
+ * from the input ELO order; this just permutes for the user-chosen view.
+ */
+export function applyDisplaySort(
+  itemsSortedByElo: Item[],
+  mode: SortMode,
+): Item[] {
+  const a = [...itemsSortedByElo];
+  switch (mode) {
+    case 'rank-desc':
+      return a;
+    case 'rank-asc':
+      return a.reverse();
+    case 'elo-desc':
+      return a.sort((x, y) => y.eloScore - x.eloScore);
+    case 'elo-asc':
+      return a.sort((x, y) => x.eloScore - y.eloScore);
+    case 'added-desc':
+      return a.sort((x, y) => (y.added ?? '').localeCompare(x.added ?? ''));
+    case 'added-asc':
+      return a.sort((x, y) => (x.added ?? '').localeCompare(y.added ?? ''));
+    case 'name-asc':
+      return a.sort((x, y) => x.name.localeCompare(y.name));
+    case 'name-desc':
+      return a.sort((x, y) => y.name.localeCompare(x.name));
+  }
 }
 
 // ---------------------------------------------------------------------------

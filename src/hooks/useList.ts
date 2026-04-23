@@ -107,5 +107,22 @@ export function useList(id: string, onSave?: (list: ListConfig) => void) {
     storageDelete(id);
   }, [id]);
 
-  return { list, save, reload, addItems, renameItem, removeItem, restoreItem, deleteList: remove };
+  const setItemNotes = useCallback(
+    (itemId: string, text: string) => {
+      if (!list) return;
+      const trimmed = text.trim();
+      const updated = {
+        ...list,
+        items: list.items.map((i) =>
+          i.id === itemId
+            ? { ...i, notes: trimmed.length > 0 ? trimmed : undefined }
+            : i,
+        ),
+      };
+      save(updated);
+    },
+    [list, save],
+  );
+
+  return { list, save, reload, addItems, renameItem, removeItem, restoreItem, setItemNotes, deleteList: remove };
 }
