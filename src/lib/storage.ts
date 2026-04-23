@@ -109,6 +109,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   theme: 'system',
   homeSortOrder: 'recent',
   customListOrder: [],
+  duelMode: 'side-by-side',
 };
 
 export function getSettings(): AppSettings {

@@ -33,6 +33,11 @@ export default function AppSettingsPage() {
     }
   }
 
+  function handleDuelModeChange(mode: string) {
+    updateSettings({ duelMode: mode as 'side-by-side' | 'swipe' });
+    setSettings(getSettings());
+  }
+
   return (
     <div className="p-4 max-w-lg mx-auto space-y-6">
       <h1 className="text-2xl font-bold">{S.settings.title}</h1>
@@ -53,6 +58,26 @@ export default function AppSettingsPage() {
             <SelectItem value="dark">Dark</SelectItem>
           </SelectContent>
         </Select>
+      </div>
+
+      {/* Duel mode */}
+      <div className="space-y-2">
+        <label className="text-sm font-medium">Duel mode</label>
+        <Select
+          value={settings.duelMode ?? 'side-by-side'}
+          onValueChange={handleDuelModeChange}
+        >
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="side-by-side">Side-by-side cards</SelectItem>
+            <SelectItem value="swipe">Swipe</SelectItem>
+          </SelectContent>
+        </Select>
+        <p className="text-xs text-muted-foreground">
+          Swipe mode shows one card at a time — swipe right to pick, left to reject.
+        </p>
       </div>
 
       <Separator />

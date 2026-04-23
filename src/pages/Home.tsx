@@ -13,10 +13,12 @@ import {
 import { Plus, Upload, Settings, FolderOpen } from 'lucide-react';
 import { ListCard } from '@/components/ListCard';
 import { ListCreateDialog } from '@/components/ListCreateDialog';
+import { ImportConflictDialog } from '@/components/ImportConflictDialog';
 import { useListRegistry } from '@/hooks/useListRegistry';
 import { useFileSync } from '@/hooks/useFileSync';
 import { saveFileHandle } from '@/lib/storage';
 import { generateShortId } from '@/lib/markdown';
+import type { ListConfig } from '@/types';
 
 export default function Home() {
   const settings = getSettings();
@@ -27,11 +29,21 @@ export default function Home() {
     changeSortOrder,
     createList,
     importList,
+    importListWithChoice,
     refresh,
+    updateCustomOrder,
   } = useListRegistry();
   const [createOpen, setCreateOpen] = useState(false);
+  const [reorderMode, setReorderMode] = useState(false);
+  const [draggingId, setDraggingId] = useState<string | null>(null);
+  const dragOverIdRef = useRef<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { supported, openFromFile } = useFileSync(undefined);
+  const [conflict, setConflict] = useState<{
+    existing: ListConfig;
+    parsed: ListConfig;
+    handle?: FileSystemFileHandle;
+  } | null>(null);
 
   if (!settings.firstRunDone) {
     return <Navigate to="/welcome" replace />;
@@ -48,8 +60,12 @@ export default function Home() {
     const reader = new FileReader();
     reader.onload = () => {
       const text = reader.result as string;
-      const id = importList(text);
-      navigate(`/list/${id}`);
+      const result = importList(text);
+      if (result.status === 'conflict') {
+        setConflict({ existing: result.existing, parsed: result.parsed });
+      } else {
+        navigate(`/list/${result.id}`);
+      }
     };
     reader.readAsText(file);
     e.target.value = '';
@@ -58,12 +74,58 @@ export default function Home() {
   async function handleOpenFile() {
     const result = await openFromFile();
     if (!result) return;
-    // Assign a new ID to avoid collisions
-    result.list.id = generateShortId();
+    const existingId = result.list.id;
+    if (existingId) {
+      // Check if a list with this ID already exists
+      const { getList } = await import('@/lib/storage');
+      const existing = getList(existingId);
+      if (existing) {
+        setConflict({ existing, parsed: result.list, handle: result.handle });
+        return;
+      }
+    } else {
+      result.list.id = generateShortId();
+    }
     saveList(result.list);
     await saveFileHandle(result.list.id, result.handle);
     refresh();
     navigate(`/list/${result.list.id}`);
+  }
+
+  async function resolveConflict(choice: 'replace' | 'new') {
+    if (!conflict) return;
+    const id = importListWithChoice(conflict.parsed, choice);
+    if (conflict.handle) {
+      await saveFileHandle(id, conflict.handle);
+    }
+    setConflict(null);
+    navigate(`/list/${id}`);
+  }
+
+  function reorder(fromId: string, toId: string) {
+    if (fromId === toId) return;
+    const ids = lists.map((l) => l.id);
+    const fromIdx = ids.indexOf(fromId);
+    const toIdx = ids.indexOf(toId);
+    if (fromIdx === -1 || toIdx === -1) return;
+    const next = [...ids];
+    const [moved] = next.splice(fromIdx, 1);
+    if (moved === undefined) return;
+    next.splice(toIdx, 0, moved);
+    updateCustomOrder(next);
+  }
+
+  function moveBy(id: string, delta: -1 | 1) {
+    const ids = lists.map((l) => l.id);
+    const idx = ids.indexOf(id);
+    const nextIdx = idx + delta;
+    if (idx === -1 || nextIdx < 0 || nextIdx >= ids.length) return;
+    const next = [...ids];
+    const a = next[idx]!;
+    const b = next[nextIdx]!;
+    next[idx] = b;
+    next[nextIdx] = a;
+    updateCustomOrder(next);
   }
 
   return (
@@ -116,6 +178,16 @@ export default function Home() {
               </SelectContent>
             </Select>
             <div className="flex gap-2">
+              {sortOrder === 'custom' && (
+                <Button
+                  size="sm"
+                  variant={reorderMode ? 'default' : 'outline'}
+                  onClick={() => setReorderMode((v) => !v)}
+                  aria-pressed={reorderMode}
+                >
+                  {reorderMode ? 'Done' : 'Reorder'}
+                </Button>
+              )}
               <Button size="sm" onClick={() => setCreateOpen(true)}>
                 <Plus className="h-4 w-4 mr-1" />
                 New
@@ -138,11 +210,30 @@ export default function Home() {
           </div>
 
           <div className="space-y-2">
-            {lists.map((entry) => (
+            {lists.map((entry, idx) => (
               <ListCard
                 key={entry.id}
                 entry={entry}
                 onClick={() => navigate(`/list/${entry.id}`)}
+                reorderMode={reorderMode && sortOrder === 'custom'}
+                isDragging={draggingId === entry.id}
+                onDragStart={() => setDraggingId(entry.id)}
+                onDragOver={() => {
+                  dragOverIdRef.current = entry.id;
+                }}
+                onDrop={() => {
+                  if (draggingId && dragOverIdRef.current) {
+                    reorder(draggingId, dragOverIdRef.current);
+                  }
+                  setDraggingId(null);
+                  dragOverIdRef.current = null;
+                }}
+                onDragEnd={() => {
+                  setDraggingId(null);
+                  dragOverIdRef.current = null;
+                }}
+                onMoveUp={idx > 0 ? () => moveBy(entry.id, -1) : undefined}
+                onMoveDown={idx < lists.length - 1 ? () => moveBy(entry.id, 1) : undefined}
               />
             ))}
           </div>
@@ -162,6 +253,17 @@ export default function Home() {
         onClose={() => setCreateOpen(false)}
         onCreate={handleCreate}
       />
+
+      {conflict && (
+        <ImportConflictDialog
+          open={true}
+          existingName={conflict.existing.name}
+          incomingName={conflict.parsed.name}
+          onReplace={() => resolveConflict('replace')}
+          onImportAsNew={() => resolveConflict('new')}
+          onCancel={() => setConflict(null)}
+        />
+      )}
     </div>
   );
 }

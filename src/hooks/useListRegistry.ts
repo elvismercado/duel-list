@@ -11,6 +11,10 @@ import {
 import { generateShortId, parseMarkdown } from '@/lib/markdown';
 import type { ListConfig } from '@/types';
 
+export type ImportResult =
+  | { status: 'ok'; id: string }
+  | { status: 'conflict'; existing: ListConfig; parsed: ListConfig };
+
 function sortEntries(
   entries: ListEntry[],
   order: string,
@@ -87,10 +91,25 @@ export function useListRegistry() {
   );
 
   const importList = useCallback(
-    (markdown: string): string => {
+    (markdown: string): ImportResult => {
       const parsed = parseMarkdown(markdown);
-      // Generate new ID to avoid collisions
-      parsed.id = generateShortId();
+      const existing = parsed.id ? getList(parsed.id) : null;
+      if (existing) {
+        return { status: 'conflict', existing, parsed };
+      }
+      if (!parsed.id) parsed.id = generateShortId();
+      saveList(parsed);
+      refresh();
+      return { status: 'ok', id: parsed.id };
+    },
+    [refresh],
+  );
+
+  const importListWithChoice = useCallback(
+    (parsed: ListConfig, choice: 'replace' | 'new'): string => {
+      if (choice === 'new') {
+        parsed.id = generateShortId();
+      }
       saveList(parsed);
       refresh();
       return parsed.id;
@@ -113,6 +132,7 @@ export function useListRegistry() {
     updateCustomOrder,
     createList,
     importList,
+    importListWithChoice,
     deleteList,
     refresh,
   };

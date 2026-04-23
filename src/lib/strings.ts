@@ -60,4 +60,15 @@ export const S = {
     historyButton: 'History (.md)',
     exportAppData: 'Export app data',
   },
+
+  import: {
+    conflict: {
+      title: 'List already exists',
+      message:
+        'A list named "{existing}" already exists with the same ID as "{incoming}". Replace it, or import as a new list?',
+      replace: 'Replace existing',
+      importAsNew: 'Import as new',
+      cancel: 'Cancel',
+    },
+  },
 } as const;

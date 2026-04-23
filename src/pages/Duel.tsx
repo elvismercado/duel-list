@@ -9,6 +9,8 @@ import { Progress } from '@/components/ui/progress';
 import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { SkipForward, Equal, Trophy, TrendingUp, TrendingDown, ArrowLeft } from 'lucide-react';
+import { SwipeMode } from '@/components/SwipeMode';
+import { getSettings } from '@/lib/storage';
 
 export default function Duel() {
   const { id } = useParams<{ id: string }>();
@@ -194,6 +196,21 @@ function DuelSession({
   }
 
   const { itemA, itemB } = currentPair;
+  const duelMode = getSettings().duelMode;
+
+  if (duelMode === 'swipe') {
+    return (
+      <SwipeMode
+        key={`${itemA.id}-${itemB.id}`}
+        itemA={itemA}
+        itemB={itemB}
+        duelCount={duelCount}
+        sessionLength={list.sessionLength}
+        onPick={handlePick}
+        onSkip={skipPair}
+      />
+    );
+  }
 
   return (
     <div className="p-4 max-w-lg mx-auto space-y-4">

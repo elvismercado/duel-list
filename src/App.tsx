@@ -1,24 +1,34 @@
+import { lazy, Suspense } from 'react';
 import { createBrowserRouter, RouterProvider } from 'react-router';
 import Layout from '@/components/Layout';
-import Home from '@/pages/Home';
-import Welcome from '@/pages/Welcome';
-import Rankings from '@/pages/Rankings';
-import Duel from '@/pages/Duel';
-import ListSettings from '@/pages/ListSettings';
-import AppSettings from '@/pages/AppSettings';
-import NotFound from '@/pages/NotFound';
+
+const Home = lazy(() => import('@/pages/Home'));
+const Welcome = lazy(() => import('@/pages/Welcome'));
+const Rankings = lazy(() => import('@/pages/Rankings'));
+const Duel = lazy(() => import('@/pages/Duel'));
+const ListSettings = lazy(() => import('@/pages/ListSettings'));
+const AppSettings = lazy(() => import('@/pages/AppSettings'));
+const NotFound = lazy(() => import('@/pages/NotFound'));
+
+function withSuspense(node: React.ReactNode) {
+  return (
+    <Suspense fallback={<div className="p-4 text-sm text-muted-foreground">Loading…</div>}>
+      {node}
+    </Suspense>
+  );
+}
 
 const router = createBrowserRouter([
   {
     element: <Layout />,
     children: [
-      { path: '/', element: <Home /> },
-      { path: '/welcome', element: <Welcome /> },
-      { path: '/list/:id', element: <Rankings /> },
-      { path: '/list/:id/duel', element: <Duel /> },
-      { path: '/list/:id/settings', element: <ListSettings /> },
-      { path: '/settings', element: <AppSettings /> },
-      { path: '*', element: <NotFound /> },
+      { path: '/', element: withSuspense(<Home />) },
+      { path: '/welcome', element: withSuspense(<Welcome />) },
+      { path: '/list/:id', element: withSuspense(<Rankings />) },
+      { path: '/list/:id/duel', element: withSuspense(<Duel />) },
+      { path: '/list/:id/settings', element: withSuspense(<ListSettings />) },
+      { path: '/settings', element: withSuspense(<AppSettings />) },
+      { path: '*', element: withSuspense(<NotFound />) },
     ],
   },
 ]);

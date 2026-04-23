@@ -22,10 +22,12 @@ export default defineConfig({
         name: 'DuelList',
         short_name: 'DuelList',
         description: 'Rank anything — one duel at a time.',
+        lang: 'en',
         start_url: '/',
         display: 'standalone',
         theme_color: '#18181b',
         background_color: '#ffffff',
+        categories: ['productivity', 'utilities', 'lifestyle'],
         icons: [
           {
             src: '/favicon.svg',
@@ -48,6 +50,22 @@ export default defineConfig({
             sizes: '512x512',
             type: 'image/png',
             purpose: 'maskable',
+          },
+        ],
+        screenshots: [
+          {
+            src: '/screenshots/home-narrow.png',
+            sizes: '720x1280',
+            type: 'image/png',
+            form_factor: 'narrow',
+            label: 'Your lists',
+          },
+          {
+            src: '/screenshots/duel-narrow.png',
+            sizes: '720x1280',
+            type: 'image/png',
+            form_factor: 'narrow',
+            label: 'Pick a winner',
           },
         ],
       },

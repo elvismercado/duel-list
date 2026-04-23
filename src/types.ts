@@ -31,4 +31,5 @@ export interface AppSettings {
   theme: 'light' | 'dark' | 'system';
   homeSortOrder: 'recent' | 'a-z' | 'created' | 'custom';
   customListOrder: string[];
+  duelMode: 'side-by-side' | 'swipe';
 }

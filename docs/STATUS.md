@@ -121,3 +121,16 @@
 - [x] **Touch targets** — `min-h-[44px] min-w-[44px]` on all icon buttons: Layout (back), Rankings (add, settings, ⋮ menu, restore), Home (settings), ListSettings (restore).
 - [x] **List name debounce + blur** — ListSettings.tsx uses local `nameValue` state with 500ms debounce auto-save and immediate save on blur.
 - [x] Build verification — `tsc --noEmit` passes, `vite build` succeeds (13 precache entries, sw.js generated).
+
+## Phase G: MVP Completion + Swipe Mode — COMPLETE
+
+- [x] **G3 Code-splitting** — `App.tsx` uses `React.lazy` + `<Suspense>` for all 7 page modules. Main chunk dropped from 670 kB to 293 kB (gzip 95 kB). 22 lazy-loaded route/component chunks.
+- [x] **G1 Import-conflict dialog** — `useListRegistry.importList` now returns `{status:'ok'|'conflict'}`; new `importListWithChoice(parsed, 'replace'|'new')`. New `src/components/ImportConflictDialog.tsx` shown when imported file's frontmatter `id` matches an existing list. Wired into both file-input import and File System Access `openFromFile`.
+- [x] **G2 Drag-to-reorder** — When `sortOrder === 'custom'`, Home shows a "Reorder/Done" toggle. `ListCard` renders draggable variant with HTML5 drag-and-drop + GripVertical handle + Up/Down keyboard buttons (a11y). Persists via existing `updateCustomOrder`.
+- [x] **G5 PWA manifest** — Added `screenshots`, `categories: ['productivity', 'utilities', 'lifestyle']`, `lang: 'en'` to manifest. **Note:** real PNG icon artwork and screenshot files in `public/screenshots/` still need to be created/replaced before publishing — current PNG icons are placeholders.
+- [x] **G4 Swipe Mode (Phase 1b)** — Added `framer-motion` 12.38.0. Extended `AppSettings.duelMode: 'side-by-side' | 'swipe'`. New `src/components/SwipeMode.tsx` — stacked motion cards, drag-x with 100px threshold, exit animation, PICK/NOPE hint overlays. Tie/Skip buttons + keyboard shortcuts work in both modes. Selector added to `AppSettings.tsx`.
+- [x] Build verification — `tsc --noEmit` clean, `vite build` succeeds, PWA precache 35 entries, sw.js + workbox generated.
+
+### Outstanding (deferred from G5)
+- [ ] Real PWA icon artwork (replace placeholder `public/icon-*.png` files)
+- [ ] Add `public/screenshots/home-narrow.png` and `public/screenshots/duel-narrow.png` (720×1280)
