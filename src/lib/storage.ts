@@ -104,12 +104,56 @@ export function saveHistory(listId: string, markdown: string): void {
 // App settings
 // ---------------------------------------------------------------------------
 
+const DEFAULT_REMINDERS: AppSettings['reminders'] = {
+  enabled: false,
+  cadence: 'daily',
+  customCount: 3,
+  customUnit: 'week',
+  preferredHour: 19,
+  preferredMinute: 0,
+  quietHoursEnabled: false,
+  quietHoursStart: 22,
+  quietHoursEnd: 8,
+  channel: 'in-app',
+  perListOptOut: [],
+  lastShownAt: null,
+  snoozedUntil: null,
+};
+
+// Migrate legacy reminder shape (customPerWeek, 'few-per-week' cadence) to the
+// new customCount/customUnit + simplified cadence.
+function migrateReminders(
+  raw: unknown,
+): AppSettings['reminders'] {
+  if (!raw || typeof raw !== 'object') return { ...DEFAULT_REMINDERS };
+  const r = raw as Record<string, unknown> & {
+    customPerWeek?: number;
+    cadence?: string;
+  };
+  const merged = { ...DEFAULT_REMINDERS, ...(r as Partial<AppSettings['reminders']>) };
+  // Legacy customPerWeek -> customCount/customUnit
+  if (typeof r.customPerWeek === 'number' && typeof r.customCount !== 'number') {
+    merged.customCount = r.customPerWeek;
+    merged.customUnit = 'week';
+  }
+  // Legacy 'few-per-week' cadence -> custom 3/week
+  if (r.cadence === 'few-per-week') {
+    merged.cadence = 'custom';
+    if (typeof r.customPerWeek !== 'number') {
+      merged.customCount = 3;
+      merged.customUnit = 'week';
+    }
+  }
+  return merged;
+}
+
 const DEFAULT_SETTINGS: AppSettings = {
   firstRunDone: false,
   theme: 'system',
   homeSortOrder: 'recent-desc',
   customListOrder: [],
   duelMode: 'side-by-side',
+  reminders: DEFAULT_REMINDERS,
 };
 
 // Migrate legacy homeSortOrder values to the new field+direction shape.
@@ -134,11 +178,15 @@ function migrateHomeSort(value: unknown): AppSettings['homeSortOrder'] {
 export function getSettings(): AppSettings {
   const raw = localStorage.getItem(KEY_SETTINGS);
   if (!raw) return { ...DEFAULT_SETTINGS };
-  const parsed = JSON.parse(raw) as Partial<AppSettings> & { homeSortOrder?: unknown };
+  const parsed = JSON.parse(raw) as Partial<AppSettings> & {
+    homeSortOrder?: unknown;
+    reminders?: unknown;
+  };
   return {
     ...DEFAULT_SETTINGS,
     ...parsed,
     homeSortOrder: migrateHomeSort(parsed.homeSortOrder),
+    reminders: migrateReminders(parsed.reminders),
   };
 }
 

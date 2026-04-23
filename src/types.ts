@@ -48,6 +48,43 @@ export interface AppSettings {
   homeSortOrder: HomeSortMode;
   customListOrder: string[];
   duelMode: 'side-by-side' | 'swipe';
+  reminders: ReminderSettings;
+}
+
+export type ReminderCadence =
+  | 'off'
+  | 'daily'
+  | 'weekly'
+  | 'monthly'
+  | 'custom';
+
+export type CustomCadenceUnit = 'day' | 'week' | 'month' | 'year';
+
+export type ReminderChannel = 'in-app' | 'os' | 'both';
+
+export interface ReminderSettings {
+  enabled: boolean;
+  cadence: ReminderCadence;
+  /** Used when cadence === 'custom'. Range 1..99. */
+  customCount: number;
+  /** Used when cadence === 'custom'. */
+  customUnit: CustomCadenceUnit;
+  /** Local hour (0-23) preferred for showing the reminder. */
+  preferredHour: number;
+  /** Local minute (0-59) preferred for showing the reminder. */
+  preferredMinute: number;
+  /** When false, quiet hours are ignored and reminders may show at any time. */
+  quietHoursEnabled: boolean;
+  /** Quiet hours window — no reminders during [start, end). 0-23 each. */
+  quietHoursStart: number;
+  quietHoursEnd: number;
+  channel: ReminderChannel;
+  /** List IDs excluded from the reminder rotation. */
+  perListOptOut: string[];
+  /** Epoch ms of the last reminder shown. Null = never. */
+  lastShownAt: number | null;
+  /** Epoch ms; reminders suppressed until this time. Null = not snoozed. */
+  snoozedUntil: number | null;
 }
 
 export type HomeSortMode =

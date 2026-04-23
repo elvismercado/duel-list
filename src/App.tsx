@@ -9,6 +9,7 @@ const Duel = lazy(() => import('@/pages/Duel'));
 const ListSettings = lazy(() => import('@/pages/ListSettings'));
 const History = lazy(() => import('@/pages/History'));
 const AppSettings = lazy(() => import('@/pages/AppSettings'));
+const RemindersSettings = lazy(() => import('@/pages/RemindersSettings'));
 const Features = lazy(() => import('@/pages/Features'));
 const NotFound = lazy(() => import('@/pages/NotFound'));
 
@@ -31,6 +32,7 @@ const router = createBrowserRouter([
       { path: '/list/:id/settings', element: withSuspense(<ListSettings />) },
       { path: '/list/:id/history', element: withSuspense(<History />) },
       { path: '/settings', element: withSuspense(<AppSettings />) },
+      { path: '/settings/reminders', element: withSuspense(<RemindersSettings />) },
       { path: '/features', element: withSuspense(<Features />) },
       { path: '*', element: withSuspense(<NotFound />) },
     ],

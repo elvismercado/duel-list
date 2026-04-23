@@ -1,6 +1,6 @@
-import { useState, useRef } from 'react';
-import { Navigate, useNavigate } from 'react-router';
-import { getSettings, saveList } from '@/lib/storage';
+import { useState, useRef, useMemo } from 'react';
+import { Navigate, useNavigate, useSearchParams } from 'react-router';
+import { getSettings, saveList, getList, getHistory, updateSettings } from '@/lib/storage';
 import { S } from '@/lib/strings';
 import { Button } from '@/components/ui/button';
 import {
@@ -14,6 +14,8 @@ import { Plus, Settings, FolderOpen, ArrowDownAZ, ArrowUpAZ, ArrowDownNarrowWide
 import { ListCard } from '@/components/ListCard';
 import { ListCreateDialog } from '@/components/ListCreateDialog';
 import { ImportConflictDialog } from '@/components/ImportConflictDialog';
+import { ReminderBanner } from '@/components/ReminderBanner';
+import { isReminderDue, pickReminderList } from '@/lib/reminders';
 import { useListRegistry } from '@/hooks/useListRegistry';
 import { useFileSync } from '@/hooks/useFileSync';
 import { saveFileHandle } from '@/lib/storage';
@@ -187,6 +189,47 @@ export default function Home() {
     updateCustomOrder(arrayMove(ids, idx, nextIdx));
   }
 
+  // Reminders: pick a candidate when due. Recompute when refresh changes.
+  const [reminderTick, setReminderTick] = useState(0);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const testReminder = searchParams.get('testReminder') === '1';
+  const reminderCandidate = useMemo(() => {
+    const s = getSettings();
+    if (!testReminder && !isReminderDue(s.reminders)) return null;
+    return pickReminderList(lists, getList, getHistory, s.reminders);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lists, reminderTick, testReminder]);
+
+  function clearTestFlag() {
+    if (testReminder) {
+      const next = new URLSearchParams(searchParams);
+      next.delete('testReminder');
+      setSearchParams(next, { replace: true });
+    }
+  }
+
+  function handleSnoozeReminder() {
+    const s = getSettings();
+    updateSettings({
+      reminders: {
+        ...s.reminders,
+        snoozedUntil: Date.now() + 24 * 60 * 60 * 1000,
+        lastShownAt: Date.now(),
+      },
+    });
+    clearTestFlag();
+    setReminderTick((t) => t + 1);
+  }
+
+  function handleSkipReminder() {
+    const s = getSettings();
+    updateSettings({
+      reminders: { ...s.reminders, lastShownAt: Date.now() },
+    });
+    clearTestFlag();
+    setReminderTick((t) => t + 1);
+  }
+
   return (
     <div className="p-4 max-w-lg mx-auto space-y-4">
       <div className="flex items-center justify-between">
@@ -195,6 +238,14 @@ export default function Home() {
           <Settings className="h-5 w-5" />
         </Button>
       </div>
+
+      {reminderCandidate && (
+        <ReminderBanner
+          candidate={reminderCandidate}
+          onSnooze={handleSnoozeReminder}
+          onSkip={handleSkipReminder}
+        />
+      )}
 
       {lists.length === 0 ? (
         <div className="text-center space-y-4 py-12">

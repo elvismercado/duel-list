@@ -11,9 +11,38 @@ import {
 } from '@/components/ui/select';
 import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
-import { Download, Sparkles, Compass } from 'lucide-react';
+import { Download, Sparkles, Compass, Bell } from 'lucide-react';
 import { useState } from 'react';
 import { Link } from 'react-router';
+import type { CustomCadenceUnit, ReminderSettings } from '@/types';
+
+function cadenceShortLabel(r: ReminderSettings): string {
+  switch (r.cadence) {
+    case 'off': return S.settings.remindersCadenceOff;
+    case 'daily': return S.settings.remindersCadenceDaily;
+    case 'weekly': return S.settings.remindersCadenceWeekly;
+    case 'monthly': return S.settings.remindersCadenceMonthly;
+    case 'custom': {
+      const unit = unitShortLabel(r.customUnit);
+      return `${r.customCount} ${unit}`;
+    }
+  }
+}
+
+function unitShortLabel(unit: CustomCadenceUnit): string {
+  switch (unit) {
+    case 'day': return S.settings.remindersUnitDay;
+    case 'week': return S.settings.remindersUnitWeek;
+    case 'month': return S.settings.remindersUnitMonth;
+    case 'year': return S.settings.remindersUnitYear;
+  }
+}
+
+function timeShortLabel(r: ReminderSettings): string {
+  return `${r.preferredHour.toString().padStart(2, '0')}:${r.preferredMinute
+    .toString()
+    .padStart(2, '0')}`;
+}
 
 export default function AppSettingsPage() {
   const [settings, setSettings] = useState(getSettings);
@@ -117,6 +146,31 @@ export default function AppSettingsPage() {
             {S.export.exportAppData}
           </Button>
         </div>
+      </div>
+
+      <Separator />
+
+      {/* Reminders nav card */}
+      <div className="space-y-2">
+        <h2 className="text-sm font-semibold text-muted-foreground">
+          {S.settings.remindersHeading}
+        </h2>
+        <Button asChild variant="outline" className="w-full justify-between">
+          <Link to="/settings/reminders">
+            <span className="flex items-center gap-2">
+              <Bell className="h-4 w-4" />
+              {S.settings.remindersOpenLink}
+            </span>
+            <span className="text-xs text-muted-foreground">
+              {settings.reminders.enabled
+                ? S.settings.remindersStatusActive(
+                    cadenceShortLabel(settings.reminders),
+                    timeShortLabel(settings.reminders),
+                  )
+                : S.settings.remindersStatusOff}
+            </span>
+          </Link>
+        </Button>
       </div>
 
       <Separator />

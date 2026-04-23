@@ -1,7 +1,8 @@
 import { Card, CardContent } from '@/components/ui/card';
 import type { ListEntry } from '@/lib/storage';
-import { getList } from '@/lib/storage';
+import { getList, getHistory } from '@/lib/storage';
 import { sortItemsByElo } from '@/lib/ranking';
+import { getDuelCountFromHistory } from '@/lib/history';
 import { GripVertical, ArrowUp, ArrowDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useSortable } from '@dnd-kit/sortable';
@@ -29,6 +30,30 @@ function formatRelativeTime(ts: number | null): string {
   return S.list.daysAgo(days);
 }
 
+type ActivityBucket = 'fresh' | 'stale' | 'cold' | 'never';
+
+function getActivityBucket(ts: number | null): ActivityBucket {
+  if (!ts) return 'never';
+  const days = (Date.now() - ts) / 86_400_000;
+  if (days < 7) return 'fresh';
+  if (days < 30) return 'stale';
+  return 'cold';
+}
+
+const ACTIVITY_DOT_CLASS: Record<ActivityBucket, string> = {
+  fresh: 'bg-emerald-500',
+  stale: 'bg-amber-500',
+  cold: 'bg-muted-foreground/40',
+  never: 'bg-muted-foreground/30',
+};
+
+const ACTIVITY_ARIA: Record<ActivityBucket, string> = {
+  fresh: S.list.activityFresh,
+  stale: S.list.activityStale,
+  cold: S.list.activityCold,
+  never: S.list.activityNever,
+};
+
 export function ListCard({
   entry,
   onClick,
@@ -39,7 +64,9 @@ export function ListCard({
   const list = getList(entry.id);
   const activeItems = list?.items.filter((i) => !i.removed) ?? [];
   const sorted = sortItemsByElo(activeItems);
-  const topItem = sorted[0];
+  const topThree = sorted.slice(0, 3);
+  const duelCount = getDuelCountFromHistory(getHistory(entry.id));
+  const activity = getActivityBucket(entry.lastOpened);
 
   const sortable = useSortable({ id: entry.id, disabled: !reorderMode });
   const style = reorderMode
@@ -105,21 +132,45 @@ export function ListCard({
       onClick={onClick}
       onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick(); } }}
     >
-      <CardContent className="p-4 space-y-1">
-        <div className="flex items-center justify-between">
-          <h3 className="font-semibold truncate">{entry.name}</h3>
-          <span className="text-xs text-muted-foreground">
+      <CardContent className="p-4 space-y-2">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 min-w-0">
+            <span
+              className={`h-2 w-2 rounded-full shrink-0 ${ACTIVITY_DOT_CLASS[activity]}`}
+              aria-label={ACTIVITY_ARIA[activity]}
+              title={ACTIVITY_ARIA[activity]}
+            />
+            <h3 className="font-semibold truncate">{entry.name}</h3>
+          </div>
+          <span className="text-xs text-muted-foreground shrink-0">
             {formatRelativeTime(entry.lastOpened)}
           </span>
         </div>
-        <div className="flex items-center justify-between text-sm text-muted-foreground">
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <span>{S.ranking.itemsCount(activeItems.length)}</span>
-          {topItem && (
-            <span className="truncate ml-2">
-              {S.ranking.topItemPrefix(topItem.name)}
-            </span>
-          )}
+          <span aria-hidden="true">·</span>
+          <span>{S.list.duelsCount(duelCount)}</span>
         </div>
+        {activeItems.length < 2 ? (
+          <p className="text-xs text-muted-foreground">
+            {S.list.addMoreItemsCta(2 - activeItems.length)}
+          </p>
+        ) : duelCount === 0 ? (
+          <p className="text-xs text-muted-foreground">{S.list.noDuelsYet}</p>
+        ) : (
+          <div className="flex items-center gap-3 text-xs">
+            {topThree.map((item, i) => (
+              <span
+                key={item.id}
+                className="inline-flex items-center gap-1 min-w-0 truncate"
+                aria-label={S.list.podiumPositionAria(i + 1, item.name)}
+              >
+                <span className="text-muted-foreground tabular-nums">{i + 1}.</span>
+                <span className="truncate">{item.name}</span>
+              </span>
+            ))}
+          </div>
+        )}
       </CardContent>
     </Card>
   );

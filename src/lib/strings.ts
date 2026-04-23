@@ -201,6 +201,27 @@ export const S = {
     dragAria: (name: string) => `Drag ${name}`,
     moveUpAria: (name: string) => `Move ${name} up`,
     moveDownAria: (name: string) => `Move ${name} down`,
+    duelsCount: (n: number) => `${n} ${n === 1 ? 'duel' : 'duels'}`,
+    addMoreItemsCta: (n: number) =>
+      n === 1 ? 'Add 1 more item to start' : `Add ${n} more items to start`,
+    noDuelsYet: 'No duels yet',
+    activityFresh: 'Active recently',
+    activityStale: 'Active this month',
+    activityCold: 'Inactive',
+    activityNever: 'Never opened',
+    podiumPositionAria: (pos: number, name: string) => `Position ${pos}: ${name}`,
+  },
+
+  reminders: {
+    bannerTitle: 'Time for a duel?',
+    bannerSubtitle: (listName: string, days: number) =>
+      days <= 0
+        ? `Rank one duel for "${listName}".`
+        : `Rank one duel for "${listName}" — last played ${days} ${days === 1 ? 'day' : 'days'} ago.`,
+    play: 'Play',
+    snooze: 'Snooze 1d',
+    skip: 'Skip',
+    dismissAria: 'Dismiss reminder',
   },
 
   history: {
@@ -251,6 +272,47 @@ export const S = {
     duelModeSwipe: 'Swipe',
     duelModeHelp:
       'Swipe mode shows both items side by side — drag a card up to pick it.',
+    remindersHeading: 'Duel reminders',
+    remindersHelp:
+      'Get a friendly nudge to play a duel — keeps your rankings fresh over time.',
+    remindersOpenLink: 'Configure reminders',
+    remindersStatusOff: 'Off',
+    remindersStatusActive: (cadenceLabel: string, timeLabel: string) =>
+      `${cadenceLabel} · ${timeLabel}`,
+    remindersEnabledLabel: 'Enable reminders',
+    remindersCadenceLabel: 'How often',
+    remindersCadenceOff: 'Off',
+    remindersCadenceDaily: 'Daily',
+    remindersCadenceWeekly: 'Weekly',
+    remindersCadenceMonthly: 'Monthly',
+    remindersCadenceCustom: 'Custom',
+    remindersCustomCountLabel: 'How many',
+    remindersUnitDay: 'per day',
+    remindersUnitWeek: 'per week',
+    remindersUnitMonth: 'per month',
+    remindersUnitYear: 'per year',
+    remindersPreferredHourLabel: 'Preferred time',
+    remindersPreferredHourMorning: 'Morning',
+    remindersPreferredHourMidday: 'Midday',
+    remindersPreferredHourEvening: 'Evening',
+    remindersPreferredHourNight: 'Night',
+    remindersPreferredHourCustom: 'Custom',
+    remindersPreferredTimeCustomLabel: 'Pick a time',
+    remindersQuietHoursToggleLabel: 'Quiet hours',
+    remindersQuietHoursLabel: 'Quiet hours window',
+    remindersQuietHoursHelp: 'No reminders during this window.',
+    remindersChannelLabel: 'Where to show reminders',
+    remindersChannelInApp: 'In the app only',
+    remindersChannelOs: 'OS notifications only',
+    remindersChannelBoth: 'Both',
+    remindersOsUnsupported:
+      'OS notifications are limited on this device — in-app reminders still work.',
+    remindersPerListHeading: 'Skip these lists',
+    remindersPerListHelp: 'Lists you don’t want reminders for.',
+    remindersTestButton: 'Show test reminder',
+    remindersTestHelp:
+      'Forces the reminder banner to appear once on Home — useful for previewing.',
+    remindersBack: 'Back to settings',
     aboutHeading: 'About',
     whatsInDuelList: "What's in DuelList",
     replayOnboarding: 'Replay onboarding',
