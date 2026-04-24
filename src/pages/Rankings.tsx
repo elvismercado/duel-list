@@ -131,15 +131,6 @@ export default function Rankings() {
         size="icon"
         variant="ghost"
         className="min-h-[44px] min-w-[44px]"
-        onClick={() => setAddOpen(true)}
-        aria-label={S.ranking.addItemsAria}
-      >
-        <Plus className="h-5 w-5" />
-      </Button>
-      <Button
-        size="icon"
-        variant="ghost"
-        className="min-h-[44px] min-w-[44px]"
         onClick={() => navigate(`/list/${id}/settings`)}
         aria-label={S.ranking.settingsAria}
       >
@@ -356,6 +347,14 @@ export default function Rankings() {
               </button>
             )}
           </div>
+          <Button
+            variant="outline"
+            className="w-full"
+            onClick={() => setAddOpen(true)}
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            {S.ranking.addItems}
+          </Button>
           {visibleItems.length === 0 ? (
             <div className="text-center py-8 space-y-2">
               <p className="text-muted-foreground text-sm">{S.ranking.noMatch(query)}</p>
@@ -364,11 +363,12 @@ export default function Rankings() {
               </Button>
             </div>
           ) : (
-            <ul className="space-y-1">
-              {visibleItems.map((item) => {
-                const currentRank = rankById.get(item.id) ?? 0;
-                const showChip = displayMode === 'rank' && currentRank >= 1 && currentRank <= 3;
-                return (
+            <>
+              <ul className="space-y-1">
+                {visibleItems.map((item) => {
+                  const currentRank = rankById.get(item.id) ?? 0;
+                  const showChip = displayMode === 'rank' && currentRank >= 1 && currentRank <= 3;
+                  return (
             <li
               key={item.id}
               className="flex items-center gap-3 rounded-md border p-3 bg-card"
@@ -464,7 +464,18 @@ export default function Rankings() {
             </li>
             );
           })}
-        </ul>
+              </ul>
+              {!query && (
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => setAddOpen(true)}
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  {S.ranking.addItems}
+                </Button>
+              )}
+            </>
           )}
         </>
       )}
