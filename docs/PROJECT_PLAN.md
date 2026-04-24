@@ -236,7 +236,7 @@ ELO rating system + smart pairing algorithm:
 - **Add items**: Button on Rankings page opens textarea dialog for batch add (one item per line). New items start at ELO 1000, prioritized for duels.
 - **Delete items**: Delete icon per row on Rankings page. Confirmation dialog required. Deleted items move to soft-delete bucket (see below).
 - **Rename items**: On hover (mouse) or tap (touch), an edit button appears on the item row. Clicking it enables inline editing — press Enter to confirm. The item ID remains stable across renames.
-- **Soft-delete bucket**: Deleted items are not permanently removed. They appear in a collapsed "Removed items" section at the bottom of the Rankings page and are also listed in the list's Settings page. Items in the bucket are excluded from pairing and ranking. Users can restore items from either location.
+- **Soft-delete bucket**: Deleted items are not permanently removed. They appear in a collapsed "Removed items" section at the bottom of the Rankings page and are also listed in the list's Settings page. Items in the bucket are excluded from pairing and ranking. Users can restore items from either location. **Restore preserves stats** — the item keeps its score, comparison count, and `added` date; only the `removed` flag is cleared and the trend snapshot (`prevRank` / `prevEloScore`) is reset so the next session shows no spurious jump.
 - **Per-list export**: Available from list Settings page (`/list/:id/settings`):
   - Export list (`.md` file)
   - Export history (`.duellist.md` file)
@@ -252,7 +252,7 @@ ELO rating system + smart pairing algorithm:
 
 ### 8. Session Configuration
 - Default session length: 10 duels
-- User-configurable: 5 / 10 / 20 / unlimited
+- User-configurable: presets **5 / 10 / 20 / 50 / Unlimited** plus a free-form number input
 - Progress bar during session (hidden in unlimited mode)
 - Unlimited mode: runs forever; user clicks "Done" for summary, or navigates away / closes
 - **Session start**: auto-starts when user navigates to Duel page; uses the list's stored `sessionLength`. No setup screen.
@@ -300,7 +300,14 @@ After completion, redirect to Home (`/`).
   - `/list/:id` — Rankings (list detail)
   - `/list/:id/duel` — Duel session
   - `/list/:id/settings` — List settings (name, K-factor, session length, removed items, per-list export, delete list)
-  - `/settings` — App settings (export all lists, export app data)
+  - `/list/:id/history` — Per-list duel history viewer (added Phase H)
+  - `/settings` — App settings (theme, time format, export all lists, export app data)
+  - `/settings/reminders` — Reminder cadence + preferred time + quiet hours (added Phase I)
+  - `/settings/glossary` — Glossary of terms, icons, and colors (added Phase I, with stable anchor ids for HelpHint deep-links)
+  - `/features` — Feature showcase grid (added Phase H)
+  - `*` — NotFound page
+- **Display mode**: Each list has `displayMode: 'rank' | 'elo'` persisted in `ListConfig`. UI labels the two views "Rank" and "Score". Toggle button on the Rankings header. The persisted value `'elo'` is preserved for storage compat — do NOT rename without a data migration.
+- **Home hero**: When at least one list has ≥2 active items, Home shows a gradient "Random duel" hero card (Swords badge). Tapping picks a list via the weighted-random helper in `src/lib/reminders.ts` and navigates to `/list/:id/duel`. Hidden when no list is duel-eligible. The Rankings page shows a matching hero card in place of the old plain "Start duel" button.
 - React Router v7 for page navigation
 - PWA manifest + service worker via vite-plugin-pwa
 - Key files: `src/App.tsx`, `src/pages/`
@@ -317,6 +324,9 @@ After completion, redirect to Home (`/`).
 | No history yet | History/stats (Phase 3) | "No duels recorded yet. Start comparing!" | Link to Duel page |
 | localStorage near limit | Any page (banner) | "Storage is almost full. Export your lists to free up space." | Export button |
 | List not found | `/list/:id` (invalid ID) | "List not found." | Button to go Home |
+| File sync failed mid-session | Rankings header (icon) | `FileX` icon + tooltip "File link broken — re-link in settings" | Re-link from list Settings |
+| File permission revoked between sessions | Rankings header (icon) | Same as above on next mount via `requestPermission` returning `denied` | Re-link from list Settings |
+| Render-time exception in any page | Whole app | ErrorBoundary fallback ("Something went wrong") with collapsible stack | Reload button |
 
 ---
 
@@ -372,6 +382,13 @@ After completion, redirect to Home (`/`).
 ### 17. Periodic Comparison Prompts
 - Setting: "Remind me to compare every N hours/days"
 - Browser notifications or in-app prompt on open
+- **Phase I in-app banner (shipped)**: `src/lib/reminders.ts` scores eligible lists (favors stale + less-developed) and `pickReminderCandidate` returns the best match honoring cadence + quiet hours. `ReminderBanner` on Home shows the candidate with three actions:
+  - **Play** — navigate to `/list/:id/duel`.
+  - **Snooze 1d** — suppress that *list* for 24h.
+  - **Skip** — mark this candidacy seen; the next eligible list is offered on the next mount/cadence tick.
+  - Settings page at `/settings/reminders` configures cadence, preferred time (in-app `PreferredTimePicker`, 12h/24h aware), and quiet hours (15-minute granularity, stored as `quietHoursStartMinute` / `quietHoursEndMinute`).
+- **Trend snapshot persistence**: `prevRank` / `prevEloScore` are written to each item at session start. Items that pre-date Phase I have `prevRank: 0` and show no trend until their first new session. Trend backfill is intentionally not done.
+- **Phase 3 (deferred)**: OS-level notifications via the service worker.
 
 ### 18. Dark Mode / Themes
 - Follow system preference
@@ -468,6 +485,22 @@ created: 2026-04-21
 47. [ ] Export all as zip → all .md + .duellist.md files bundled in a single .zip download
 48. [ ] Export app data → full localStorage dump as JSON file
 49. [ ] Navigation back → back arrow in header + clickable logo, no breadcrumb
+
+### Phase I (post-H, shipped)
+50. [ ] Reminders banner → Home shows `ReminderBanner` for eligible list; Snooze 1d / Skip / Play actions work
+51. [ ] Reminder settings → cadence, preferred time (12h/24h picker), quiet hours (15-min granularity) persist via `duellist:settings`
+52. [ ] Glossary page → `/settings/glossary` lists Terminology + visual sections; anchor links work (`#score`, `#rank`, `#session`, etc.)
+53. [ ] HelpHint icons → Rankings (Score/Rank toggle), Duel (session counter), ItemDetailsDialog (Rank/Score tiles) deep-link to matching Glossary anchor
+54. [ ] Score terminology → UI says "Score"; storage still uses `eloScore` and `displayMode: 'elo'`
+55. [ ] Display mode toggle → Rankings switches between Rank (#1… with podium chips) and Score views; persists per list
+56. [ ] Trend arrows → after a new session, items show TrendingUp/Down + delta on Rankings; alignment stable across all rows (fixed-width slot)
+57. [ ] Random-duel hero → Home shows gradient hero when any list has ≥2 items; quick-duel chip on each ListCard
+58. [ ] Rankings hero → in-list page shows matching hero card in place of plain "Start duel" button
+59. [ ] ItemDetailsDialog → row dropdown “Details” opens dialog with stat tiles + last-duels list; ScrollArea handles overflow
+60. [ ] Removed-items → collapsible section sorted by score desc; restore preserves stats; ScrollArea handles overflow
+61. [ ] 12h/24h time format → setting in App settings flows through Reminders, History DuelRow, ItemDetailsDialog
+62. [ ] PageSkeleton → lazy-route Suspense fallbacks render Home/Rankings/default skeletons instead of "Loading…" text
+63. [ ] ErrorBoundary → thrown render error shows fallback UI with Reload + collapsible stack instead of blank screen
 
 ### Phase 2
 1. [ ] Connect to Nextcloud → file read/write via WebDAV works

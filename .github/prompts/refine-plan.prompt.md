@@ -102,7 +102,7 @@ These topics have been decided across prior refinement rounds. Reference them fo
 - **List creation**: Name + K-factor + session length. Empty lists allowed. Items added from Rankings page.
 - **Soft-delete**: Deleted items move to bucket (collapsed on Rankings, listed in list Settings). Restorable. Excluded from pairing. `## Removed` section in markdown file.
 - **Soft-delete markdown format**: `## Removed` section at bottom of file. Items keep HTML comment JSON with `"removed":true` flag. Item type has `removed?: boolean`.
-- **Soft-delete restore**: Full reset — ELO 1000, prevElo 1000, prevRank last, comparisons 0, added = today. Treated as new item.
+- **Soft-delete restore**: Stats preserved — keeps `eloScore`, `prevEloScore` (reset to current `eloScore` to suppress spurious trend), `comparisonCount`, `added`. Only the `removed` flag is cleared and `prevRank` is reset to `0`.
 - **Delete confirmation**: Always confirm for both items and lists
 - **Export split**: Per-list exports (list .md, history .duellist.md) on `/list/:id/settings`. App-wide exports (all lists, app data, export all) on `/settings`.
 - **Edit list settings**: Gear icon on Rankings → `/list/:id/settings` (name, K-factor, session length, removed items, per-list export, delete list)
@@ -139,3 +139,13 @@ These topics have been decided across prior refinement rounds. Reference them fo
 - **Back arrow**: Shown on sub-pages only (not on Home). Home shows logo/title only.
 - **Export filename slugify**: `name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')`, max 50 chars.
 - **`history.ts`**: Separate lib file for history append (tail parsing) + cooldown parsing.
+- **Score vs ELO terminology**: UI label is **"Score"** everywhere; "ELO" appears only in the Glossary as the underlying algorithm name. Storage names (`Item.eloScore`, `displayMode: 'elo'` value, `SortField: 'elo'` value, `src/lib/elo.ts`/`ranking.ts` module names) are preserved — do NOT rename without a data migration. Caveats codified in `.github/copilot-instructions.md`.
+- **Display mode (Rank vs Score)**: Per-list `ListConfig.displayMode: 'rank' | 'elo'`. Toggle on Rankings header. Rank view shows ordinals + podium chips for top 3; Score view shows numeric score with `pts` suffix in duel cards.
+- **Help-icon (HelpHint) convention**: `<HelpHint anchor="..." term={S....} />` next to ambiguous labels deep-links to `/settings/glossary#<anchor>`. Stable anchor ids: `list`, `item`, `item-list`, `duel`, `session`, `score`, `rank`, `brand`.
+- **Trend snapshot**: `prevRank` / `prevEloScore` written by `useComparison.initSession` at session start. No backfill for pre-Phase-I items (they show no trend until next session). TrendBadge always reserves a fixed-width slot for row alignment.
+- **Session length presets**: 5 / 10 / 20 / 50 / Unlimited plus free-form number input.
+- **Routes (post-Phase I)**: `/`, `/welcome`, `/list/:id`, `/list/:id/duel`, `/list/:id/settings`, `/list/:id/history`, `/settings`, `/settings/reminders`, `/settings/glossary`, `/features`, `*` (NotFound).
+- **Reminder banner actions**: Play (navigate to duel), Snooze 1d (suppress that *list* for 24h), Skip (mark candidacy seen — next eligible list offered on next mount/cadence tick).
+- **Hero CTAs**: Home shows gradient "Random duel" hero when any list has ≥2 active items (uses `pickRandomDuelList` weighted-random helper). Rankings page shows matching hero card in place of the old plain "Start duel" button.
+- **PageSkeleton**: Lazy-route Suspense fallbacks render Home/Rankings-shaped skeletons (rest use `DefaultSkeleton`) instead of "Loading…" text.
+- **ErrorBoundary**: Top-level boundary in `src/App.tsx` wraps `<RouterProvider>` and renders fallback ("Something went wrong") + Reload + collapsible stack instead of blank screen.

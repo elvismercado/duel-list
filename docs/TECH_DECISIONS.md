@@ -121,7 +121,11 @@ created: 2026-04-21
 - **K-factor**: Default K=32, configurable per list (stored in frontmatter). Higher K = faster convergence but more volatile. Lower K = more stable but slower to adapt.
 - **ELO tiebreaker**: When items have the same ELO score, they retain their import order in the ranking.
 
-**User-facing**: Users never see ELO numbers. They see ordinal rank positions (#1, #2, #3...). During duels, cards show: item name, current rank position, and comparison count.
+**User-facing**: The numeric value is labelled **"Score"** in the UI; "ELO" appears only in the Glossary as the underlying algorithm name. Each list has a `displayMode: 'rank' | 'elo'` setting (toggle on the Rankings header):
+- **Rank view** — ordinal positions (#1, #2…), top three rendered as gold/silver/bronze podium chips.
+- **Score view** — the numeric Score (e.g. `1089`) with a `pts` suffix in duel cards.
+
+The persisted value `'elo'` is kept on `ListConfig.displayMode` and on `Item.eloScore` for storage compatibility. **Do not rename these fields without a data migration.** This split is documented in `.github/copilot-instructions.md` (Storage / migration caveats).
 
 ### 6. Smart Pairing Algorithm
 
@@ -300,13 +304,15 @@ On parse, items under `## Removed` are loaded into the soft-delete bucket. On wr
 
 **On restore**:
 - Item returns to the active list with its original ID preserved
-- `eloScore` reset to 1000
-- `prevEloScore` reset to 1000
-- `prevRank` set to last position (current item count)
-- `comparisonCount` reset to 0
-- `added` set to current date (treated as a fully new item)
-- `removed` flag removed
-- Prioritized for pairing (same as newly added items)
+- **All stats preserved**: `eloScore`, `prevEloScore`, `comparisonCount`, and `added` are kept as-is
+- `prevRank` is reset to `0` and `prevEloScore` to the current `eloScore` so the next session's trend arrow doesn't show a spurious jump
+- `removed` flag cleared
+- No re-prioritization — the item rejoins the ranking at its previous score
+
+**Rationale for preserving stats**:
+- Removal is reversible — a destroyed history would defeat the purpose
+- Matches user-facing copy ("Restoring keeps these stats." — `S.ranking.restoreKeepsStatsHint`)
+- Trend snapshot reset prevents misleading TrendingUp/Down indicators on the first post-restore session
 
 **Rationale**:
 - Prevents accidental permanent data loss without implementing full undo
@@ -388,6 +394,32 @@ On parse, items under `## Removed` are loaded into the soft-delete bucket. On wr
 - Back arrow + logo click covers all navigation needs
 - Consistent with mobile app patterns (where breadcrumbs are rare)
 
+### 25. Help-Icon (HelpHint) Convention
+
+**Decision**: Ambiguous user-facing labels (Score, Rank, Session, etc.) get a small `HelpCircle` icon button next to them that deep-links to `/settings/glossary#<anchor>`. Implementation: `<HelpHint anchor="score" term={S.ranking.score} />` from `src/components/HelpHint.tsx`.
+
+**Stable Glossary anchor ids** (do not rename without updating consumers):
+- `#list`, `#item`, `#item-list`, `#duel`, `#session`, `#score`, `#rank`, `#brand`
+
+**Rationale**:
+- Single source of truth for terminology — the Glossary page documents what each label means
+- Lower-noise than tooltips (icon is opt-in; readers who already know the term skip past it)
+- Glossary scrolls smoothly to the anchor on mount via `useLocation().hash`
+- Encourages new ambiguous-term contributions to come with a Glossary entry, not a longer tooltip
+
+### 26. Trend Snapshot Persistence
+
+**Decision**: Each item carries `prevRank` and `prevEloScore`. These are written by `useComparison.initSession` at the start of every new session (only when changed). The on-list trend arrows on the Rankings page derive from `(currentRank - prevRank)` and `(eloScore - prevEloScore)` respectively.
+
+**Backfill**: None. Items that pre-date Phase I have `prevRank: 0`, which renders as no trend arrow until their first new session populates the snapshot. This is intentional — a backfill couldn't know what the previous rank "should have been".
+
+**Restore interaction**: On `restoreItem`, `prevRank` is set to `0` and `prevEloScore` to the current `eloScore` so the post-restore session shows no spurious jump.
+
+**Rationale**:
+- Snapshot survives page reloads (the session counter remains ephemeral — see §19)
+- Tiny payload (~16 bytes per item)
+- TrendBadge always reserves a fixed-width slot so list rows stay aligned even when the snapshot is missing
+
 ---
 
 ## User Requirements (from conversation)
@@ -422,48 +454,9 @@ On parse, items under `## Removed` are loaded into the soft-delete bucket. On wr
 
 ---
 
-## File Structure (Planned)
+## File Structure
 
-```
-src/
-├── App.tsx                          # App shell, routing
-├── main.tsx                         # Entry point
-├── types.ts                         # Core type definitions
-├── data/
-│   └── samples.ts                   # Sample list definitions (6 pre-built lists)
-├── lib/
-│   ├── markdown.ts                  # Markdown parser/writer (frontmatter + HTML comments)
-│   ├── ranking.ts                   # ELO rating system
-│   ├── pairing.ts                   # Smart pair selection
-│   ├── history.ts                   # History append (tail parsing) + cooldown parsing
-│   ├── storage.ts                   # localStorage read/write + quota monitoring
-│   ├── strings.ts                   # UI string constants (i18n prep)
-│   ├── nextcloud.ts                 # WebDAV client (Phase 2)
-│   └── sync.ts                      # Bi-directional sync (Phase 2)
-├── locales/                         # Translation JSON files (Phase 3)
-│   ├── en.json
-│   ├── nl.json
-│   ├── es.json
-│   └── pap.json
-├── components/
-│   ├── SideBySideMode.tsx           # Click-to-pick comparison
-│   ├── SwipeMode.tsx                # Tinder-style swipe comparison (Phase 1b)
-│   ├── RankingView.tsx              # Ranked list display
-│   ├── ListManager.tsx              # Create/import/export lists
-│   ├── NextcloudSettings.tsx        # Nextcloud config (Phase 2)
-│   └── FileBrowser.tsx              # Nextcloud file picker (Phase 2)
-├── pages/
-│   ├── Home.tsx                     # List selector + first-run redirect
-│   ├── Welcome.tsx                  # First-run onboarding (/welcome)
-│   ├── Duel.tsx                     # Active duel session (/list/:id/duel)
-│   ├── Rankings.tsx                 # View rankings (/list/:id)
-│   ├── ListSettings.tsx             # List settings (/list/:id/settings)
-│   └── Settings.tsx                 # App settings + export (/settings)
-└── hooks/
-    ├── useComparison.ts             # Comparison session logic
-    ├── useList.ts                   # List CRUD operations
-    └── useExport.ts                 # Export list/history/app data
-```
+The live `src/` tree is the canonical source of truth. See `docs/STATUS.md` (Phases A–I) for what each module/component does. The earlier aspirational tree in this document was retired in the Phase I doc refresh because it had drifted significantly from reality (renamed pages, added components like `RankChip` / `HelpHint` / `PageSkeleton` / `ItemDetailsDialog` / `ReminderBanner`, additional shadcn primitives in `src/components/ui/`, hooks `useFileSync`, etc.).
 
 ---
 

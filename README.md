@@ -10,9 +10,9 @@ DuelList is a personal list-ranking web app that turns the impossible task of so
 
 ## Core Concepts
 
-- **The Duel**: A single A-vs-B comparison. Two items shown side by side. User picks the winner, declares a tie, or skips. Each card shows: item name, current rank (e.g., "#7 of 120"), and comparison count (e.g., "Compared 12 times").
-- **The Session**: A configurable batch of duels. Default ~10 per session (quick daily burst). User can set session length or go unlimited. Progress bar shows remaining duels.
-- **The Ranking**: The evolving full list from #1 to last. Updated after every duel via ELO (invisible to user). Users see clean ordinal ranks. Always "in progress" — improves with every duel.
+- **The Duel**: A single A-vs-B comparison. Two items shown side by side. User picks the winner, declares a tie, or skips. Each card shows: item name, current rank or score (depending on the list's display mode), and comparison count.
+- **The Session**: A configurable batch of duels. Default ~10 per session (quick daily burst). User can set session length (5/10/20/50/Unlimited or any custom number) and progress is shown.
+- **The Ranking**: The evolving full list from #1 to last. Updated after every duel via the ELO rating algorithm. Each list can be viewed two ways: **Rank** (ordinal positions #1, #2…) or **Score** (the underlying number). The Score column is labelled "Score" in the UI; it is the ELO value under the hood.
 - **The List**: A markdown file of items to rank. Create from scratch, import, add items over time, export ranked. Multiple independent lists supported.
 
 ## File Format
