@@ -14,7 +14,6 @@ import {
   KeyRound,
   Layers,
   Bell,
-  ArrowLeft,
 } from 'lucide-react';
 
 const FEATURE_ICONS: React.ComponentType<{ className?: string }>[] = [
@@ -34,14 +33,7 @@ const FEATURE_ICONS: React.ComponentType<{ className?: string }>[] = [
 export default function Features() {
   return (
     <div className="p-4 max-w-2xl mx-auto space-y-6">
-      <div className="flex items-center gap-2">
-        <Button asChild variant="ghost" size="icon" className="min-h-[44px] min-w-[44px]" aria-label={S.common.backAria}>
-          <Link to="/">
-            <ArrowLeft className="h-5 w-5" />
-          </Link>
-        </Button>
-        <h1 className="text-2xl font-bold">{S.features.heading}</h1>
-      </div>
+      <h1 className="text-2xl font-bold">{S.features.heading}</h1>
 
       <p className="text-muted-foreground">
         {S.features.intro}

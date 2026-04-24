@@ -34,18 +34,38 @@ function formatRelativeTime(ts: number | null): string {
 
 type ActivityBucket = 'fresh' | 'stale' | 'cold' | 'never';
 
-function getActivityBucket(ts: number | null): ActivityBucket {
-  if (!ts) return 'never';
-  const days = (Date.now() - ts) / 86_400_000;
-  if (days < 7) return 'fresh';
-  if (days < 30) return 'stale';
+/**
+ * Activity dot reflects *duel freshness*, not visit freshness:
+ *  - fresh   = duelled in the last 14 days
+ *  - stale   = duelled 14–45d ago, OR opened but never duelled
+ *  - cold    = duelled 45+ days ago
+ *  - never   = list has never been opened
+ *
+ * `lastDuelAt` is null when the list has no duels. `lastOpened` is null only
+ * for lists that have not been opened since the new field landed. Glossary
+ * copy in `S.glossary.activity*Desc` mirrors these definitions.
+ */
+function getActivityBucket(
+  lastDuelAt: number | null | undefined,
+  lastOpened: number | null,
+): ActivityBucket {
+  if (!lastOpened && (lastDuelAt === null || lastDuelAt === undefined)) {
+    return 'never';
+  }
+  if (lastDuelAt === null || lastDuelAt === undefined) {
+    // Opened but never duelled — surface as 'stale' to nudge first duels.
+    return 'stale';
+  }
+  const days = (Date.now() - lastDuelAt) / 86_400_000;
+  if (days < 14) return 'fresh';
+  if (days < 45) return 'stale';
   return 'cold';
 }
 
 const ACTIVITY_DOT_CLASS: Record<ActivityBucket, string> = {
   fresh: 'bg-emerald-500',
   stale: 'bg-amber-500',
-  cold: 'bg-muted-foreground/40',
+  cold: 'bg-orange-500',
   never: 'bg-muted-foreground/30',
 };
 
@@ -68,7 +88,7 @@ export function ListCard({
   const sorted = sortItemsByElo(activeItems);
   const topThree = sorted.slice(0, 3);
   const duelCount = getDuelCountFromHistory(getHistory(entry.id));
-  const activity = getActivityBucket(entry.lastOpened);
+  const activity = getActivityBucket(entry.lastDuelAt ?? null, entry.lastOpened);
   const canDuel = activeItems.length >= 2;
   const navigate = useNavigate();
 

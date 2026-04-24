@@ -79,7 +79,7 @@ export function useReminderScheduler(): void {
           title: S.settings.osNotificationTitle,
           body: S.settings.osNotificationBody(
             candidate.list.name,
-            Math.round(candidate.daysSinceOpened),
+            Math.round(candidate.daysSinceLastDuel),
           ),
           url: `/list/${candidate.entry.id}/duel`,
           listId: candidate.entry.id,

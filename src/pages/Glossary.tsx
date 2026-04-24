@@ -1,10 +1,8 @@
 import { useEffect } from 'react';
-import { Link, useLocation } from 'react-router';
+import { useLocation } from 'react-router';
 import { S } from '@/lib/strings';
-import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import {
-  ArrowLeft,
   ArrowUp,
   ArrowDown,
   Bell,
@@ -74,14 +72,7 @@ export default function GlossaryPage() {
   }, [hash]);
   return (
     <div className="p-4 max-w-lg mx-auto space-y-6">
-      <div className="flex items-center gap-2">
-        <Button asChild variant="ghost" size="icon" aria-label={G.backAria}>
-          <Link to="/settings">
-            <ArrowLeft className="h-5 w-5" />
-          </Link>
-        </Button>
-        <h1 className="text-2xl font-bold">{G.heading}</h1>
-      </div>
+      <h1 className="text-2xl font-bold">{G.heading}</h1>
 
       <p className="text-sm text-muted-foreground">{G.intro}</p>
 
@@ -114,7 +105,7 @@ export default function GlossaryPage() {
           desc={G.activityStaleDesc}
         />
         <GlossaryRow
-          swatch={<Dot className="bg-muted-foreground/40" />}
+          swatch={<Dot className="bg-orange-500" />}
           label={S.list.activityCold}
           desc={G.activityColdDesc}
         />

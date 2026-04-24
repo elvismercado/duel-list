@@ -1,5 +1,5 @@
 import type { DuelRecord, Item } from '@/types';
-import { getHistory, saveHistory } from '@/lib/storage';
+import { getHistory, saveHistory, markDuelRecorded } from '@/lib/storage';
 import { formatLocalDate } from '@/lib/datetime';
 
 // ---------------------------------------------------------------------------
@@ -54,6 +54,7 @@ export function appendDuelToHistory(
   const current = getHistory(listId);
   const updated = tailParseAndAppend(current, entry, today, listName);
   saveHistory(listId, updated);
+  markDuelRecorded(listId);
 }
 
 // ---------------------------------------------------------------------------

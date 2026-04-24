@@ -24,12 +24,42 @@ export interface ListEntry {
   id: string;
   name: string;
   lastOpened: number | null;
+  /**
+   * Epoch ms of the last recorded duel for this list. Null = never duelled.
+   * Maintained by `markDuelRecorded`. Pre-existing entries are lazily
+   * backfilled by `getAllLists` from the history file the first time they're
+   * read after the field was introduced.
+   */
+  lastDuelAt?: number | null;
 }
 
 export function getAllLists(): ListEntry[] {
   const raw = localStorage.getItem(KEY_LISTS);
   if (!raw) return [];
-  return JSON.parse(raw) as ListEntry[];
+  const entries = JSON.parse(raw) as ListEntry[];
+  // Lazy backfill: any entry created before `lastDuelAt` existed has the
+  // field undefined. Parse the latest @iso suffix in the history file once
+  // and persist the result so subsequent renders are O(1).
+  let mutated = false;
+  for (const e of entries) {
+    if (e.lastDuelAt === undefined) {
+      e.lastDuelAt = parseLastDuelTimestamp(getHistory(e.id));
+      mutated = true;
+    }
+  }
+  if (mutated) saveRegistry(entries);
+  return entries;
+}
+
+function parseLastDuelTimestamp(history: string): number | null {
+  if (!history) return null;
+  // Match the most recent ISO timestamp suffix (`@2026-04-23T14:32:05.847Z`).
+  // History grows append-only so the last match in the string is the newest.
+  const matches = history.match(/@(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z)/g);
+  if (!matches || matches.length === 0) return null;
+  const last = matches[matches.length - 1]!.slice(1);
+  const t = Date.parse(last);
+  return Number.isFinite(t) ? t : null;
 }
 
 function saveRegistry(entries: ListEntry[]): void {
@@ -51,10 +81,14 @@ export function saveList(config: ListConfig): void {
 
   const entries = getAllLists();
   const idx = entries.findIndex((e) => e.id === config.id);
+  const previous = idx === -1 ? null : entries[idx]!;
   const entry: ListEntry = {
     id: config.id,
     name: config.name,
     lastOpened: Date.now(),
+    // Preserve the previous duel timestamp on rename/save — only `markDuelRecorded`
+    // should advance it.
+    lastDuelAt: previous?.lastDuelAt ?? null,
   };
 
   if (idx === -1) {
@@ -98,6 +132,19 @@ export function getHistory(listId: string): string {
 
 export function saveHistory(listId: string, markdown: string): void {
   localStorage.setItem(historyKey(listId), markdown);
+}
+
+/**
+ * Update a list entry's `lastDuelAt` to the current time. Called by the
+ * history-append path so the activity dot and reminder scorer can rely on a
+ * cheap timestamp instead of re-parsing the history string on every render.
+ */
+export function markDuelRecorded(listId: string): void {
+  const entries = getAllLists();
+  const idx = entries.findIndex((e) => e.id === listId);
+  if (idx === -1) return;
+  entries[idx]!.lastDuelAt = Date.now();
+  saveRegistry(entries);
 }
 
 // ---------------------------------------------------------------------------

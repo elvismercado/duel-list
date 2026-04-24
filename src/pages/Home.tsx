@@ -216,7 +216,7 @@ export default function Home() {
       title: S.settings.osNotificationTitle,
       body: S.settings.osNotificationBody(
         reminderCandidate.list.name,
-        Math.round(reminderCandidate.daysSinceOpened),
+        Math.round(reminderCandidate.daysSinceLastDuel),
       ),
       url: `/list/${reminderCandidate.entry.id}/duel`,
       listId: reminderCandidate.entry.id,

@@ -137,13 +137,24 @@ export interface ReminderCandidate {
   entry: ListEntry;
   list: ListConfig;
   duelCount: number;
+  /**
+   * Days since the user last opened this list. Kept for backwards-compat with
+   * existing UI copy; prefer `daysSinceLastDuel` for ranking-staleness logic.
+   */
   daysSinceOpened: number;
+  /**
+   * Days since the most recent duel for this list. Equals 365 (treated as
+   * "very stale") when the list has never been duelled. This is the value
+   * `pickReminderList` scores on — it matches the activity-dot semantics on
+   * the home page (which also reflect duel freshness, not visit freshness).
+   */
+  daysSinceLastDuel: number;
   score: number;
 }
 
 /**
  * Choose the best list to nudge. Higher score wins.
- * Score = daysSinceOpened * 0.3 + (lessDevelopedBonus).
+ * Score = daysSinceLastDuel * 0.3 + (lessDevelopedBonus).
  * Excludes opted-out lists and lists with < 2 active items.
  */
 export function pickReminderList(
@@ -167,10 +178,16 @@ export function pickReminderList(
       entry.lastOpened === null
         ? 365
         : Math.max(0, (now.getTime() - entry.lastOpened) / DAY_MS);
+    const daysSinceLastDuel =
+      entry.lastDuelAt === null || entry.lastDuelAt === undefined
+        ? 365
+        : Math.max(0, (now.getTime() - entry.lastDuelAt) / DAY_MS);
     // Less-developed lists get a bonus (more leverage per duel).
     const developmentBonus = duelCount < 10 ? 2 : duelCount < 50 ? 1 : 0;
-    const score = daysSinceOpened * 0.3 + developmentBonus;
-    candidates.push({ entry, list, duelCount, daysSinceOpened, score });
+    // Score by ranking-staleness, not visit-staleness, so a list opened
+    // yesterday but not actually duelled in 6 weeks still surfaces.
+    const score = daysSinceLastDuel * 0.3 + developmentBonus;
+    candidates.push({ entry, list, duelCount, daysSinceOpened, daysSinceLastDuel, score });
   }
 
   if (candidates.length === 0) return null;

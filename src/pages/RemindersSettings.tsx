@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router';
+import { useNavigate } from 'react-router';
 import { S } from '@/lib/strings';
 import { getSettings, updateSettings, getAllLists, getList } from '@/lib/storage';
 import { formatHourMinute } from '@/lib/datetime';
@@ -21,7 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { ArrowLeft, Bell } from 'lucide-react';
+import { Bell } from 'lucide-react';
 import type {
   CustomCadenceUnit,
   ReminderCadence,
@@ -93,14 +93,7 @@ export default function RemindersSettingsPage() {
 
   return (
     <div className="p-4 max-w-lg mx-auto space-y-6">
-      <div className="flex items-center gap-2">
-        <Button asChild variant="ghost" size="icon" aria-label={S.settings.remindersBack}>
-          <Link to="/settings">
-            <ArrowLeft className="h-5 w-5" />
-          </Link>
-        </Button>
-        <h1 className="text-2xl font-bold">{S.settings.remindersHeading}</h1>
-      </div>
+      <h1 className="text-2xl font-bold">{S.settings.remindersHeading}</h1>
 
       <p className="text-sm text-muted-foreground">{S.settings.remindersHelp}</p>
 

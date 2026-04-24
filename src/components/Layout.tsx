@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Outlet, useLocation, useNavigate, useParams } from 'react-router';
+import { Link, Outlet, useLocation, useNavigate, useParams } from 'react-router';
 import { ArrowLeft, AlertTriangle } from 'lucide-react';
 import { S } from '@/lib/strings';
 import { getSettings, isQuotaNearLimit } from '@/lib/storage';
@@ -15,17 +15,35 @@ function applyTheme(theme: string) {
   }
 }
 
+// Hard-coded for now — keep in sync with package.json on release.
+// A future build-time replacement (vite `define`) can wire this to env automatically.
+const APP_VERSION = '1.0.0';
+
 function getBackTarget(pathname: string, id?: string): string | null {
   if (pathname === '/') return null;
   if (pathname === '/welcome') return '/';
   if (pathname === '/settings') return '/';
+  if (pathname === '/settings/reminders') return '/settings';
+  if (pathname === '/settings/glossary') return '/settings';
+  if (pathname === '/features') return '/';
   if (id) {
     if (pathname.endsWith('/duel')) return `/list/${id}`;
     if (pathname.endsWith('/settings')) return `/list/${id}`;
+    if (pathname.endsWith('/history')) return `/list/${id}`;
     // /list/:id itself
     return '/';
   }
   return '/';
+}
+
+function shouldShowFooter(pathname: string): boolean {
+  // Hide on immersive / standalone surfaces:
+  //  - /welcome owns its own full-screen layout
+  //  - /list/:id/duel is the focus mode (notifications already suppress chrome)
+  //  - NotFound (`*`) doesn't have a stable shape
+  if (pathname === '/welcome') return false;
+  if (pathname.endsWith('/duel')) return false;
+  return true;
 }
 
 export default function Layout() {
@@ -83,6 +101,26 @@ export default function Layout() {
       <main className="flex-1 pb-8" style={{ paddingBottom: 'max(2rem, env(safe-area-inset-bottom))' }}>
         <Outlet />
       </main>
+      {shouldShowFooter(location.pathname) && (
+        <footer className="border-t bg-background/60 px-4 py-3 text-xs text-muted-foreground">
+          <div className="max-w-lg mx-auto flex items-center justify-between gap-3 flex-wrap">
+            <nav className="flex items-center gap-3" aria-label={S.app.footerNavAria}>
+              <Link to="/settings/glossary" className="hover:text-foreground transition-colors">
+                {S.app.footerGlossary}
+              </Link>
+              <span aria-hidden="true" className="text-muted-foreground/40">·</span>
+              <Link to="/features" className="hover:text-foreground transition-colors">
+                {S.app.footerFeatures}
+              </Link>
+              <span aria-hidden="true" className="text-muted-foreground/40">·</span>
+              <Link to="/settings" className="hover:text-foreground transition-colors">
+                {S.app.footerSettings}
+              </Link>
+            </nav>
+            <span className="text-muted-foreground/70">{S.app.footerVersion(APP_VERSION)}</span>
+          </div>
+        </footer>
+      )}
     </div>
   );
 }
