@@ -208,7 +208,7 @@ export default function Rankings() {
         {supported && isSynced && (
           <span
             title={S.ranking.fileLinkedTooltip}
-            className="shrink-0 inline-flex items-center gap-1 rounded-full border border-green-600/30 bg-green-600/10 px-2 py-0.5 text-xs font-medium text-green-700 dark:text-green-400"
+            className="shrink-0 inline-flex items-center gap-1 rounded-full border border-success/30 bg-success/10 px-2 py-0.5 text-xs font-medium text-success"
           >
             <FileCheck className="h-3.5 w-3.5" aria-hidden="true" />
             <span>{S.ranking.fileLinked}</span>
@@ -602,7 +602,7 @@ function TrendBadge({ delta }: { delta: number | null }) {
   if (delta > 0) {
     return (
       <span
-        className={`${wrapper} text-emerald-600 dark:text-emerald-400`}
+        className={`${wrapper} text-outcome-win`}
         title={S.ranking.movedUp(delta)}
         aria-label={S.ranking.movedUp(delta)}
       >
@@ -614,7 +614,7 @@ function TrendBadge({ delta }: { delta: number | null }) {
   const down = Math.abs(delta);
   return (
     <span
-      className={`${wrapper} text-destructive`}
+      className={`${wrapper} text-outcome-loss`}
       title={S.ranking.movedDown(down)}
       aria-label={S.ranking.movedDown(down)}
     >

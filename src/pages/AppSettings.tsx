@@ -1,5 +1,6 @@
 import { S } from '@/lib/strings';
 import { getSettings, updateSettings, getStorageUsage } from '@/lib/storage';
+import { applyTheme, type Theme } from '@/lib/theme';
 import { useExport } from '@/hooks/useExport';
 import { formatHourMinute } from '@/lib/datetime';
 import { Button } from '@/components/ui/button';
@@ -49,17 +50,10 @@ export default function AppSettingsPage() {
   const storage = getStorageUsage();
 
   function handleThemeChange(theme: string) {
-    updateSettings({ theme: theme as 'system' | 'light' | 'dark' });
+    const t = theme as Theme;
+    updateSettings({ theme: t });
     setSettings(getSettings());
-    // Apply theme to document
-    const root = document.documentElement;
-    root.classList.remove('light', 'dark');
-    if (theme === 'system') {
-      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      root.classList.add(prefersDark ? 'dark' : 'light');
-    } else {
-      root.classList.add(theme);
-    }
+    applyTheme(t);
   }
 
   function handleDuelModeChange(mode: string) {

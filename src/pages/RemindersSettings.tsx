@@ -343,13 +343,13 @@ export default function RemindersSettingsPage() {
                           'inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full ' +
                           (skipped
                             ? 'bg-muted text-muted-foreground'
-                            : 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300')
+                            : 'bg-success/15 text-success')
                         }
                       >
                         <span
                           className={
                             'h-1.5 w-1.5 rounded-full ' +
-                            (skipped ? 'bg-muted-foreground/50' : 'bg-emerald-500')
+                            (skipped ? 'bg-muted-foreground/50' : 'bg-success')
                           }
                         />
                         {skipped

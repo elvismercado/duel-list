@@ -95,17 +95,17 @@ export default function GlossaryPage() {
 
       <Section title={G.sectionActivity}>
         <GlossaryRow
-          swatch={<Dot className="bg-emerald-500" />}
+          swatch={<Dot className="bg-success" />}
           label={S.list.activityFresh}
           desc={G.activityFreshDesc}
         />
         <GlossaryRow
-          swatch={<Dot className="bg-amber-500" />}
+          swatch={<Dot className="bg-warning" />}
           label={S.list.activityStale}
           desc={G.activityStaleDesc}
         />
         <GlossaryRow
-          swatch={<Dot className="bg-orange-500" />}
+          swatch={<Dot className="bg-outcome-loss" />}
           label={S.list.activityCold}
           desc={G.activityColdDesc}
         />
@@ -118,7 +118,7 @@ export default function GlossaryPage() {
 
       <Section title={G.sectionFileLink}>
         <GlossaryRow
-          swatch={<FileCheck className="h-4 w-4 text-emerald-600" />}
+          swatch={<FileCheck className="h-4 w-4 text-success" />}
           label={G.fileLinkedLabel}
           desc={G.fileLinkedDesc}
         />
@@ -141,7 +141,7 @@ export default function GlossaryPage() {
           desc={G.rankViewDesc}
         />
         <GlossaryRow
-          swatch={<Trophy className="h-4 w-4 text-amber-500" />}
+          swatch={<Trophy className="h-4 w-4 text-podium-gold" />}
           label={G.scoreViewLabel}
           desc={G.scoreViewDesc}
         />
@@ -167,12 +167,12 @@ export default function GlossaryPage() {
 
       <Section title={G.sectionTrend}>
         <GlossaryRow
-          swatch={<ArrowUp className="h-4 w-4 text-emerald-600" />}
+          swatch={<ArrowUp className="h-4 w-4 text-outcome-win" />}
           label={G.trendUpLabel}
           desc={G.trendUpDesc}
         />
         <GlossaryRow
-          swatch={<ArrowDown className="h-4 w-4 text-destructive" />}
+          swatch={<ArrowDown className="h-4 w-4 text-outcome-loss" />}
           label={G.trendDownLabel}
           desc={G.trendDownDesc}
         />
@@ -190,7 +190,7 @@ export default function GlossaryPage() {
           desc={G.cardCtaNoDuelsDesc}
         />
         <GlossaryRow
-          swatch={<Trophy className="h-4 w-4 text-amber-500" />}
+          swatch={<Trophy className="h-4 w-4 text-podium-gold" />}
           label={G.cardPodiumLabel}
           desc={G.cardPodiumDesc}
         />

@@ -325,7 +325,7 @@ function NameChip({
         alignRight ? 'flex-row-reverse text-right' : ''
       } ${
         won
-          ? 'border-amber-500 bg-amber-50 text-amber-950 dark:bg-amber-500/10 dark:text-amber-100 font-semibold'
+          ? 'border-warning bg-warning/10 text-foreground font-semibold'
           : dimmed
             ? 'border-border bg-card text-muted-foreground'
             : 'border-border bg-card text-foreground'
@@ -334,7 +334,7 @@ function NameChip({
     >
       {won && (
         <Trophy
-          className="h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400"
+          className="h-4 w-4 shrink-0 text-warning"
           aria-label={S.history.winnerAria}
         />
       )}

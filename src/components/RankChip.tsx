@@ -1,7 +1,7 @@
 const PODIUM_CHIP_CLASS: readonly string[] = [
-  'bg-amber-400/20 text-amber-700 dark:text-amber-300',
-  'bg-slate-400/25 text-slate-700 dark:text-slate-300',
-  'bg-orange-400/20 text-orange-800 dark:text-orange-300',
+  'bg-podium-gold/20 text-podium-gold',
+  'bg-podium-silver/25 text-podium-silver',
+  'bg-podium-bronze/20 text-podium-bronze',
 ];
 
 const MUTED_CHIP_CLASS = 'bg-muted text-muted-foreground';

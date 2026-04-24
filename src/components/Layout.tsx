@@ -3,18 +3,9 @@ import { Link, Outlet, useLocation, useNavigate, useParams } from 'react-router'
 import { ArrowLeft, AlertTriangle } from 'lucide-react';
 import { S } from '@/lib/strings';
 import { getSettings, isQuotaNearLimit } from '@/lib/storage';
+import { applyTheme } from '@/lib/theme';
 import { HeaderActionsProvider, useHeaderActionsSlot } from '@/components/HeaderActions';
-
-function applyTheme(theme: string) {
-  const root = document.documentElement;
-  root.classList.remove('light', 'dark');
-  if (theme === 'system') {
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    root.classList.add(prefersDark ? 'dark' : 'light');
-  } else {
-    root.classList.add(theme);
-  }
-}
+import { ThemeToggle } from '@/components/ThemeToggle';
 
 // Hard-coded for now.keep in sync with package.json on release.
 // A future build-time replacement (vite `define`) can wire this to env automatically.
@@ -107,9 +98,10 @@ function LayoutInner() {
         >
           {S.app.name}
         </button>
-        {headerActions && (
-          <div className="ml-auto flex items-center gap-1">{headerActions}</div>
-        )}
+        <div className="ml-auto flex items-center gap-1">
+          <ThemeToggle />
+          {headerActions}
+        </div>
       </header>
       <main className="flex-1 pb-8" style={{ paddingBottom: 'max(2rem, env(safe-area-inset-bottom))' }}>
         <Outlet />

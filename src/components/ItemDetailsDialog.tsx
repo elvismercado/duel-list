@@ -205,7 +205,7 @@ function OutcomeBadge({ outcome }: { outcome: ItemDuelRecord['outcome'] }) {
   if (outcome === 'win') {
     return (
       <Trophy
-        className="h-4 w-4 text-amber-600 dark:text-amber-400 shrink-0"
+        className="h-4 w-4 text-warning shrink-0"
         aria-hidden="true"
       />
     );

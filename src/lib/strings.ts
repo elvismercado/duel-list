@@ -21,6 +21,8 @@ export const S = {
     footerFeatures: 'Features',
     footerSettings: 'Settings',
     footerVersion: (v: string) => `v${v}`,
+    themeToggleAria: (current: string, next: string) =>
+      `Theme: ${current}. Tap to switch to ${next}.`,
   },
 
   common: {

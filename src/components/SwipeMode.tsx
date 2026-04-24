@@ -73,7 +73,7 @@ function SwipeCard({ item, showElo, onPick, exiting }: SwipeCardProps) {
           )}
           <motion.div
             style={{ opacity: upHint }}
-            className="absolute top-3 left-1/2 -translate-x-1/2 border-2 border-green-500 text-green-500 px-3 py-1 rounded font-bold text-xs"
+            className="absolute top-3 left-1/2 -translate-x-1/2 border-2 border-outcome-win text-outcome-win px-3 py-1 rounded font-bold text-xs"
           >
             {S.duel.pickBadge}
           </motion.div>

@@ -111,7 +111,7 @@ function DuelSession({
     return (
       <div className="p-4 max-w-lg mx-auto space-y-6" aria-live="polite">
         <div className="text-center space-y-2">
-          <Trophy className="h-10 w-10 mx-auto text-yellow-500" />
+          <Trophy className="h-10 w-10 mx-auto text-podium-gold" />
           <h1 className="text-2xl font-bold">{S.duel.sessionComplete}</h1>
           <p className="text-muted-foreground">
             {S.duel.duelsCompleted(duelCount)}
@@ -149,9 +149,9 @@ function DuelSession({
                 className="flex items-center gap-3 rounded-md border p-2"
               >
                 {m.rankChange < 0 ? (
-                  <TrendingUp className="h-4 w-4 text-green-500 shrink-0" />
+                  <TrendingUp className="h-4 w-4 text-outcome-win shrink-0" />
                 ) : (
-                  <TrendingDown className="h-4 w-4 text-red-500 shrink-0" />
+                  <TrendingDown className="h-4 w-4 text-outcome-loss shrink-0" />
                 )}
                 <span className="flex-1 truncate text-sm">{m.item.name}</span>
                 <span className="text-xs text-muted-foreground">

@@ -65,9 +65,9 @@ function getActivityBucket(
 }
 
 const ACTIVITY_DOT_CLASS: Record<ActivityBucket, string> = {
-  fresh: 'bg-emerald-500',
-  stale: 'bg-amber-500',
-  cold: 'bg-orange-500',
+  fresh: 'bg-success',
+  stale: 'bg-warning',
+  cold: 'bg-outcome-loss',
   never: 'bg-muted-foreground/30',
 };
 
@@ -197,7 +197,7 @@ export function ListCard({
             <h3 className="text-lg font-bold truncate">{entry.name}</h3>
             {showLinkStatus && isLinked && (
               <span
-                className="shrink-0 inline-flex items-center gap-1 rounded-full border border-green-600/30 bg-green-600/10 px-2 py-0.5 text-[10px] font-medium text-green-700 dark:text-green-400"
+                className="shrink-0 inline-flex items-center gap-1 rounded-full border border-success/30 bg-success/10 px-2 py-0.5 text-[10px] font-medium text-success"
                 title={S.ranking.fileLinkedTooltip}
               >
                 <FileCheck className="h-3 w-3" aria-hidden="true" />
