@@ -17,6 +17,8 @@ import { Download, Sparkles, Compass, Bell, HelpCircle } from 'lucide-react';
 import { useState } from 'react';
 import { Link } from 'react-router';
 import type { AppSettings, CustomCadenceUnit, ReminderSettings } from '@/types';
+import { CopyLastErrorButton } from '@/components/ErrorBoundary';
+import { clearErrorLog, getLastError } from '@/lib/errorLog';
 
 function cadenceShortLabel(r: ReminderSettings): string {
   switch (r.cadence) {
@@ -207,6 +209,87 @@ export default function AppSettingsPage() {
           {S.settings.storageUsage(storage.current / 1024, storage.limit / 1024 / 1024)}
         </p>
       </div>
+
+      <Separator />
+
+      <DeveloperZone />
     </div>
   );
+}
+
+function DeveloperZone() {
+  const [throwNow, setThrowNow] = useState(false);
+  const [logTick, setLogTick] = useState(0);
+  const last = getLastError();
+
+  function handleClear() {
+    if (!last) return;
+    if (!window.confirm(S.settings.devClearLogConfirm)) return;
+    clearErrorLog();
+    setLogTick((t) => t + 1);
+  }
+
+  return (
+    <details className="rounded-lg border bg-card">
+      <summary className="cursor-pointer select-none px-3 py-2 text-sm font-semibold text-muted-foreground">
+        {S.settings.developerHeading}
+      </summary>
+      <div className="space-y-3 px-3 pb-3 pt-1">
+        <p className="text-xs text-muted-foreground">{S.settings.developerHelp}</p>
+
+        <div className="space-y-1">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => setThrowNow(true)}
+          >
+            {S.settings.devTriggerError}
+          </Button>
+          <p className="text-xs text-muted-foreground">
+            {S.settings.devTriggerErrorHelp}
+          </p>
+          {throwNow && <ErrorBomb />}
+        </div>
+
+        <div className="space-y-1">
+          {last ? (
+            <p
+              className="text-xs text-muted-foreground truncate"
+              title={`${new Date(last.ts).toLocaleString()} \u00b7 ${last.message}`}
+            >
+              {S.settings.devLastErrorPreview(
+                new Date(last.ts).toLocaleString(),
+                last.message,
+              )}
+            </p>
+          ) : (
+            <p className="text-xs text-muted-foreground">
+              {S.settings.devNoErrorYet}
+            </p>
+          )}
+          <div className="flex gap-2 flex-wrap">
+            {/* key forces a refetch of getLastError after clear */}
+            <CopyLastErrorButton key={logTick} variant="outline" />
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handleClear}
+              disabled={!last}
+            >
+              {S.settings.devClearLog}
+            </Button>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            {S.settings.devCopyLastErrorHelp}
+          </p>
+        </div>
+      </div>
+    </details>
+  );
+}
+
+function ErrorBomb(): never {
+  throw new Error('Manually triggered from Developer zone');
 }

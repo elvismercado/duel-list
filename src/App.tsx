@@ -1,7 +1,7 @@
 import { lazy, Suspense } from 'react';
 import { createBrowserRouter, RouterProvider } from 'react-router';
 import Layout from '@/components/Layout';
-import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { ErrorBoundary, RouteErrorElement } from '@/components/ErrorBoundary';
 import { useReminderScheduler } from '@/hooks/useReminderScheduler';
 import {
   DefaultSkeleton,
@@ -29,6 +29,7 @@ function withSuspense(node: React.ReactNode, fallback: React.ReactNode = <Defaul
 const router = createBrowserRouter([
   {
     element: <Layout />,
+    errorElement: <RouteErrorElement />,
     children: [
       { path: '/', element: withSuspense(<Home />, <HomeSkeleton />) },
       { path: '/welcome', element: withSuspense(<Welcome />) },

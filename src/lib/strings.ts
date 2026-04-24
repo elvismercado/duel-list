@@ -16,6 +16,8 @@ export const S = {
       'Duel⚡List hit an unexpected error. Your saved lists are safe.reloading usually fixes it.',
     errorBoundaryReload: 'Reload',
     errorBoundaryDetails: 'Show details',
+    errorBoundaryCopy: 'Copy details',
+    errorBoundaryCopied: 'Copied',
     footerNavAria: 'Footer navigation',
     footerGlossary: 'Glossary',
     footerFeatures: 'Features',
@@ -528,6 +530,23 @@ export const S = {
     deleteList: 'Delete list',
     deleteListConfirm: (name: string) =>
       `Permanently delete "${name}" and all its history? This cannot be undone.`,
+    developerHeading: 'Developer',
+    developerHelp:
+      'Troubleshooting tools. Safe to use, but only needed when something looks broken.',
+    devTriggerError: 'Trigger render error',
+    devTriggerErrorHelp:
+      'Throws an error inside the page so you can confirm the error screen works.',
+    devCopyLastError: 'Copy last error',
+    devCopyLastErrorHelp:
+      'Copies the most recent error (message, stack, time, route) to the clipboard.',
+    devNoErrorYet: 'No errors recorded yet.',
+    devLastErrorPreview: (relative: string, message: string) =>
+      `Last error ${relative}: ${message}`,
+    devCopied: 'Copied',
+    devClearLog: 'Clear error log',
+    devClearLogHelp: 'Removes all stored errors from this device.',
+    devClearLogConfirm:
+      'Clear the stored error log? Recent crash details will be lost.',
   },
 
   export: {
