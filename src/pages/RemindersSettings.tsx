@@ -1,8 +1,15 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { S } from '@/lib/strings';
 import { getSettings, updateSettings, getAllLists, getList } from '@/lib/storage';
 import { formatHourMinute } from '@/lib/datetime';
+import {
+  getPermission,
+  notificationsSupported,
+  requestPermission,
+  showLocal,
+  triggerSupported,
+} from '@/lib/notifications';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
@@ -40,7 +47,21 @@ export default function RemindersSettingsPage() {
   }
 
   function handleTest() {
-    navigate('/?testReminder=1');
+    const wantsOs = r.channel === 'os' || r.channel === 'both';
+    const osDeliverable = wantsOs && getPermission() === 'granted';
+    if (osDeliverable) {
+      void showLocal({
+        title: S.settings.osNotificationTitle,
+        body: S.settings.osNotificationBody('DuelList', 0),
+        url: '/',
+      });
+    }
+    // Show the in-app banner whenever the channel includes in-app, or as a
+    // fallback when OS was chosen but isn't actually deliverable yet.
+    const wantsInApp = r.channel === 'in-app' || r.channel === 'both';
+    if (wantsInApp || !osDeliverable) {
+      navigate('/?testReminder=1');
+    }
   }
 
   const preferredMode: 'preset' | 'custom' = isPresetHour(r.preferredHour, r.preferredMinute)
@@ -286,9 +307,7 @@ export default function RemindersSettingsPage() {
               </SelectContent>
             </Select>
             {r.channel !== 'in-app' && (
-              <p className="text-xs text-muted-foreground">
-                {S.settings.remindersOsUnsupported}
-              </p>
+              <OsPermissionPanel />
             )}
           </div>
 
@@ -468,3 +487,64 @@ function PreferredTimePicker({
     </div>
   );
 }
+
+function OsPermissionPanel() {
+  const supported = notificationsSupported();
+  const [permission, setPermission] = useState<NotificationPermission>(
+    supported ? getPermission() : 'denied',
+  );
+  const [scheduleSupported, setScheduleSupported] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    if (!supported) return;
+    void triggerSupported().then(setScheduleSupported);
+  }, [supported]);
+
+  if (!supported) {
+    return (
+      <p className="text-xs text-muted-foreground">
+        {S.settings.remindersOsUnsupported}
+      </p>
+    );
+  }
+
+  async function handleEnable() {
+    const next = await requestPermission();
+    setPermission(next);
+    if (next === 'granted') {
+      void triggerSupported().then(setScheduleSupported);
+    }
+  }
+
+  return (
+    <div className="space-y-2 rounded-md border bg-muted/30 p-3">
+      {permission === 'granted' && (
+        <p className="text-xs text-muted-foreground">
+          {S.settings.remindersPermissionGranted}
+        </p>
+      )}
+      {permission === 'denied' && (
+        <p className="text-xs text-muted-foreground">
+          {S.settings.remindersPermissionDenied}
+        </p>
+      )}
+      {permission === 'default' && (
+        <>
+          <p className="text-xs text-muted-foreground">
+            {S.settings.remindersPermissionDefault}
+          </p>
+          <Button size="sm" variant="outline" onClick={handleEnable}>
+            <Bell className="h-4 w-4 mr-1" />
+            {S.settings.remindersPermissionEnableButton}
+          </Button>
+        </>
+      )}
+      {permission === 'granted' && scheduleSupported === false && (
+        <p className="text-xs text-muted-foreground">
+          {S.settings.remindersTriggerUnsupportedHelp}
+        </p>
+      )}
+    </div>
+  );
+}
+

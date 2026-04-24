@@ -403,14 +403,27 @@ export const S = {
     remindersChannelBoth: 'Both',
     remindersOsUnsupported:
       'OS notifications are limited on this device — in-app reminders still work.',
+    remindersPermissionGranted: 'Notifications enabled.',
+    remindersPermissionDenied:
+      'Notifications are blocked. Open your browser site settings to allow them, then come back.',
+    remindersPermissionDefault:
+      'Allow notifications so DuelList can nudge you when the app is in the background.',
+    remindersPermissionEnableButton: 'Enable notifications',
+    remindersTriggerUnsupportedHelp:
+      'Background scheduling isn’t supported on this browser — reminders will only fire while DuelList is open.',
+    osNotificationTitle: 'Time for a duel?',
+    osNotificationBody: (listName: string, days: number) =>
+      days <= 0
+        ? `Rank one duel for "${listName}".`
+        : `Rank one duel for "${listName}" — last played ${days} ${days === 1 ? 'day' : 'days'} ago.`,
     remindersPerListHeading: 'Skip these lists',
     remindersPerListHelp: 'Lists you don’t want reminders for.',
     remindersPerListReminding: 'Reminding',
     remindersPerListSkipped: 'Skipped',
     remindersPerListItemsCount: (n: number) => `${n} ${n === 1 ? 'item' : 'items'}`,
-    remindersTestButton: 'Show test reminder',
+    remindersTestButton: 'Send test reminder',
     remindersTestHelp:
-      'Forces the reminder banner to appear once on Home — useful for previewing.',
+      'Sends a test through your selected channel — in-app banner, OS notification, or both.',
     remindersBack: 'Back to settings',
     aboutHeading: 'About',
     whatsInDuelList: "What's in DuelList",

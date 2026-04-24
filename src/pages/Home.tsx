@@ -1,4 +1,4 @@
-import { useState, useRef, useMemo } from 'react';
+import { useState, useRef, useMemo, useEffect } from 'react';
 import { Navigate, useNavigate, useSearchParams } from 'react-router';
 import { getSettings, saveList, getList, getHistory, updateSettings } from '@/lib/storage';
 import { S } from '@/lib/strings';
@@ -16,6 +16,7 @@ import { ListCreateDialog } from '@/components/ListCreateDialog';
 import { ImportConflictDialog } from '@/components/ImportConflictDialog';
 import { ReminderBanner } from '@/components/ReminderBanner';
 import { isReminderDue, pickReminderList, pickRandomDuelList } from '@/lib/reminders';
+import { getPermission, showLocal } from '@/lib/notifications';
 import { useListRegistry } from '@/hooks/useListRegistry';
 import { useFileSync } from '@/hooks/useFileSync';
 import { saveFileHandle } from '@/lib/storage';
@@ -200,6 +201,49 @@ export default function Home() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lists, reminderTick, testReminder]);
 
+  // Visibility-based channel arbitration: when the tab is hidden and the user
+  // has opted into OS notifications, fire one through the SW instead of (and
+  // not in addition to) showing the in-app banner. Re-evaluate when the tab
+  // returns to the foreground so the banner can appear immediately on focus.
+  useEffect(() => {
+    if (!reminderCandidate) return;
+    if (document.visibilityState !== 'hidden') return;
+    const s = getSettings();
+    const wantsOs = s.reminders.channel === 'os' || s.reminders.channel === 'both';
+    if (!wantsOs) return;
+    if (getPermission() !== 'granted') return;
+    void showLocal({
+      title: S.settings.osNotificationTitle,
+      body: S.settings.osNotificationBody(
+        reminderCandidate.list.name,
+        Math.round(reminderCandidate.daysSinceOpened),
+      ),
+      url: `/list/${reminderCandidate.entry.id}/duel`,
+      listId: reminderCandidate.entry.id,
+    });
+    // Mark as shown so we don't keep firing on every focus loss.
+    updateSettings({
+      reminders: { ...s.reminders, lastShownAt: Date.now() },
+    });
+  }, [reminderCandidate]);
+
+  useEffect(() => {
+    function onVisibility() {
+      if (document.visibilityState === 'visible') {
+        setReminderTick((t) => t + 1);
+      }
+    }
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => document.removeEventListener('visibilitychange', onVisibility);
+  }, []);
+
+  // Suppress the in-app banner when the page is hidden — the OS notification
+  // (if permitted) is doing the work; otherwise the banner will appear on
+  // next focus via the visibilitychange listener above.
+  const showBanner =
+    reminderCandidate !== null &&
+    (typeof document === 'undefined' || document.visibilityState === 'visible');
+
   function clearTestFlag() {
     if (testReminder) {
       const next = new URLSearchParams(searchParams);
@@ -250,7 +294,7 @@ export default function Home() {
         </Button>
       </div>
 
-      {reminderCandidate && (
+      {reminderCandidate && showBanner && (
         <ReminderBanner
           candidate={reminderCandidate}
           onSnooze={handleSnoozeReminder}

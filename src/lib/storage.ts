@@ -204,6 +204,29 @@ export function updateSettings(partial: Partial<AppSettings>): void {
     KEY_SETTINGS,
     JSON.stringify({ ...current, ...partial }),
   );
+  for (const fn of settingsListeners) {
+    try {
+      fn();
+    } catch {
+      // listener errors must not break the settings write
+    }
+  }
+}
+
+const settingsListeners = new Set<() => void>();
+
+/**
+ * Subscribe to in-process settings updates. Fires after every successful
+ * `updateSettings` call. Returns an unsubscribe function.
+ *
+ * Note: this only catches updates from the same tab. Cross-tab updates would
+ * need a separate `storage` event listener.
+ */
+export function subscribeSettings(listener: () => void): () => void {
+  settingsListeners.add(listener);
+  return () => {
+    settingsListeners.delete(listener);
+  };
 }
 
 // ---------------------------------------------------------------------------

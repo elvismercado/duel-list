@@ -78,6 +78,61 @@ export function isReminderDue(
   return t - settings.lastShownAt >= interval;
 }
 
+/**
+ * Compute the next epoch ms at which a reminder is allowed to fire, given
+ * cadence, snooze, preferred time, and quiet hours. Returns null if the
+ * settings disable reminders entirely.
+ *
+ * Algorithm:
+ *  1. Earliest candidate = max(now, lastShownAt + interval, snoozedUntil).
+ *  2. If `preferredHour:preferredMinute` falls today after the candidate, use
+ *     today's preferred slot; else use tomorrow's. (Always snap up so we don't
+ *     fire earlier than requested.)
+ *  3. If the snapped time falls inside quiet hours, walk forward in 15-min
+ *     steps until we land outside the window (capped at 7 days lookahead).
+ */
+export function nextEligibleTick(
+  settings: ReminderSettings,
+  now: Date = new Date(),
+): number | null {
+  if (!settings.enabled || settings.cadence === 'off') return null;
+  const interval = cadenceToIntervalMs(
+    settings.cadence,
+    settings.customCount,
+    settings.customUnit,
+  );
+  if (!isFinite(interval)) return null;
+
+  const earliest = Math.max(
+    now.getTime(),
+    settings.lastShownAt !== null ? settings.lastShownAt + interval : now.getTime(),
+    settings.snoozedUntil ?? 0,
+  );
+
+  // Snap to the preferred hour:minute. We pick the soonest slot >= earliest.
+  const snapped = new Date(earliest);
+  snapped.setSeconds(0, 0);
+  const targetMin = settings.preferredHour * 60 + settings.preferredMinute;
+  const snappedMin = snapped.getHours() * 60 + snapped.getMinutes();
+  if (snappedMin <= targetMin) {
+    snapped.setHours(settings.preferredHour, settings.preferredMinute, 0, 0);
+  } else {
+    // Move to tomorrow's preferred time.
+    snapped.setDate(snapped.getDate() + 1);
+    snapped.setHours(settings.preferredHour, settings.preferredMinute, 0, 0);
+  }
+
+  // If quiet hours apply, walk forward in 15-min steps until we land outside.
+  let probe = snapped;
+  const cap = snapped.getTime() + 7 * 86_400_000;
+  while (!inAllowedHours(probe, settings)) {
+    probe = new Date(probe.getTime() + 15 * 60_000);
+    if (probe.getTime() > cap) return null;
+  }
+  return probe.getTime();
+}
+
+
 export interface ReminderCandidate {
   entry: ListEntry;
   list: ListConfig;
