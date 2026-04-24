@@ -85,23 +85,22 @@ export const S = {
   welcome: {
     heading: 'Welcome to Duel⚡List',
     description:
-      'Rank your favourites through quick A-vs-B comparisons. Create a list, add items, and start duelling.',
+      'Rank your favourites through quick A-vs-B duels. Create a list, add items, and start duelling.',
     getStarted: 'Get started',
     trySample: 'Try a sample list',
     skipTour: 'Skip tour',
     seeAllFeatures: 'See all features',
+    seeGlossary: 'What things mean',
     stepAria: (n: number) => `Step ${n}`,
-    duelStepTitle: 'The Duel',
+    duelStepTitle: 'The duel',
     duelStepDescription:
-      'Two items appear side by side. Pick the winner, declare a tie, or skip.',
-    rankingStepTitle: 'Your Ranking Builds Itself',
-    rankingStepDescription:
-      'After each duel, your list re-ranks automatically. The more duels you do, the more accurate it gets.',
-    sessionsStepTitle: 'Quick Sessions',
-    sessionsStepDescription: "Do 5–10 duels a day. It's a habit, not a chore.",
-    remindersStepTitle: 'Gentle Nudges',
-    remindersStepDescription:
-      'Pick a cadence and Duel⚡List will surface a list that’s gone stale. In-app banner, OS notification, or both.quiet hours respected.',
+      'Two items appear side by side — pick the winner, call a tie, or skip. After each duel, your list re-ranks itself; the more you do, the more accurate it gets. Prefer one card at a time? Switch to swipe mode in Settings.',
+    sessionsStepTitle: 'Sessions & history',
+    sessionsStepDescription:
+      'Knock out 5–10 duels per session. Every duel is saved, so you can browse history or export it as Markdown anytime.',
+    loopStepTitle: 'Stay in the loop',
+    loopStepDescription:
+      'Pick a cadence and Duel⚡List will nudge you when a list goes stale — quiet hours respected. Tweak the theme from the header, and start new lists fast with built-in templates.',
     readyStepTitle: 'Ready!',
     readyStepDescription: 'Create a list or try a sample to get started.',
   },

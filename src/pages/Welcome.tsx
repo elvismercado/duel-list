@@ -15,16 +15,12 @@ const TOUR_STEPS = [
     description: S.welcome.duelStepDescription,
   },
   {
-    heading: S.welcome.rankingStepTitle,
-    description: S.welcome.rankingStepDescription,
-  },
-  {
     heading: S.welcome.sessionsStepTitle,
     description: S.welcome.sessionsStepDescription,
   },
   {
-    heading: S.welcome.remindersStepTitle,
-    description: S.welcome.remindersStepDescription,
+    heading: S.welcome.loopStepTitle,
+    description: S.welcome.loopStepDescription,
   },
   {
     heading: S.welcome.readyStepTitle,
@@ -90,6 +86,16 @@ export default function Welcome() {
               className="w-48"
             >
               {S.welcome.seeAllFeatures}
+            </Button>
+            <Button
+              variant="ghost"
+              onClick={() => {
+                updateSettings({ firstRunDone: true });
+                navigate('/settings/glossary');
+              }}
+              className="w-48"
+            >
+              {S.welcome.seeGlossary}
             </Button>
           </>
         ) : (
