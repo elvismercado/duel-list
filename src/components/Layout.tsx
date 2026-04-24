@@ -23,6 +23,7 @@ function getBackTarget(pathname: string, id?: string): string | null {
     if (pathname.endsWith('/duel')) return `/list/${id}`;
     if (pathname.endsWith('/settings')) return `/list/${id}`;
     if (pathname.endsWith('/history')) return `/list/${id}`;
+    if (pathname.includes('/item/')) return `/list/${id}`;
     // /list/:id itself
     return '/';
   }

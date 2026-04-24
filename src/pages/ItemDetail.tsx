@@ -16,7 +16,7 @@ import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { HelpHint } from '@/components/HelpHint';
-import { Check, Pencil, Trash2, Trophy } from 'lucide-react';
+import { Check, ChevronLeft, Pencil, Trash2, Trophy } from 'lucide-react';
 
 export default function ItemDetail() {
   const { id, itemId } = useParams<{ id: string; itemId: string }>();
@@ -108,6 +108,17 @@ export default function ItemDetail() {
 
   return (
     <div className="p-4 max-w-lg mx-auto space-y-6">
+      {/* Parent list breadcrumb */}
+      <button
+        type="button"
+        onClick={() => navigate(`/list/${id}`)}
+        className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded -mx-1 px-1 -my-0.5 py-0.5"
+        aria-label={S.itemDetail.inListAria(list.name)}
+      >
+        <ChevronLeft className="h-4 w-4 shrink-0" aria-hidden="true" />
+        <span className="truncate">{list.name}</span>
+      </button>
+
       {/* Title + rename */}
       <div className="flex items-center gap-2 min-w-0">
         {renaming ? (
