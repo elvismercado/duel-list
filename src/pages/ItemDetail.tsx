@@ -57,6 +57,10 @@ export default function ItemDetail() {
     () => list?.items.find((i) => i.id === itemId) ?? null,
     [list, itemId],
   );
+  const activeCount = useMemo(
+    () => (list ? list.items.filter((i) => !i.removed).length : 0),
+    [list],
+  );
   const rank = useMemo(() => {
     if (!list || !item || item.removed) return 0;
     const ranked = sortItemsByElo(list.items.filter((i) => !i.removed));
@@ -76,6 +80,20 @@ export default function ItemDetail() {
     () => (item ? parseHistoryByItem(historyMd, item.id, 10) : []),
     [item, historyMd],
   );
+  // Newest-first slice of last 5 outcomes (already newest-first from parseHistoryByItem).
+  const recentForm = useMemo(() => lastDuels.slice(0, 5), [lastDuels]);
+  // Current streak: consecutive non-tie outcomes from newest, all matching.
+  const streak = useMemo<{ kind: 'win' | 'loss'; n: number } | null>(() => {
+    if (lastDuels.length === 0) return null;
+    const head = lastDuels[0]!;
+    if (head.outcome === 'tie') return null;
+    let n = 1;
+    for (let i = 1; i < lastDuels.length; i++) {
+      if (lastDuels[i]!.outcome !== head.outcome) break;
+      n++;
+    }
+    return n >= 2 ? { kind: head.outcome, n } : null;
+  }, [lastDuels]);
 
   useEffect(() => {
     if (item) setNotesDraft(item.notes ?? '');
@@ -192,7 +210,7 @@ export default function ItemDetail() {
             }
           />
         )}
-        <EditedPill ts={item.updated} />
+        <EditedPill ts={item.updated} className="ml-auto" />
       </div>
 
       {/* Title + rename */}
@@ -244,7 +262,11 @@ export default function ItemDetail() {
 
       {/* Stat grid */}
       <div className="grid grid-cols-2 gap-2 text-sm">
-        <RankTile rank={rank} prevRank={item.prevRank} />
+        <RankTile
+          rank={rank}
+          prevRank={item.prevRank}
+          activeCount={activeCount}
+        />
         <StatTile
           label={S.ranking.detailsScore}
           value={String(Math.round(item.eloScore))}
@@ -261,6 +283,8 @@ export default function ItemDetail() {
           wins={stats?.wins ?? 0}
           losses={stats?.losses ?? 0}
           ties={stats?.ties ?? 0}
+          recentForm={recentForm}
+          streak={streak}
         />
       </div>
 
@@ -268,6 +292,7 @@ export default function ItemDetail() {
       <RivalriesSection
         listId={id!}
         opponents={opponents}
+        activeCount={activeCount}
       />
 
       {/* Notes */}
@@ -279,7 +304,10 @@ export default function ItemDetail() {
           >
             {S.ranking.detailsNotesLabel}
           </label>
-          <SaveStatus status={saveStatus} />
+          <NotesStatusLine
+            saveStatus={saveStatus}
+            notesUpdated={item.notesUpdated}
+          />
         </div>
         <textarea
           id="item-notes"
@@ -291,10 +319,7 @@ export default function ItemDetail() {
           onKeyDown={handleNotesKeyDown}
           placeholder={S.ranking.detailsNotesPlaceholder}
         />
-        <NotesMeta
-          value={notesDraft}
-          notesUpdated={item.notesUpdated}
-        />
+        <NotesMeta value={notesDraft} />
       </div>
 
       {/* Last duels */}
@@ -381,37 +406,54 @@ export default function ItemDetail() {
   );
 }
 
-function SaveStatus({
-  status,
+function NotesStatusLine({
+  saveStatus,
+  notesUpdated,
 }: {
-  status: 'idle' | 'unsaved' | 'saving' | 'saved';
+  saveStatus: 'idle' | 'unsaved' | 'saving' | 'saved';
+  notesUpdated: number | undefined;
 }) {
-  if (status === 'idle') return null;
-  const label =
-    status === 'saving'
-      ? S.itemDetail.notesSaving
-      : status === 'saved'
-      ? S.itemDetail.notesSaved
-      : S.itemDetail.notesUnsaved;
+  if (saveStatus !== 'idle') {
+    const label =
+      saveStatus === 'saving'
+        ? S.itemDetail.notesSaving
+        : saveStatus === 'saved'
+        ? S.itemDetail.notesSaved
+        : S.itemDetail.notesUnsaved;
+    return (
+      <span
+        role="status"
+        aria-live="polite"
+        className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground"
+      >
+        {label}
+      </span>
+    );
+  }
+  if (typeof notesUpdated !== 'number') return null;
   return (
     <span
-      role="status"
-      aria-live="polite"
-      className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground"
+      className="text-[10px] text-muted-foreground"
+      title={new Date(notesUpdated).toLocaleString()}
     >
-      {label}
+      {S.itemDetail.notesEditedRelative(formatRelative(notesUpdated))}
     </span>
   );
 }
 
-const FRESH_THRESHOLD_MS = 60_000;
-
-function EditedPill({ ts }: { ts: number | undefined }) {
+function EditedPill({
+  ts,
+  className,
+}: {
+  ts: number | undefined;
+  className?: string;
+}) {
   if (typeof ts !== 'number') return null;
-  if (Date.now() - ts < FRESH_THRESHOLD_MS) return null;
   return (
     <span
-      className="shrink-0 text-xs text-muted-foreground"
+      className={`shrink-0 text-xs text-muted-foreground${
+        className ? ` ${className}` : ''
+      }`}
       title={new Date(ts).toLocaleString()}
     >
       {S.itemDetail.editedRelative(formatRelative(ts))}
@@ -419,43 +461,34 @@ function EditedPill({ ts }: { ts: number | undefined }) {
   );
 }
 
-function NotesMeta({
-  value,
-  notesUpdated,
-}: {
-  value: string;
-  notesUpdated: number | undefined;
-}) {
+function NotesMeta({ value }: { value: string }) {
   const trimmed = value.trim();
-  const showCounter = trimmed.length > 0;
+  if (trimmed.length === 0) return null;
   const charCount = value.length;
-  const wordCount = trimmed.length === 0 ? 0 : trimmed.split(/\s+/).length;
-  const showNotesEdited =
-    typeof notesUpdated === 'number' &&
-    Date.now() - notesUpdated >= FRESH_THRESHOLD_MS;
-  if (!showCounter && !showNotesEdited) return null;
+  const wordCount = trimmed.split(/\s+/).length;
   return (
-    <div className="flex items-center justify-between gap-2 text-[10px] text-muted-foreground">
-      <span>
-        {showNotesEdited && (
-          <span title={new Date(notesUpdated!).toLocaleString()}>
-            {S.itemDetail.notesEditedRelative(formatRelative(notesUpdated!))}
-          </span>
-        )}
-      </span>
-      {showCounter && (
-        <span className="tabular-nums">
-          {S.itemDetail.charsCount(charCount)}
-          {' \u00b7 '}
-          {S.itemDetail.wordsCount(wordCount)}
-        </span>
-      )}
+    <div className="flex justify-end text-[10px] text-muted-foreground tabular-nums">
+      {S.itemDetail.charsCount(charCount)}
+      {' \u00b7 '}
+      {S.itemDetail.wordsCount(wordCount)}
     </div>
   );
 }
 
-function RankTile({ rank, prevRank }: { rank: number; prevRank: number }) {
+function RankTile({
+  rank,
+  prevRank,
+  activeCount,
+}: {
+  rank: number;
+  prevRank: number;
+  activeCount: number;
+}) {
   const delta = rank > 0 && prevRank > 0 ? prevRank - rank : 0;
+  const showPercentile = rank > 0 && activeCount >= 5;
+  const pct = showPercentile
+    ? Math.max(1, Math.round((rank / activeCount) * 100))
+    : 0;
   return (
     <div className="rounded-lg border bg-card p-2">
       <div className="flex items-center gap-1 text-xs text-muted-foreground">
@@ -495,6 +528,11 @@ function RankTile({ rank, prevRank }: { rank: number; prevRank: number }) {
           </span>
         )}
       </div>
+      {showPercentile && (
+        <div className="text-[10px] text-muted-foreground mt-0.5 tabular-nums">
+          {S.itemDetail.percentileLine(pct, activeCount)}
+        </div>
+      )}
     </div>
   );
 }
@@ -532,10 +570,14 @@ function RecordTile({
   wins,
   losses,
   ties,
+  recentForm,
+  streak,
 }: {
   wins: number;
   losses: number;
   ties: number;
+  recentForm: ItemDuelRecord[];
+  streak: { kind: 'win' | 'loss'; n: number } | null;
 }) {
   const total = wins + losses + ties;
   const winRate = total > 0 ? Math.round((wins / total) * 100) : 0;
@@ -547,8 +589,26 @@ function RecordTile({
       <div className="flex items-center gap-1 text-xs text-muted-foreground">
         <span>{S.itemDetail.winRate}</span>
       </div>
-      <div className="text-base font-semibold tabular-nums">
-        {total > 0 ? `${winRate}%` : '–'}
+      <div className="flex items-center gap-2">
+        <span className="text-base font-semibold tabular-nums">
+          {total > 0 ? `${winRate}%` : '–'}
+        </span>
+        {streak && (
+          <span
+            className={`text-[10px] font-medium tabular-nums ${
+              streak.kind === 'win' ? 'text-outcome-win' : 'text-outcome-loss'
+            }`}
+            title={
+              streak.kind === 'win'
+                ? S.itemDetail.winStreak(streak.n)
+                : S.itemDetail.lossStreak(streak.n)
+            }
+          >
+            {streak.kind === 'win'
+              ? S.itemDetail.winStreak(streak.n)
+              : S.itemDetail.lossStreak(streak.n)}
+          </span>
+        )}
       </div>
       {total > 0 ? (
         <>
@@ -573,6 +633,9 @@ function RecordTile({
           <div className="text-[10px] text-muted-foreground tabular-nums mt-0.5">
             {S.itemDetail.opponentRecord(wins, losses, ties)}
           </div>
+          {recentForm.length > 0 && (
+            <RecentFormStrip recent={recentForm} />
+          )}
         </>
       ) : (
         <div className="text-[10px] text-muted-foreground">
@@ -583,14 +646,54 @@ function RecordTile({
   );
 }
 
+function RecentFormStrip({ recent }: { recent: ItemDuelRecord[] }) {
+  // Render oldest -> newest, left to right.
+  const ordered = [...recent].reverse();
+  return (
+    <div className="mt-1 flex items-center gap-1">
+      <span className="text-[10px] text-muted-foreground">
+        {S.itemDetail.recentFormHeading}
+      </span>
+      <div className="flex items-center gap-0.5">
+        {ordered.map((d, i) => {
+          const cls =
+            d.outcome === 'win'
+              ? 'bg-outcome-win'
+              : d.outcome === 'loss'
+              ? 'bg-outcome-loss'
+              : 'bg-foreground/20';
+          const aria =
+            d.outcome === 'win'
+              ? S.itemDetail.recentOutcomeWinAria(d.opponentName)
+              : d.outcome === 'loss'
+              ? S.itemDetail.recentOutcomeLossAria(d.opponentName)
+              : S.itemDetail.recentOutcomeTieAria(d.opponentName);
+          return (
+            <span
+              key={`${d.tsIso}-${i}`}
+              className={`h-2 w-2 rounded-sm ${cls}`}
+              aria-label={aria}
+              title={aria}
+            />
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 function RivalriesSection({
   listId,
   opponents,
+  activeCount,
 }: {
   listId: string;
   opponents: OpponentStats[];
+  activeCount: number;
 }) {
   const navigate = useNavigate();
+  const possible = Math.max(0, activeCount - 1);
+  const showCoverage = possible > 0 && opponents.length > 0;
   if (opponents.length === 0) {
     return (
       <div className="space-y-1">
@@ -617,9 +720,16 @@ function RivalriesSection({
 
   return (
     <div className="space-y-2">
-      <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-        {S.itemDetail.rivalriesHeading}
-      </h2>
+      <div>
+        <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          {S.itemDetail.rivalriesHeading}
+        </h2>
+        {showCoverage && (
+          <p className="text-[10px] text-muted-foreground tabular-nums">
+            {S.itemDetail.coverageLine(opponents.length, possible)}
+          </p>
+        )}
+      </div>
       <ul className="space-y-1">
         <RivalRow
           label={S.itemDetail.biggestRival}

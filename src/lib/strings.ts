@@ -245,8 +245,20 @@ export const S = {
     notesSaved: 'Saved',
     editedRelative: (rel: string) => `Edited ${rel}`,
     notesEditedRelative: (rel: string) => `Notes edited ${rel}`,
-    charsCount: (n: number) => `${n} ${n === 1 ? 'char' : 'chars'}`,
+    charsCount: (n: number) =>
+      `${n} ${n === 1 ? 'character' : 'characters'}`,
     wordsCount: (n: number) => `${n} ${n === 1 ? 'word' : 'words'}`,
+    recentFormHeading: 'Recent',
+    recentOutcomeWinAria: (name: string) => `Won vs ${name}`,
+    recentOutcomeLossAria: (name: string) => `Lost to ${name}`,
+    recentOutcomeTieAria: (name: string) => `Tied with ${name}`,
+    percentileLine: (pct: number, total: number) =>
+      `Top ${pct}% of ${total}`,
+    coverageLine: (seen: number, possible: number) =>
+      `Duelled ${seen} of ${possible} ${possible === 1 ? 'other' : 'others'}`,
+    winStreak: (n: number) => `${n} ${n === 1 ? 'win' : 'wins'} in a row`,
+    lossStreak: (n: number) =>
+      `${n} ${n === 1 ? 'loss' : 'losses'} in a row`,
   },
 
   list: {
