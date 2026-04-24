@@ -240,6 +240,9 @@ export const S = {
       `${n} ${n === 1 ? 'duel' : 'duels'} together`,
     trendUp: (n: number) => `+${n}`,
     trendDown: (n: number) => `−${n}`,
+    notesUnsaved: 'Unsaved',
+    notesSaving: 'Saving…',
+    notesSaved: 'Saved',
   },
 
   list: {

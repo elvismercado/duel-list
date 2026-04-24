@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import { S } from '@/lib/strings';
 import { useList } from '@/hooks/useList';
@@ -46,6 +46,12 @@ export default function ItemDetail() {
   const [notesDraft, setNotesDraft] = useState('');
   const [removeOpen, setRemoveOpen] = useState(false);
   const [linkConfirmOpen, setLinkConfirmOpen] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<
+    'idle' | 'unsaved' | 'saving' | 'saved'
+  >('idle');
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const saveTimerRef = useRef<number | null>(null);
+  const savedTimerRef = useRef<number | null>(null);
 
   const item = useMemo(
     () => list?.items.find((i) => i.id === itemId) ?? null,
@@ -74,6 +80,22 @@ export default function ItemDetail() {
   useEffect(() => {
     if (item) setNotesDraft(item.notes ?? '');
   }, [item]);
+
+  // Auto-resize the textarea to fit content (capped via max-h on the element).
+  useEffect(() => {
+    const el = textareaRef.current;
+    if (!el) return;
+    el.style.height = 'auto';
+    el.style.height = `${el.scrollHeight}px`;
+  }, [notesDraft]);
+
+  // Clear any pending timers on unmount so we don't update state after teardown.
+  useEffect(() => {
+    return () => {
+      if (saveTimerRef.current !== null) clearTimeout(saveTimerRef.current);
+      if (savedTimerRef.current !== null) clearTimeout(savedTimerRef.current);
+    };
+  }, []);
 
   if (!list) {
     return (
@@ -108,9 +130,40 @@ export default function ItemDetail() {
     setRenaming(false);
   }
 
-  function commitNotes() {
-    if ((item!.notes ?? '') !== notesDraft.trim()) {
-      setItemNotes(item!.id, notesDraft);
+  function commitNotes(value: string) {
+    if (!item) return;
+    if (saveTimerRef.current !== null) {
+      clearTimeout(saveTimerRef.current);
+      saveTimerRef.current = null;
+    }
+    const trimmed = value.trim();
+    if ((item.notes ?? '') === trimmed) {
+      setSaveStatus('idle');
+      return;
+    }
+    setSaveStatus('saving');
+    setItemNotes(item.id, value);
+    setSaveStatus('saved');
+    if (savedTimerRef.current !== null) clearTimeout(savedTimerRef.current);
+    savedTimerRef.current = window.setTimeout(
+      () => setSaveStatus('idle'),
+      1500,
+    );
+  }
+
+  function handleNotesChange(e: React.ChangeEvent<HTMLTextAreaElement>) {
+    const next = e.target.value;
+    setNotesDraft(next);
+    setSaveStatus('unsaved');
+    if (saveTimerRef.current !== null) clearTimeout(saveTimerRef.current);
+    saveTimerRef.current = window.setTimeout(() => commitNotes(next), 600);
+  }
+
+  function handleNotesKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
+    if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+      e.preventDefault();
+      commitNotes(notesDraft);
+      e.currentTarget.blur();
     }
   }
 
@@ -218,18 +271,23 @@ export default function ItemDetail() {
 
       {/* Notes */}
       <div className="space-y-1">
-        <label
-          htmlFor="item-notes"
-          className="text-xs font-semibold uppercase tracking-wide text-muted-foreground"
-        >
-          {S.ranking.detailsNotesLabel}
-        </label>
+        <div className="flex items-center justify-between gap-2">
+          <label
+            htmlFor="item-notes"
+            className="text-xs font-semibold uppercase tracking-wide text-muted-foreground"
+          >
+            {S.ranking.detailsNotesLabel}
+          </label>
+          <SaveStatus status={saveStatus} />
+        </div>
         <textarea
           id="item-notes"
-          className="w-full min-h-[100px] rounded-md border bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+          ref={textareaRef}
+          className="w-full min-h-[100px] max-h-[400px] resize-none overflow-y-auto rounded-md border bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
           value={notesDraft}
-          onChange={(e) => setNotesDraft(e.target.value)}
-          onBlur={commitNotes}
+          onChange={handleNotesChange}
+          onBlur={() => commitNotes(notesDraft)}
+          onKeyDown={handleNotesKeyDown}
           placeholder={S.ranking.detailsNotesPlaceholder}
         />
       </div>
@@ -315,6 +373,29 @@ export default function ItemDetail() {
         onCancel={() => setLinkConfirmOpen(false)}
       />
     </div>
+  );
+}
+
+function SaveStatus({
+  status,
+}: {
+  status: 'idle' | 'unsaved' | 'saving' | 'saved';
+}) {
+  if (status === 'idle') return null;
+  const label =
+    status === 'saving'
+      ? S.itemDetail.notesSaving
+      : status === 'saved'
+      ? S.itemDetail.notesSaved
+      : S.itemDetail.notesUnsaved;
+  return (
+    <span
+      role="status"
+      aria-live="polite"
+      className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground"
+    >
+      {label}
+    </span>
   );
 }
 
