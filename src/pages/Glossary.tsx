@@ -91,9 +91,13 @@ export default function GlossaryPage() {
         <TermRow id="cadence" label={G.termCadenceLabel} desc={G.termCadenceDesc} />
         <TermRow id="quiet-hours" label={G.termQuietHoursLabel} desc={G.termQuietHoursDesc} />
         <TermRow id="snooze" label={G.termSnoozeLabel} desc={G.termSnoozeDesc} />
+        <TermRow id="tie" label={G.termTieLabel} desc={G.termTieDesc} />
+        <TermRow id="skip" label={G.termSkipLabel} desc={G.termSkipDesc} />
+        <TermRow id="template" label={G.termTemplateLabel} desc={G.termTemplateDesc} />
+        <TermRow id="theme" label={G.termThemeLabel} desc={G.termThemeDesc} />
       </Section>
 
-      <Section title={G.sectionActivity}>
+      <Section id="activity" title={G.sectionActivity}>
         <GlossaryRow
           swatch={<Dot className="bg-success" />}
           label={S.list.activityFresh}
@@ -116,7 +120,7 @@ export default function GlossaryPage() {
         />
       </Section>
 
-      <Section title={G.sectionFileLink}>
+      <Section id="file-link" title={G.sectionFileLink}>
         <GlossaryRow
           swatch={<FileCheck className="h-4 w-4 text-success" />}
           label={G.fileLinkedLabel}
@@ -134,7 +138,7 @@ export default function GlossaryPage() {
         />
       </Section>
 
-      <Section title={G.sectionRankingView}>
+      <Section id="ranking-view" title={G.sectionRankingView}>
         <GlossaryRow
           swatch={<Hash className="h-4 w-4" />}
           label={G.rankViewLabel}
@@ -147,7 +151,7 @@ export default function GlossaryPage() {
         />
       </Section>
 
-      <Section title={G.sectionQuickActions}>
+      <Section id="quick-actions" title={G.sectionQuickActions}>
         <GlossaryRow
           swatch={<History className="h-4 w-4" />}
           label={G.actionHistoryLabel}
@@ -165,7 +169,7 @@ export default function GlossaryPage() {
         />
       </Section>
 
-      <Section title={G.sectionTrend}>
+      <Section id="trend" title={G.sectionTrend}>
         <GlossaryRow
           swatch={<ArrowUp className="h-4 w-4 text-outcome-win" />}
           label={G.trendUpLabel}
@@ -178,7 +182,7 @@ export default function GlossaryPage() {
         />
       </Section>
 
-      <Section title={G.sectionCardStates}>
+      <Section id="card-states" title={G.sectionCardStates}>
         <GlossaryRow
           swatch={<Plus className="h-4 w-4 text-muted-foreground" />}
           label={G.cardCtaAddLabel}
@@ -196,7 +200,7 @@ export default function GlossaryPage() {
         />
       </Section>
 
-      <Section title={G.sectionReminder}>
+      <Section id="reminder-banner" title={G.sectionReminder}>
         <GlossaryRow
           swatch={<Bell className="h-4 w-4" />}
           label={G.reminderBellLabel}
@@ -209,7 +213,7 @@ export default function GlossaryPage() {
         />
       </Section>
 
-      <Section title={G.sectionRemoved}>
+      <Section id="removed" title={G.sectionRemoved}>
         <GlossaryRow
           swatch={<Undo2 className="h-4 w-4 text-muted-foreground" />}
           label={G.removedLabel}
