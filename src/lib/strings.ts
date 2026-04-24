@@ -225,7 +225,6 @@ export const S = {
   itemDetail: {
     notFound: 'Item not found',
     backToList: 'Back to list',
-    inListAria: (listName: string) => `In list: ${listName}`,
     renameAria: (name: string) => `Rename ${name}`,
     removeButton: 'Remove item',
   },
