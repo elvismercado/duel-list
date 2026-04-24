@@ -514,14 +514,14 @@ export const S = {
           'No need to rank a long list from scratch. Decide between just two items at a time and the algorithm sorts the rest.',
       },
       {
-        title: 'ELO ratings under the hood',
+        title: 'Scores you can trust',
         body:
-          'Every choice updates an ELO score. See your list converge with each duel.toggle between rank position and raw ELO from the rankings screen.',
+          'Every choice updates a per-item Score. See your list converge with each duel.toggle between rank position (#1, #2…) and the raw Score from the rankings screen.',
       },
       {
         title: 'Smart pairing',
         body:
-          'Pairs are picked to maximize information: similar ratings first, low-confidence items prioritized, recently skipped pairs penalized.',
+          'Pairs are picked to maximize information: items with similar Scores first, low-confidence items prioritized, recently skipped pairs penalized.',
       },
       {
         title: 'Multiple lists, custom order',
@@ -562,6 +562,11 @@ export const S = {
         title: 'Smart reminders',
         body:
           'Choose a cadence (daily, weekly, monthly, custom) and Duel⚡List nudges you about a list that’s gone stale. In-app banner while the app is open, OS notification when it isn’t. Quiet hours and per-list opt-outs are honored.',
+      },
+      {
+        title: 'Light, dark, or auto',
+        body:
+          'A theme toggle in the header cycles between system, light, and dark. Your choice is remembered across sessions.',
       },
     ],
   },

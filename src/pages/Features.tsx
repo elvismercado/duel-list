@@ -14,6 +14,7 @@ import {
   KeyRound,
   Layers,
   Bell,
+  SunMoon,
 } from 'lucide-react';
 
 const FEATURE_ICONS: React.ComponentType<{ className?: string }>[] = [
@@ -28,6 +29,7 @@ const FEATURE_ICONS: React.ComponentType<{ className?: string }>[] = [
   KeyRound,
   Layers,
   Bell,
+  SunMoon,
 ];
 
 export default function Features() {
