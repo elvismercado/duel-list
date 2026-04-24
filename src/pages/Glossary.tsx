@@ -96,6 +96,10 @@ export default function GlossaryPage() {
         <TermRow id="score" label={G.termScoreLabel} desc={G.termScoreDesc} />
         <TermRow id="rank" label={G.termRankLabel} desc={G.termRankDesc} />
         <TermRow id="brand" label={G.termBrandLabel} desc={G.termBrandDesc} />
+        <TermRow id="reminder" label={G.termReminderLabel} desc={G.termReminderDesc} />
+        <TermRow id="cadence" label={G.termCadenceLabel} desc={G.termCadenceDesc} />
+        <TermRow id="quiet-hours" label={G.termQuietHoursLabel} desc={G.termQuietHoursDesc} />
+        <TermRow id="snooze" label={G.termSnoozeLabel} desc={G.termSnoozeDesc} />
       </Section>
 
       <Section title={G.sectionActivity}>

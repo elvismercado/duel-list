@@ -260,6 +260,18 @@ export const S = {
     termRankDesc: 'An item’s position (#1, #2…) derived from its score.',
     termBrandLabel: 'DuelList',
     termBrandDesc: 'The app you’re using. Always one word, capital D and L.',
+    termReminderLabel: 'Reminder',
+    termReminderDesc:
+      'A nudge to play a duel for a list that’s gone quiet. Shows as a banner inside the app and — if you opt in — as an OS notification when the app is in the background.',
+    termCadenceLabel: 'Cadence',
+    termCadenceDesc:
+      'How often reminders may fire — daily, weekly, monthly, or a custom interval. Set per app, not per list.',
+    termQuietHoursLabel: 'Quiet hours',
+    termQuietHoursDesc:
+      'A daily window when reminders are suppressed (defaults are off). A reminder due during quiet hours waits until the window ends.',
+    termSnoozeLabel: 'Snooze',
+    termSnoozeDesc:
+      'Action on the reminder banner that suppresses the suggested list for 24 hours. Skip just dismisses this reminder — the next eligible list will be offered next cycle.',
     sectionActivity: 'List activity dot',
     sectionFileLink: 'File link status',
     sectionRankingView: 'Ranking view',
