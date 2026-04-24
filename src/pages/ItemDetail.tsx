@@ -8,15 +8,26 @@ import { getHistory, getSettings } from '@/lib/storage';
 import { formatTimeOfDay } from '@/lib/datetime';
 import {
   computeItemStats,
+  computeOpponentStats,
   parseHistoryByItem,
   type ItemDuelRecord,
+  type OpponentStats,
 } from '@/lib/history';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { HelpHint } from '@/components/HelpHint';
-import { Check, Pencil, Trash2, Trophy } from 'lucide-react';
+import { RankChip } from '@/components/RankChip';
+import {
+  Check,
+  ChevronRight,
+  Pencil,
+  Trash2,
+  TrendingDown,
+  TrendingUp,
+  Trophy,
+} from 'lucide-react';
 
 export default function ItemDetail() {
   const { id, itemId } = useParams<{ id: string; itemId: string }>();
@@ -46,6 +57,10 @@ export default function ItemDetail() {
   const historyMd = useMemo(() => (id ? getHistory(id) : ''), [id]);
   const stats = useMemo(
     () => (item ? computeItemStats(historyMd, item.id) : null),
+    [item, historyMd],
+  );
+  const opponents = useMemo<OpponentStats[]>(
+    () => (item ? computeOpponentStats(historyMd, item.id) : []),
     [item, historyMd],
   );
   const lastDuels = useMemo<ItemDuelRecord[]>(
@@ -112,7 +127,7 @@ export default function ItemDetail() {
       <p className="text-sm text-muted-foreground truncate">{list.name}</p>
 
       {/* Title + rename */}
-      <div className="flex items-center gap-2 min-w-0">
+      <div className="flex items-start gap-2 min-w-0">
         {renaming ? (
           <>
             <Input
@@ -141,7 +156,7 @@ export default function ItemDetail() {
           </>
         ) : (
           <>
-            <h1 className="text-2xl font-bold truncate flex-1 min-w-0">
+            <h1 className="text-2xl font-bold flex-1 min-w-0 break-words">
               {item.name}
             </h1>
             <Button
@@ -160,12 +175,7 @@ export default function ItemDetail() {
 
       {/* Stat grid */}
       <div className="grid grid-cols-2 gap-2 text-sm">
-        <StatTile
-          label={S.ranking.detailsRank}
-          value={rank > 0 ? `#${rank}` : '–'}
-          helpAnchor="rank"
-          helpTerm={S.ranking.detailsRank}
-        />
+        <RankTile rank={rank} prevRank={item.prevRank} />
         <StatTile
           label={S.ranking.detailsScore}
           value={String(Math.round(item.eloScore))}
@@ -177,20 +187,19 @@ export default function ItemDetail() {
           value={String(stats?.total ?? 0)}
         />
         <StatTile label={S.ranking.detailsAdded} value={item.added} />
-        <StatTile
-          label={S.ranking.detailsLastDuel}
-          value={
-            stats?.lastDuelTs
-              ? formatRelative(stats.lastDuelTs)
-              : S.ranking.detailsNever
-          }
-        />
-        <StatTile
-          label={S.ranking.detailsWins}
-          value={`${stats?.wins ?? 0} / ${stats?.losses ?? 0} / ${stats?.ties ?? 0}`}
-          subtitle={`${S.ranking.detailsWins} / ${S.ranking.detailsLosses} / ${S.ranking.detailsTies}`}
+        <LastDuelTile lastDuelTs={stats?.lastDuelTs ?? null} />
+        <RecordTile
+          wins={stats?.wins ?? 0}
+          losses={stats?.losses ?? 0}
+          ties={stats?.ties ?? 0}
         />
       </div>
+
+      {/* Rivalries */}
+      <RivalriesSection
+        listId={id!}
+        opponents={opponents}
+      />
 
       {/* Notes */}
       <div className="space-y-1">
@@ -275,6 +284,247 @@ export default function ItemDetail() {
         onCancel={() => setRemoveOpen(false)}
       />
     </div>
+  );
+}
+
+function RankTile({ rank, prevRank }: { rank: number; prevRank: number }) {
+  const delta = rank > 0 && prevRank > 0 ? prevRank - rank : 0;
+  return (
+    <div className="rounded-lg border bg-card p-2">
+      <div className="flex items-center gap-1 text-xs text-muted-foreground">
+        <span>{S.ranking.detailsRank}</span>
+        <HelpHint anchor="rank" term={S.ranking.detailsRank} className="h-4 w-4" />
+      </div>
+      <div className="flex items-center gap-2">
+        {rank >= 1 && rank <= 3 ? (
+          <RankChip position={rank} />
+        ) : (
+          <div className="text-base font-semibold">
+            {rank > 0 ? `#${rank}` : '–'}
+          </div>
+        )}
+        {delta !== 0 && (
+          <span
+            className={`inline-flex items-center gap-0.5 text-xs font-medium tabular-nums ${
+              delta > 0 ? 'text-outcome-win' : 'text-outcome-loss'
+            }`}
+            aria-label={
+              delta > 0
+                ? S.ranking.movedUp(delta)
+                : S.ranking.movedDown(Math.abs(delta))
+            }
+            title={
+              delta > 0
+                ? S.ranking.movedUp(delta)
+                : S.ranking.movedDown(Math.abs(delta))
+            }
+          >
+            {delta > 0 ? (
+              <TrendingUp className="h-3.5 w-3.5" aria-hidden="true" />
+            ) : (
+              <TrendingDown className="h-3.5 w-3.5" aria-hidden="true" />
+            )}
+            {Math.abs(delta)}
+          </span>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function LastDuelTile({ lastDuelTs }: { lastDuelTs: number | null }) {
+  const dotClass = activityDotClass(lastDuelTs);
+  const value = lastDuelTs ? formatRelative(lastDuelTs) : S.ranking.detailsNever;
+  return (
+    <div className="rounded-lg border bg-card p-2">
+      <div className="flex items-center gap-1 text-xs text-muted-foreground">
+        <span>{S.ranking.detailsLastDuel}</span>
+      </div>
+      <div className="flex items-center gap-2">
+        <span
+          className={`h-2.5 w-2.5 rounded-full shrink-0 ${dotClass}`}
+          aria-hidden="true"
+        />
+        <span className="text-base font-semibold truncate" title={value}>
+          {value}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+function activityDotClass(lastDuelTs: number | null): string {
+  if (lastDuelTs === null) return 'bg-muted-foreground/30';
+  const days = (Date.now() - lastDuelTs) / 86_400_000;
+  if (days < 14) return 'bg-success';
+  if (days < 45) return 'bg-warning';
+  return 'bg-outcome-loss';
+}
+
+function RecordTile({
+  wins,
+  losses,
+  ties,
+}: {
+  wins: number;
+  losses: number;
+  ties: number;
+}) {
+  const total = wins + losses + ties;
+  const winRate = total > 0 ? Math.round((wins / total) * 100) : 0;
+  const winPct = total > 0 ? (wins / total) * 100 : 0;
+  const tiePct = total > 0 ? (ties / total) * 100 : 0;
+  const lossPct = total > 0 ? (losses / total) * 100 : 0;
+  return (
+    <div className="rounded-lg border bg-card p-2">
+      <div className="flex items-center gap-1 text-xs text-muted-foreground">
+        <span>{S.itemDetail.winRate}</span>
+      </div>
+      <div className="text-base font-semibold tabular-nums">
+        {total > 0 ? `${winRate}%` : '–'}
+      </div>
+      {total > 0 ? (
+        <>
+          <div
+            className="mt-1 flex h-1.5 w-full overflow-hidden rounded-full bg-muted"
+            role="img"
+            aria-label={S.itemDetail.opponentRecord(wins, losses, ties)}
+          >
+            <div
+              className="bg-outcome-win"
+              style={{ width: `${winPct}%` }}
+            />
+            <div
+              className="bg-foreground/20"
+              style={{ width: `${tiePct}%` }}
+            />
+            <div
+              className="bg-outcome-loss"
+              style={{ width: `${lossPct}%` }}
+            />
+          </div>
+          <div className="text-[10px] text-muted-foreground tabular-nums mt-0.5">
+            {S.itemDetail.opponentRecord(wins, losses, ties)}
+          </div>
+        </>
+      ) : (
+        <div className="text-[10px] text-muted-foreground">
+          {S.ranking.detailsNoDuelsYet}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function RivalriesSection({
+  listId,
+  opponents,
+}: {
+  listId: string;
+  opponents: OpponentStats[];
+}) {
+  const navigate = useNavigate();
+  if (opponents.length === 0) {
+    return (
+      <div className="space-y-1">
+        <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          {S.itemDetail.rivalriesHeading}
+        </h2>
+        <p className="text-sm text-muted-foreground">
+          {S.itemDetail.noRivalsYet}
+        </p>
+      </div>
+    );
+  }
+  const biggestRival = [...opponents].sort((a, b) => b.total - a.total)[0]!;
+  const mostWins = [...opponents]
+    .filter((o) => o.wins > 0)
+    .sort((a, b) => b.wins - a.wins)[0];
+  const mostLosses = [...opponents]
+    .filter((o) => o.losses > 0)
+    .sort((a, b) => b.losses - a.losses)[0];
+
+  function go(opponentId: string) {
+    navigate(`/list/${listId}/item/${opponentId}`);
+  }
+
+  return (
+    <div className="space-y-2">
+      <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+        {S.itemDetail.rivalriesHeading}
+      </h2>
+      <ul className="space-y-1">
+        <RivalRow
+          label={S.itemDetail.biggestRival}
+          opp={biggestRival}
+          onOpen={go}
+        />
+        {mostWins && (
+          <RivalRow
+            label={S.itemDetail.mostWinsAgainst}
+            opp={mostWins}
+            onOpen={go}
+            accent="win"
+          />
+        )}
+        {mostLosses && (
+          <RivalRow
+            label={S.itemDetail.lostMostTo}
+            opp={mostLosses}
+            onOpen={go}
+            accent="loss"
+          />
+        )}
+      </ul>
+    </div>
+  );
+}
+
+function RivalRow({
+  label,
+  opp,
+  onOpen,
+  accent,
+}: {
+  label: string;
+  opp: OpponentStats;
+  onOpen: (id: string) => void;
+  accent?: 'win' | 'loss';
+}) {
+  const totalCls =
+    accent === 'win'
+      ? 'text-outcome-win'
+      : accent === 'loss'
+      ? 'text-outcome-loss'
+      : 'text-muted-foreground';
+  return (
+    <li>
+      <button
+        type="button"
+        onClick={() => onOpen(opp.opponentId)}
+        className="w-full flex items-center gap-2 rounded-md border bg-card hover:bg-accent/40 transition-colors p-2 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        aria-label={`${label}: ${opp.opponentName}`}
+      >
+        <div className="flex-1 min-w-0">
+          <div className="text-[10px] uppercase tracking-wide text-muted-foreground">
+            {label}
+          </div>
+          <div className="truncate text-sm font-medium">
+            {opp.opponentName}
+          </div>
+        </div>
+        <div
+          className={`text-xs tabular-nums shrink-0 ${totalCls}`}
+          title={S.itemDetail.opponentTotalAria(opp.total)}
+        >
+          {S.itemDetail.opponentRecord(opp.wins, opp.losses, opp.ties)}
+        </div>
+        <ChevronRight
+          className="h-4 w-4 shrink-0 text-muted-foreground"
+          aria-hidden="true"
+        />
+      </button>
+    </li>
   );
 }
 

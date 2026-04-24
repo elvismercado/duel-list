@@ -227,6 +227,19 @@ export const S = {
     backToList: 'Back to list',
     renameAria: (name: string) => `Rename ${name}`,
     removeButton: 'Remove item',
+    winRate: 'Win rate',
+    record: 'Record',
+    rivalriesHeading: 'Rivalries',
+    biggestRival: 'Biggest rival',
+    mostWinsAgainst: 'Most wins against',
+    lostMostTo: 'Lost most to',
+    noRivalsYet: 'No rivals yet. Play a few duels.',
+    opponentRecord: (w: number, l: number, t: number) =>
+      `${w}W / ${l}L / ${t}T`,
+    opponentTotalAria: (n: number) =>
+      `${n} ${n === 1 ? 'duel' : 'duels'} together`,
+    trendUp: (n: number) => `+${n}`,
+    trendDown: (n: number) => `−${n}`,
   },
 
   list: {

@@ -253,3 +253,43 @@ export function computeItemStats(
   }
   return { wins, losses, ties, total: wins + losses + ties, lastDuelTs };
 }
+
+export type OpponentStats = {
+  opponentId: string;
+  opponentName: string;
+  wins: number;
+  losses: number;
+  ties: number;
+  total: number;
+};
+
+/**
+ * Aggregate this item's record against every opponent it has duelled.
+ * Outcomes are from the perspective of `itemId`.
+ */
+export function computeOpponentStats(
+  historyString: string,
+  itemId: string,
+): OpponentStats[] {
+  const map = new Map<string, OpponentStats>();
+  for (const e of iterDuelLines(historyString)) {
+    const isA = e.idA === itemId;
+    const isB = e.idB === itemId;
+    if (!isA && !isB) continue;
+    const opponentId = isA ? e.idB : e.idA;
+    const opponentName = isA ? e.nameB : e.nameA;
+    let entry = map.get(opponentId);
+    if (!entry) {
+      entry = { opponentId, opponentName, wins: 0, losses: 0, ties: 0, total: 0 };
+      map.set(opponentId, entry);
+    } else {
+      // Keep the most recent name we see (handles renames).
+      entry.opponentName = opponentName;
+    }
+    if (e.op === '=') entry.ties++;
+    else if (e.op === '>') (isA ? entry.wins++ : entry.losses++);
+    else (isB ? entry.wins++ : entry.losses++);
+    entry.total++;
+  }
+  return [...map.values()];
+}
