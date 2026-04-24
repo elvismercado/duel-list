@@ -53,10 +53,11 @@ export function useList(id: string, onSave?: (list: ListConfig) => void) {
   const renameItem = useCallback(
     (itemId: string, newName: string) => {
       if (!list) return;
+      const now = Date.now();
       const updated = {
         ...list,
         items: list.items.map((i) =>
-          i.id === itemId ? { ...i, name: newName } : i,
+          i.id === itemId ? { ...i, name: newName, updated: now } : i,
         ),
       };
       save(updated);
@@ -102,11 +103,18 @@ export function useList(id: string, onSave?: (list: ListConfig) => void) {
     (itemId: string, text: string) => {
       if (!list) return;
       const trimmed = text.trim();
+      const now = Date.now();
+      const hasNotes = trimmed.length > 0;
       const updated = {
         ...list,
         items: list.items.map((i) =>
           i.id === itemId
-            ? { ...i, notes: trimmed.length > 0 ? trimmed : undefined }
+            ? {
+                ...i,
+                notes: hasNotes ? trimmed : undefined,
+                updated: now,
+                notesUpdated: hasNotes ? now : undefined,
+              }
             : i,
         ),
       };

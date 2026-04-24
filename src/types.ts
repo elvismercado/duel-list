@@ -10,6 +10,10 @@ export interface Item {
   removed?: boolean;
   /** Free-text user notes about this item. Empty/undefined when none. */
   notes?: string;
+  /** Epoch ms of the last item-level edit (rename or notes change). */
+  updated?: number;
+  /** Epoch ms of the last notes save. Cleared when notes go empty. */
+  notesUpdated?: number;
 }
 
 export interface DuelRecord {

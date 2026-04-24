@@ -147,6 +147,8 @@ interface ItemJson {
   added?: string;
   removed?: boolean;
   notes?: string;
+  updated?: number;
+  notesUpdated?: number;
 }
 
 function parseItems(content: string): { active: Item[]; removed: Item[] } {
@@ -199,6 +201,9 @@ function parseItemSection(section: string): Item[] {
       added: json.added ?? today,
       removed: json.removed ?? undefined,
       notes: typeof json.notes === 'string' && json.notes.length > 0 ? json.notes : undefined,
+      updated: typeof json.updated === 'number' ? json.updated : undefined,
+      notesUpdated:
+        typeof json.notesUpdated === 'number' ? json.notesUpdated : undefined,
     });
   }
 
@@ -223,6 +228,12 @@ function serializeItemJson(item: Item): string {
   }
   if (item.notes && item.notes.length > 0) {
     obj.notes = item.notes;
+  }
+  if (typeof item.updated === 'number') {
+    obj.updated = item.updated;
+  }
+  if (typeof item.notesUpdated === 'number') {
+    obj.notesUpdated = item.notesUpdated;
   }
   return JSON.stringify(obj);
 }

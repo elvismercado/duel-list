@@ -243,6 +243,10 @@ export const S = {
     notesUnsaved: 'Unsaved',
     notesSaving: 'Saving…',
     notesSaved: 'Saved',
+    editedRelative: (rel: string) => `Edited ${rel}`,
+    notesEditedRelative: (rel: string) => `Notes edited ${rel}`,
+    charsCount: (n: number) => `${n} ${n === 1 ? 'char' : 'chars'}`,
+    wordsCount: (n: number) => `${n} ${n === 1 ? 'word' : 'words'}`,
   },
 
   list: {

@@ -192,6 +192,7 @@ export default function ItemDetail() {
             }
           />
         )}
+        <EditedPill ts={item.updated} />
       </div>
 
       {/* Title + rename */}
@@ -289,6 +290,10 @@ export default function ItemDetail() {
           onBlur={() => commitNotes(notesDraft)}
           onKeyDown={handleNotesKeyDown}
           placeholder={S.ranking.detailsNotesPlaceholder}
+        />
+        <NotesMeta
+          value={notesDraft}
+          notesUpdated={item.notesUpdated}
         />
       </div>
 
@@ -396,6 +401,56 @@ function SaveStatus({
     >
       {label}
     </span>
+  );
+}
+
+const FRESH_THRESHOLD_MS = 60_000;
+
+function EditedPill({ ts }: { ts: number | undefined }) {
+  if (typeof ts !== 'number') return null;
+  if (Date.now() - ts < FRESH_THRESHOLD_MS) return null;
+  return (
+    <span
+      className="shrink-0 text-xs text-muted-foreground"
+      title={new Date(ts).toLocaleString()}
+    >
+      {S.itemDetail.editedRelative(formatRelative(ts))}
+    </span>
+  );
+}
+
+function NotesMeta({
+  value,
+  notesUpdated,
+}: {
+  value: string;
+  notesUpdated: number | undefined;
+}) {
+  const trimmed = value.trim();
+  const showCounter = trimmed.length > 0;
+  const charCount = value.length;
+  const wordCount = trimmed.length === 0 ? 0 : trimmed.split(/\s+/).length;
+  const showNotesEdited =
+    typeof notesUpdated === 'number' &&
+    Date.now() - notesUpdated >= FRESH_THRESHOLD_MS;
+  if (!showCounter && !showNotesEdited) return null;
+  return (
+    <div className="flex items-center justify-between gap-2 text-[10px] text-muted-foreground">
+      <span>
+        {showNotesEdited && (
+          <span title={new Date(notesUpdated!).toLocaleString()}>
+            {S.itemDetail.notesEditedRelative(formatRelative(notesUpdated!))}
+          </span>
+        )}
+      </span>
+      {showCounter && (
+        <span className="tabular-nums">
+          {S.itemDetail.charsCount(charCount)}
+          {' \u00b7 '}
+          {S.itemDetail.wordsCount(wordCount)}
+        </span>
+      )}
+    </div>
   );
 }
 
