@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import { S } from '@/lib/strings';
 import { useList } from '@/hooks/useList';
-import { useFileSync } from '@/hooks/useFileSync';
+import { useFileSync, deriveLinkStatus } from '@/hooks/useFileSync';
 import { sortItemsByElo } from '@/lib/ranking';
 import { getHistory, getSettings } from '@/lib/storage';
 import { formatTimeOfDay } from '@/lib/datetime';
@@ -19,12 +19,10 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { HelpHint } from '@/components/HelpHint';
 import { RankChip } from '@/components/RankChip';
+import { FileLinkStatus } from '@/components/FileLinkStatus';
 import {
   Check,
   ChevronRight,
-  FileCheck,
-  FileQuestion,
-  FileX,
   Pencil,
   Trash2,
   TrendingDown,
@@ -35,7 +33,8 @@ import {
 export default function ItemDetail() {
   const { id, itemId } = useParams<{ id: string; itemId: string }>();
   const navigate = useNavigate();
-  const { supported, isSynced, needsRelink, syncToFile } = useFileSync(id);
+  const { supported, isSynced, needsRelink, syncToFile, linkFile } = useFileSync(id);
+  const linkStatus = deriveLinkStatus(supported, isSynced, needsRelink);
   const onSave = useCallback(
     (l: import('@/types').ListConfig) => { if (supported) syncToFile(l); },
     [supported, syncToFile],
@@ -46,6 +45,7 @@ export default function ItemDetail() {
   const [nameDraft, setNameDraft] = useState('');
   const [notesDraft, setNotesDraft] = useState('');
   const [removeOpen, setRemoveOpen] = useState(false);
+  const [linkConfirmOpen, setLinkConfirmOpen] = useState(false);
 
   const item = useMemo(
     () => list?.items.find((i) => i.id === itemId) ?? null,
@@ -127,33 +127,19 @@ export default function ItemDetail() {
   return (
     <div className="p-4 max-w-lg mx-auto space-y-6">
       {/* Parent list label */}
-      <p className="text-sm text-muted-foreground flex items-center gap-1.5 min-w-0">
+      <div className="flex items-center gap-2 min-w-0 text-sm text-muted-foreground">
         <span className="truncate">{list.name}</span>
-        {supported && isSynced && (
-          <FileCheck
-            className="h-3.5 w-3.5 shrink-0 text-success"
-            aria-label={S.ranking.fileLinked}
-          >
-            <title>{S.ranking.fileLinkedTooltip}</title>
-          </FileCheck>
+        {linkStatus && (
+          <FileLinkStatus
+            status={linkStatus}
+            onClick={
+              linkStatus === 'linked'
+                ? undefined
+                : () => setLinkConfirmOpen(true)
+            }
+          />
         )}
-        {supported && needsRelink && (
-          <FileX
-            className="h-3.5 w-3.5 shrink-0 text-destructive"
-            aria-label={S.ranking.fileLinkBroken}
-          >
-            <title>{S.ranking.fileLinkBrokenTooltip}</title>
-          </FileX>
-        )}
-        {supported && !isSynced && !needsRelink && (
-          <FileQuestion
-            className="h-3.5 w-3.5 shrink-0 text-muted-foreground"
-            aria-label={S.list.notLinkedShort}
-          >
-            <title>{S.ranking.fileNotLinkedTooltip}</title>
-          </FileQuestion>
-        )}
-      </p>
+      </div>
 
       {/* Title + rename */}
       <div className="flex items-start gap-2 min-w-0">
@@ -311,6 +297,22 @@ export default function ItemDetail() {
         danger
         onConfirm={handleRemove}
         onCancel={() => setRemoveOpen(false)}
+      />
+
+      <ConfirmDialog
+        open={linkConfirmOpen}
+        title={S.ranking.linkFileConfirmTitle}
+        message={
+          needsRelink
+            ? S.ranking.relinkFileConfirmMessage
+            : S.ranking.linkFileConfirmMessage
+        }
+        confirmLabel={S.settings.linkFile}
+        onConfirm={() => {
+          setLinkConfirmOpen(false);
+          if (list) void linkFile(list);
+        }}
+        onCancel={() => setLinkConfirmOpen(false)}
       />
     </div>
   );

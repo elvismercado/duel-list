@@ -175,3 +175,21 @@ export function useFileSync(listId: string | undefined) {
     linkExistingHandle,
   };
 }
+
+export type LinkStatus = 'linked' | 'broken' | 'unlinked';
+
+/**
+ * Maps `useFileSync` flags to a single discriminated status.
+ * Returns `undefined` when File System Access is unsupported, so callers can
+ * render nothing on browsers that can't link files at all.
+ */
+export function deriveLinkStatus(
+  supported: boolean,
+  isSynced: boolean,
+  needsRelink: boolean,
+): LinkStatus | undefined {
+  if (!supported) return undefined;
+  if (isSynced) return 'linked';
+  if (needsRelink) return 'broken';
+  return 'unlinked';
+}

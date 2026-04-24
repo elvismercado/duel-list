@@ -10,7 +10,8 @@ import {
   type SortDir,
 } from '@/lib/ranking';
 import { useList } from '@/hooks/useList';
-import { useFileSync } from '@/hooks/useFileSync';
+import { useFileSync, deriveLinkStatus } from '@/hooks/useFileSync';
+import { FileLinkStatus } from '@/components/FileLinkStatus';
 import { RankChip } from '@/components/RankChip';
 import { HelpHint } from '@/components/HelpHint';
 import emptyRankingsImg from '@/assets/illustrations/empty-rankings.png';
@@ -33,9 +34,6 @@ import {
 import {
   Plus,
   Settings,
-  FileCheck,
-  FileX,
-  FileQuestion,
   History,
   Hash,
   Trophy,
@@ -89,6 +87,7 @@ export default function Rankings() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { supported, isSynced, needsRelink, syncToFile, linkFile } = useFileSync(id);
+  const linkStatus = deriveLinkStatus(supported, isSynced, needsRelink);
   const onSave = useCallback(
     (list: import('@/types').ListConfig) => { syncToFile(list); },
     [syncToFile],
@@ -181,38 +180,15 @@ export default function Rankings() {
     <div className="p-4 max-w-lg mx-auto space-y-4">
       <div className="flex items-center gap-2 min-w-0">
         <h1 className="text-2xl font-bold truncate">{list.name}</h1>
-        {supported && isSynced && (
-          <span
-            title={S.ranking.fileLinkedTooltip}
-            className="shrink-0 inline-flex items-center gap-1 rounded-full border border-success/30 bg-success/10 px-2 py-0.5 text-xs font-medium text-success"
-          >
-            <FileCheck className="h-3.5 w-3.5" aria-hidden="true" />
-            <span>{S.ranking.fileLinked}</span>
-          </span>
-        )}
-        {supported && needsRelink && (
-          <button
-            type="button"
-            onClick={() => setLinkConfirmOpen(true)}
-            className="shrink-0 inline-flex items-center gap-1 rounded-full border border-destructive/40 bg-destructive/10 px-2 py-0.5 text-xs font-medium text-destructive hover:bg-destructive/15"
-            title={S.ranking.fileLinkBrokenTooltip}
-            aria-label={S.ranking.fileLinkBroken}
-          >
-            <FileX className="h-3.5 w-3.5" aria-hidden="true" />
-            <span>{S.ranking.fileLinkBroken}</span>
-          </button>
-        )}
-        {supported && !isSynced && !needsRelink && (
-          <button
-            type="button"
-            onClick={() => setLinkConfirmOpen(true)}
-            className="shrink-0 inline-flex items-center gap-1 rounded-full border border-border bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground hover:bg-accent hover:text-foreground"
-            title={S.ranking.fileNotLinkedTooltip}
-            aria-label={S.settings.linkFile}
-          >
-            <FileQuestion className="h-3.5 w-3.5" aria-hidden="true" />
-            <span>{S.settings.linkFile}</span>
-          </button>
+        {linkStatus && (
+          <FileLinkStatus
+            status={linkStatus}
+            onClick={
+              linkStatus === 'linked'
+                ? undefined
+                : () => setLinkConfirmOpen(true)
+            }
+          />
         )}
       </div>
 
