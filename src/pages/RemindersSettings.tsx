@@ -70,7 +70,7 @@ export default function RemindersSettingsPage() {
 
   function handlePreferredPreset(hourStr: string) {
     if (hourStr === 'custom') {
-      // Switch to custom — keep existing or default to 8:30
+      // Switch to custom.keep existing or default to 8:30
       if (preferredMode === 'preset') {
         patch({ preferredHour: 8, preferredMinute: 30 });
       }

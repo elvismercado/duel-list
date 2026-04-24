@@ -88,7 +88,7 @@ export function useFileSync(listId: string | undefined) {
           await saveFileHandle(`${listId}:history`, histHandle);
         }
       } catch {
-        // History file is optional — continue without it
+        // History file is optional.continue without it
       }
 
       setState({
@@ -120,7 +120,7 @@ export function useFileSync(listId: string | undefined) {
         const content = serializeMarkdown(list);
         await writeToFileHandle(state.listHandle, content);
       } catch {
-        // File may have been moved/deleted — mark as needing relink
+        // File may have been moved/deleted.mark as needing relink
         setState((s) => ({ ...s, isSynced: false, needsRelink: true }));
       }
     },

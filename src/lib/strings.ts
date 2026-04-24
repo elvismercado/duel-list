@@ -1,19 +1,19 @@
 /**
- * UI string constants — all user-visible text lives here.
+ * UI string constants.all user-visible text lives here.
  * Prep for Phase 3 i18n: swap this module for translation JSON files later.
  */
 
 export const S = {
   app: {
     name: 'DuelList',
-    tagline: 'Rank anything — one duel at a time.',
+    tagline: 'Rank anything.one duel at a time.',
     storageAlmostFull:
       'Storage is almost full. Export your lists to free up space.',
     appSettingsAria: 'App settings',
     goBackAria: 'Go back',
     errorBoundaryTitle: 'Something went wrong',
     errorBoundaryDescription:
-      'DuelList hit an unexpected error. Your saved lists are safe — reloading usually fixes it.',
+      'DuelList hit an unexpected error. Your saved lists are safe.reloading usually fixes it.',
     errorBoundaryReload: 'Reload',
     errorBoundaryDetails: 'Show details',
     footerNavAria: 'Footer navigation',
@@ -68,12 +68,12 @@ export const S = {
     sortFieldName: 'Name',
     sortFieldCreated: 'Created',
     sortFieldCustom: 'Custom',
-    sortDirAriaRecentDesc: 'Most recent first — tap to reverse',
-    sortDirAriaRecentAsc: 'Oldest first — tap to reverse',
-    sortDirAriaNameAsc: 'A to Z — tap to reverse',
-    sortDirAriaNameDesc: 'Z to A — tap to reverse',
-    sortDirAriaCreatedDesc: 'Newest first — tap to reverse',
-    sortDirAriaCreatedAsc: 'Oldest first — tap to reverse',
+    sortDirAriaRecentDesc: 'Most recent first.tap to reverse',
+    sortDirAriaRecentAsc: 'Oldest first.tap to reverse',
+    sortDirAriaNameAsc: 'A to Z.tap to reverse',
+    sortDirAriaNameDesc: 'Z to A.tap to reverse',
+    sortDirAriaCreatedDesc: 'Newest first.tap to reverse',
+    sortDirAriaCreatedAsc: 'Oldest first.tap to reverse',
     heroTitle: 'Ready for a duel?',
     heroSubtitle: 'Pick a winner from a random match-up.',
     heroAction: 'Random duel',
@@ -99,7 +99,7 @@ export const S = {
     sessionsStepDescription: "Do 5–10 duels a day. It's a habit, not a chore.",
     remindersStepTitle: 'Gentle Nudges',
     remindersStepDescription:
-      'Pick a cadence and DuelList will surface a list that’s gone stale. In-app banner, OS notification, or both — quiet hours respected.',
+      'Pick a cadence and DuelList will surface a list that’s gone stale. In-app banner, OS notification, or both.quiet hours respected.',
     readyStepTitle: 'Ready!',
     readyStepDescription: 'Create a list or try a sample to get started.',
   },
@@ -144,10 +144,10 @@ export const S = {
     fileLinked: 'File linked',
     fileLinkedTooltip: 'File linked',
     fileLinkBroken: 'File link broken',
-    fileLinkBrokenTooltip: 'File link broken — re-link in settings',
+    fileLinkBrokenTooltip: 'File link broken.re-link in settings',
     fileNotLinked: 'Not linked to a file',
     fileNotLinkedTooltip:
-      'Not linked to a file — tap to link',
+      'Not linked to a file.tap to link',
     linkFileConfirmTitle: 'Link list to a file?',
     linkFileConfirmMessage:
       'Pick or create a Markdown file on disk. DuelList will write changes to it as you go, so you keep a portable copy of this list.',
@@ -178,26 +178,26 @@ export const S = {
     topItemPrefix: (name: string) => `#1 ${name}`,
     itemsCount: (n: number) => `${n} items`,
     sortLabel: 'Sort',
-    sortRankDesc: 'Rank — best first',
-    sortRankAsc: 'Rank — worst first',
-    sortScoreDesc: 'Score — high to low',
-    sortScoreAsc: 'Score — low to high',
-    sortAddedDesc: 'Added — newest first',
-    sortAddedAsc: 'Added — oldest first',
-    sortNameAsc: 'Name — A to Z',
-    sortNameDesc: 'Name — Z to A',
+    sortRankDesc: 'Rank.best first',
+    sortRankAsc: 'Rank.worst first',
+    sortScoreDesc: 'Score.high to low',
+    sortScoreAsc: 'Score.low to high',
+    sortAddedDesc: 'Added.newest first',
+    sortAddedAsc: 'Added.oldest first',
+    sortNameAsc: 'Name.A to Z',
+    sortNameDesc: 'Name.Z to A',
     sortFieldRank: 'Rank',
     sortFieldScore: 'Score',
     sortFieldAdded: 'Added',
     sortFieldName: 'Name',
-    sortDirAriaRankDesc: 'Best first — tap to reverse',
-    sortDirAriaRankAsc: 'Worst first — tap to reverse',
-    sortDirAriaScoreDesc: 'Highest score first — tap to reverse',
-    sortDirAriaScoreAsc: 'Lowest score first — tap to reverse',
-    sortDirAriaAddedDesc: 'Newest first — tap to reverse',
-    sortDirAriaAddedAsc: 'Oldest first — tap to reverse',
-    sortDirAriaNameAsc: 'A to Z — tap to reverse',
-    sortDirAriaNameDesc: 'Z to A — tap to reverse',
+    sortDirAriaRankDesc: 'Best first.tap to reverse',
+    sortDirAriaRankAsc: 'Worst first.tap to reverse',
+    sortDirAriaScoreDesc: 'Highest score first.tap to reverse',
+    sortDirAriaScoreAsc: 'Lowest score first.tap to reverse',
+    sortDirAriaAddedDesc: 'Newest first.tap to reverse',
+    sortDirAriaAddedAsc: 'Oldest first.tap to reverse',
+    sortDirAriaNameAsc: 'A to Z.tap to reverse',
+    sortDirAriaNameDesc: 'Z to A.tap to reverse',
     detailsTitle: 'Item details',
     detailsRank: 'Rank',
     detailsScore: 'Score',
@@ -267,7 +267,7 @@ export const S = {
     termItemLabel: 'Item',
     termItemDesc: 'A single thing inside a list. The members you compare.',
     termItemListLabel: 'Item list',
-    termItemListDesc: 'The list of items shown inside one list — used to disambiguate from the home-page lists.',
+    termItemListDesc: 'The list of items shown inside one list.used to disambiguate from the home-page lists.',
     termDuelLabel: 'Duel',
     termDuelDesc: 'One head-to-head comparison between two items.',
     termSessionLabel: 'Session',
@@ -280,16 +280,16 @@ export const S = {
     termBrandDesc: 'The app you’re using. Always one word, capital D and L.',
     termReminderLabel: 'Reminder',
     termReminderDesc:
-      'A nudge to play a duel for a list that’s gone quiet. Shows as a banner inside the app and — if you opt in — as an OS notification when the app is in the background.',
+      'A nudge to play a duel for a list that’s gone quiet. Shows as a banner inside the app and.if you opt in.as an OS notification when the app is in the background.',
     termCadenceLabel: 'Cadence',
     termCadenceDesc:
-      'How often reminders may fire — daily, weekly, monthly, or a custom interval. Set per app, not per list.',
+      'How often reminders may fire.daily, weekly, monthly, or a custom interval. Set per app, not per list.',
     termQuietHoursLabel: 'Quiet hours',
     termQuietHoursDesc:
       'A daily window when reminders are suppressed (defaults are off). A reminder due during quiet hours waits until the window ends.',
     termSnoozeLabel: 'Snooze',
     termSnoozeDesc:
-      'Action on the reminder banner that suppresses the suggested list for 24 hours. Skip just dismisses this reminder — the next eligible list will be offered next cycle.',
+      'Action on the reminder banner that suppresses the suggested list for 24 hours. Skip just dismisses this reminder.the next eligible list will be offered next cycle.',
     sectionActivity: 'List activity dot',
     sectionFileLink: 'File link status',
     sectionRankingView: 'Ranking view',
@@ -300,7 +300,7 @@ export const S = {
     sectionRemoved: 'Removed items',
     activityFreshDesc: 'Duelled in the last 14 days.',
     activityStaleDesc: 'Duelled 14–45 days ago, or opened but never duelled.',
-    activityColdDesc: 'No duels in over 45 days — the ranking is going stale.',
+    activityColdDesc: 'No duels in over 45 days.the ranking is going stale.',
     activityNeverDesc: 'You haven’t opened this list yet.',
     fileLinkedLabel: 'Synced to file',
     fileLinkedDesc: 'List is linked to a markdown file on disk and writes back when you change it.',
@@ -325,7 +325,7 @@ export const S = {
     cardCtaAddLabel: 'Add more items',
     cardCtaAddDesc: 'A list needs at least two items before you can duel.',
     cardCtaNoDuelsLabel: 'No duels yet',
-    cardCtaNoDuelsDesc: 'Items are added but you haven’t duelled yet — open the list to start.',
+    cardCtaNoDuelsDesc: 'Items are added but you haven’t duelled yet.open the list to start.',
     cardPodiumLabel: 'Top three',
     cardPodiumDesc: 'Once you’ve duelled, the current top three appear on the card.',
     reminderBellLabel: 'Reminder',
@@ -341,7 +341,7 @@ export const S = {
     bannerSubtitle: (listName: string, days: number) =>
       days <= 0
         ? `Rank one duel for "${listName}".`
-        : `Rank one duel for "${listName}" — last played ${days} ${days === 1 ? 'day' : 'days'} ago.`,
+        : `Rank one duel for "${listName}".last played ${days} ${days === 1 ? 'day' : 'days'} ago.`,
     play: 'Play',
     snooze: 'Snooze 1d',
     skip: 'Skip',
@@ -395,14 +395,14 @@ export const S = {
     duelModeSideBySide: 'Side-by-side cards',
     duelModeSwipe: 'Swipe',
     duelModeHelp:
-      'Swipe mode shows both items side by side — drag a card up to pick it.',
+      'Swipe mode shows both items side by side.drag a card up to pick it.',
     timeFormatLabel: 'Time format',
     timeFormat12h: '12-hour (1:30 PM)',
     timeFormat24h: '24-hour (13:30)',
     timeFormatHelp: 'Affects how clock times are shown across the app.',
     remindersHeading: 'Duel reminders',
     remindersHelp:
-      'Get a friendly nudge to play a duel — keeps your rankings fresh over time.',
+      'Get a friendly nudge to play a duel.keeps your rankings fresh over time.',
     remindersOpenLink: 'Configure reminders',
     remindersStatusOff: 'Off',
     remindersStatusActive: (cadenceLabel: string, timeLabel: string) =>
@@ -435,7 +435,7 @@ export const S = {
     remindersChannelOs: 'OS notifications only',
     remindersChannelBoth: 'Both',
     remindersOsUnsupported:
-      'OS notifications are limited on this device — in-app reminders still work.',
+      'OS notifications are limited on this device.in-app reminders still work.',
     remindersPermissionGranted: 'Notifications enabled.',
     remindersPermissionDenied:
       'Notifications are blocked. Open your browser site settings to allow them, then come back.',
@@ -443,12 +443,12 @@ export const S = {
       'Allow notifications so DuelList can nudge you when the app is in the background.',
     remindersPermissionEnableButton: 'Enable notifications',
     remindersTriggerUnsupportedHelp:
-      'Background scheduling isn’t supported on this browser — reminders will only fire while DuelList is open.',
+      'Background scheduling isn’t supported on this browser.reminders will only fire while DuelList is open.',
     osNotificationTitle: 'Time for a duel?',
     osNotificationBody: (listName: string, days: number) =>
       days <= 0
         ? `Rank one duel for "${listName}".`
-        : `Rank one duel for "${listName}" — last played ${days} ${days === 1 ? 'day' : 'days'} ago.`,
+        : `Rank one duel for "${listName}".last played ${days} ${days === 1 ? 'day' : 'days'} ago.`,
     remindersPerListHeading: 'Skip these lists',
     remindersPerListHelp: 'Lists you don’t want reminders for.',
     remindersPerListReminding: 'Reminding',
@@ -456,7 +456,7 @@ export const S = {
     remindersPerListItemsCount: (n: number) => `${n} ${n === 1 ? 'item' : 'items'}`,
     remindersTestButton: 'Send test reminder',
     remindersTestHelp:
-      'Sends a test through your selected channel — in-app banner, OS notification, or both.',
+      'Sends a test through your selected channel.in-app banner, OS notification, or both.',
     remindersBack: 'Back to settings',
     aboutHeading: 'About',
     whatsInDuelList: "What's in DuelList",
@@ -466,8 +466,8 @@ export const S = {
     storageUsage: (usedKb: number, limitMb: number) =>
       `${usedKb.toFixed(1)} KB used of ~${limitMb.toFixed(0)} MB`,
     fileSyncHeading: 'File sync',
-    fileSyncLinked: 'Linked — changes sync to file automatically.',
-    fileSyncLost: 'File sync lost — permission denied. Re-link to restore.',
+    fileSyncLinked: 'Linked.changes sync to file automatically.',
+    fileSyncLost: 'File sync lost.permission denied. Re-link to restore.',
     unlinkFile: 'Unlink file',
     linkFile: 'Link to file',
     removedItemsButton: (n: number) => `Removed items (${n})`,
@@ -514,7 +514,7 @@ export const S = {
       {
         title: 'ELO ratings under the hood',
         body:
-          'Every choice updates an ELO score. See your list converge with each duel — toggle between rank position and raw ELO from the rankings screen.',
+          'Every choice updates an ELO score. See your list converge with each duel.toggle between rank position and raw ELO from the rankings screen.',
       },
       {
         title: 'Smart pairing',
@@ -524,7 +524,7 @@ export const S = {
       {
         title: 'Multiple lists, custom order',
         body:
-          'Keep separate lists for movies, snacks, vacation spots — anything. Sort by recent / A–Z / created, or drag to a custom order.',
+          'Keep separate lists for movies, snacks, vacation spots.anything. Sort by recent / A–Z / created, or drag to a custom order.',
       },
       {
         title: 'Optional file sync',
@@ -539,7 +539,7 @@ export const S = {
       {
         title: 'Markdown import & export',
         body:
-          'Lists are plain Markdown — readable, diffable, portable. Export anytime; import to merge or replace.',
+          'Lists are plain Markdown.readable, diffable, portable. Export anytime; import to merge or replace.',
       },
       {
         title: 'Touch-friendly PWA',

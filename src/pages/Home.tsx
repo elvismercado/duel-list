@@ -76,7 +76,7 @@ function HomeDirIcon({ mode, className }: { mode: HomeSortMode; className?: stri
   if (field === 'name') {
     return dir === 'asc' ? <ArrowDownAZ className={className} /> : <ArrowUpAZ className={className} />;
   }
-  // recent / created — newest = desc
+  // recent / created.newest = desc
   return dir === 'desc' ? <ArrowDownNarrowWide className={className} /> : <ArrowUpWideNarrow className={className} />;
 }
 
@@ -243,7 +243,7 @@ export default function Home() {
     return () => document.removeEventListener('visibilitychange', onVisibility);
   }, []);
 
-  // Suppress the in-app banner when the page is hidden — the OS notification
+  // Suppress the in-app banner when the page is hidden.the OS notification
   // (if permitted) is doing the work; otherwise the banner will appear on
   // next focus via the visibilitychange listener above.
   const showBanner =

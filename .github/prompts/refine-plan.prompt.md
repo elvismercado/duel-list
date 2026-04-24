@@ -1,14 +1,14 @@
 # Refine DuelList Plan
 
-You are helping refine the plan for **DuelList** — a personal list-ranking web app where users rank items through pairwise A-vs-B comparisons ("duels").
+You are helping refine the plan for **DuelList**.a personal list-ranking web app where users rank items through pairwise A-vs-B comparisons ("duels").
 
 ## Context
 
 Read all project documentation first:
 
-- [README.md](../../README.md) — overview, core concepts, file format, tech stack
-- [PROJECT_PLAN.md](../../docs/PROJECT_PLAN.md) — implementation roadmap and phases
-- [TECH_DECISIONS.md](../../docs/TECH_DECISIONS.md) — architecture decisions and rationale
+- [README.md](../../README.md).overview, core concepts, file format, tech stack
+- [PROJECT_PLAN.md](../../docs/PROJECT_PLAN.md).implementation roadmap and phases
+- [TECH_DECISIONS.md](../../docs/TECH_DECISIONS.md).architecture decisions and rationale
 
 ## Your Task
 
@@ -94,7 +94,7 @@ These topics have been decided across prior refinement rounds. Reference them fo
 - **History name resolution**: Names resolved from current item list at write time
 - **History ID delimiter**: Square brackets `[id]` (not parentheses) to avoid ambiguity with item names
 - **i18n strategy**: Phase 1 extracts strings to constants, Phase 3 adds i18n library
-- **Empty/error states**: 6 states specified (no lists, 0 items, 1 item, 0 comparisons, no history, storage near limit). "All pairs exhausted" dropped — pairing always continues.
+- **Empty/error states**: 6 states specified (no lists, 0 items, 1 item, 0 comparisons, no history, storage near limit). "All pairs exhausted" dropped.pairing always continues.
 - **First-run tour**: 5-step walkthrough with illustrations (not UI overlays), dedicated `/welcome` route
 - **Session lifecycle**: Ephemeral counter (component state). Fresh session on every visit to Duel page. ELO safe per-duel.
 - **Post-session flow**: "Continue dueling" + "View rankings" buttons
@@ -102,7 +102,7 @@ These topics have been decided across prior refinement rounds. Reference them fo
 - **List creation**: Name + K-factor + session length. Empty lists allowed. Items added from Rankings page.
 - **Soft-delete**: Deleted items move to bucket (collapsed on Rankings, listed in list Settings). Restorable. Excluded from pairing. `## Removed` section in markdown file.
 - **Soft-delete markdown format**: `## Removed` section at bottom of file. Items keep HTML comment JSON with `"removed":true` flag. Item type has `removed?: boolean`.
-- **Soft-delete restore**: Stats preserved — keeps `eloScore`, `prevEloScore` (reset to current `eloScore` to suppress spurious trend), `comparisonCount`, `added`. Only the `removed` flag is cleared and `prevRank` is reset to `0`.
+- **Soft-delete restore**: Stats preserved.keeps `eloScore`, `prevEloScore` (reset to current `eloScore` to suppress spurious trend), `comparisonCount`, `added`. Only the `removed` flag is cleared and `prevRank` is reset to `0`.
 - **Delete confirmation**: Always confirm for both items and lists
 - **Export split**: Per-list exports (list .md, history .duellist.md) on `/list/:id/settings`. App-wide exports (all lists, app data, export all) on `/settings`.
 - **Edit list settings**: Gear icon on Rankings → `/list/:id/settings` (name, K-factor, session length, removed items, per-list export, delete list)
@@ -112,7 +112,7 @@ These topics have been decided across prior refinement rounds. Reference them fo
 - **Escaping**: HTML-encode `<!-- -->` in item names. Trim whitespace. Strip newlines.
 - **Parser edge cases**: Unknown frontmatter preserved, frontmatter name wins over heading, duplicate IDs regenerated. `## Removed` section parsed into soft-delete bucket.
 - **Serialization mapping**: eloScore↔elo, prevEloScore↔prevElo, comparisonCount↔comparisons
-- **Sample list data**: `src/data/samples.ts` — constant array of partial ListConfig objects (IDs generated on creation)
+- **Sample list data**: `src/data/samples.ts`.constant array of partial ListConfig objects (IDs generated on creation)
 - **History in localStorage**: Stored as raw markdown string under `duellist:history:<id>`. Unlimited entries. All users (including mobile/Firefox) get exportable history and pairing cooldown between sessions. Reverses Round 7.
 - **Skip re-queue**: Skips don't count toward session counter. Skipped pairs go to session-local re-queue, checked before generating new pairs.
 - **Re-import collision**: If imported file's frontmatter `id` matches existing list, prompt "Replace existing" or "Import as new list" (generates new ID).
@@ -123,29 +123,29 @@ These topics have been decided across prior refinement rounds. Reference them fo
 - **Welcome "Create" flow**: Opens create dialog inline. On submit, navigates to `/list/:newId`.
 - **YAML parser**: `yaml` package + manual ~5-line split/join. Not `gray-matter` (Buffer/ESM issues, unmaintained) or `front-matter` (read-only).
 - **History append**: Tail parsing (`lastIndexOf`) on raw markdown string. Same format in localStorage and `.duellist.md`. Duel count incremented in header line 2.
-- **Re-import "Replace existing"**: Full overwrite — replaces all item data, config, and history.
+- **Re-import "Replace existing"**: Full overwrite.replaces all item data, config, and history.
 - **Export all**: Zip via JSZip (all `.md` + `.duellist.md` files). Export app data = full localStorage dump as JSON.
 - **Home sort**: Dropdown with Recent (default) / A-Z / Created / Custom. Custom enables drag-to-reorder with toggle lock button. Sort selection + custom order persisted in `duellist:settings`.
 - **Navigation**: No breadcrumb. Back arrow in header + clickable app logo/title + browser back.
 - **Item metadata field**: Keep `metadata?: Record<string, string>` in Phase 1 type (costs nothing, parser handles unknown data).
 - **Phase 2 checklist**: Restart numbering per phase (not continuous from Phase 1).
-- **useExport history**: Reads full markdown string from localStorage directly — no header wrapping (history already includes header).
+- **useExport history**: Reads full markdown string from localStorage directly.no header wrapping (history already includes header).
 - **Phase 1 animations**: CSS transitions/`@keyframes` only. Framer Motion deferred to Phase 1b (swipe gestures).
 - **Serialization mapping**: Unified table with Source column (HTML comment vs Frontmatter). Frontmatter uses snake_case (`session_length`, `k_factor`).
-- **Delete list cleanup**: 5 targets — `duellist:list:<id>`, `duellist:history:<id>`, registry entry, `customListOrder` ID, IndexedDB file handle.
+- **Delete list cleanup**: 5 targets.`duellist:list:<id>`, `duellist:history:<id>`, registry entry, `customListOrder` ID, IndexedDB file handle.
 - **Registry sync on rename**: Update both `duellist:list:<id>` and matching entry in `duellist:lists`.
 - **Home empty state**: `firstRunDone=false` → `/welcome`. `firstRunDone=true` + 0 lists → Home with empty message + Create/Import buttons.
 - **Custom order lifecycle**: New lists appended to end. Deleted list IDs removed from `customListOrder`.
 - **Back arrow**: Shown on sub-pages only (not on Home). Home shows logo/title only.
 - **Export filename slugify**: `name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')`, max 50 chars.
 - **`history.ts`**: Separate lib file for history append (tail parsing) + cooldown parsing.
-- **Score vs ELO terminology**: UI label is **"Score"** everywhere; "ELO" appears only in the Glossary as the underlying algorithm name. Storage names (`Item.eloScore`, `displayMode: 'elo'` value, `SortField: 'elo'` value, `src/lib/elo.ts`/`ranking.ts` module names) are preserved — do NOT rename without a data migration. Caveats codified in `.github/copilot-instructions.md`.
+- **Score vs ELO terminology**: UI label is **"Score"** everywhere; "ELO" appears only in the Glossary as the underlying algorithm name. Storage names (`Item.eloScore`, `displayMode: 'elo'` value, `SortField: 'elo'` value, `src/lib/elo.ts`/`ranking.ts` module names) are preserved.do NOT rename without a data migration. Caveats codified in `.github/copilot-instructions.md`.
 - **Display mode (Rank vs Score)**: Per-list `ListConfig.displayMode: 'rank' | 'elo'`. Toggle on Rankings header. Rank view shows ordinals + podium chips for top 3; Score view shows numeric score with `pts` suffix in duel cards.
 - **Help-icon (HelpHint) convention**: `<HelpHint anchor="..." term={S....} />` next to ambiguous labels deep-links to `/settings/glossary#<anchor>`. Stable anchor ids: `list`, `item`, `item-list`, `duel`, `session`, `score`, `rank`, `brand`.
 - **Trend snapshot**: `prevRank` / `prevEloScore` written by `useComparison.initSession` at session start. No backfill for pre-Phase-I items (they show no trend until next session). TrendBadge always reserves a fixed-width slot for row alignment.
 - **Session length presets**: 5 / 10 / 20 / 50 / Unlimited plus free-form number input.
 - **Routes (post-Phase I)**: `/`, `/welcome`, `/list/:id`, `/list/:id/duel`, `/list/:id/settings`, `/list/:id/history`, `/settings`, `/settings/reminders`, `/settings/glossary`, `/features`, `*` (NotFound).
-- **Reminder banner actions**: Play (navigate to duel), Snooze 1d (suppress that *list* for 24h), Skip (mark candidacy seen — next eligible list offered on next mount/cadence tick).
+- **Reminder banner actions**: Play (navigate to duel), Snooze 1d (suppress that *list* for 24h), Skip (mark candidacy seen.next eligible list offered on next mount/cadence tick).
 - **Hero CTAs**: Home shows gradient "Random duel" hero when any list has ≥2 active items (uses `pickRandomDuelList` weighted-random helper). Rankings page shows matching hero card in place of the old plain "Start duel" button.
 - **PageSkeleton**: Lazy-route Suspense fallbacks render Home/Rankings-shaped skeletons (rest use `DefaultSkeleton`) instead of "Loading…" text.
 - **ErrorBoundary**: Top-level boundary in `src/App.tsx` wraps `<RouterProvider>` and renders fallback ("Something went wrong") + Reload + collapsible stack instead of blank screen.

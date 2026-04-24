@@ -24,7 +24,7 @@ export default defineConfig({
       manifest: {
         name: 'DuelList',
         short_name: 'DuelList',
-        description: 'Rank anything — one duel at a time.',
+        description: 'Rank anything.one duel at a time.',
         lang: 'en',
         start_url: '/',
         display: 'standalone',

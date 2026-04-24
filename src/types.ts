@@ -76,7 +76,7 @@ export interface ReminderSettings {
   preferredMinute: number;
   /** When false, quiet hours are ignored and reminders may show at any time. */
   quietHoursEnabled: boolean;
-  /** Quiet hours window — no reminders during [start, end). 0-23 each. */
+  /** Quiet hours window.no reminders during [start, end). 0-23 each. */
   quietHoursStart: number;
   quietHoursEnd: number;
   /** Minute (0-59) component of the quiet hours window endpoints. */

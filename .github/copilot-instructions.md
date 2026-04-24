@@ -1,15 +1,15 @@
-# DuelList — Copilot instructions
+# DuelList.Copilot instructions
 
 ## Terminology (use these terms consistently in UI strings, comments, and discussion)
 
-- **List / lists** — top-level container shown on Home (e.g. "Movies to rank").
-- **Item / items** — members of a list. The things you compare.
-- **Item list** — disambiguation phrase when both lists and items are in scope (e.g. "the item list inside this list").
-- **Duel** — one head-to-head comparison between two items.
-- **Session** — a sequence of duels in one sitting. Length is `list.sessionLength`.
-- **Score** — primary user-facing label for the per-item ranking number. Powered by the ELO algorithm under the hood.
-- **Rank** — derived position (#1, #2…) computed from scores.
-- **DuelList** — brand name. Always one word, capital D and L.
+- **List / lists**.top-level container shown on Home (e.g. "Movies to rank").
+- **Item / items**.members of a list. The things you compare.
+- **Item list**.disambiguation phrase when both lists and items are in scope (e.g. "the item list inside this list").
+- **Duel**.one head-to-head comparison between two items.
+- **Session**.a sequence of duels in one sitting. Length is `list.sessionLength`.
+- **Score**.primary user-facing label for the per-item ranking number. Powered by the ELO algorithm under the hood.
+- **Rank**.derived position (#1, #2…) computed from scores.
+- **DuelList**.brand name. Always one word, capital D and L.
 
 Avoid: "comparison" (use "duel"), "match" (use "duel"), "round" (use "session" for a sitting; "duel" for a single comparison), "rating" / "ELO" in user-facing copy (use "score"), "entry" / "candidate" / "contender" (use "item").
 
@@ -17,10 +17,10 @@ Avoid: "comparison" (use "duel"), "match" (use "duel"), "round" (use "session" f
 
 These persisted names **do NOT match the user-facing terminology** and must NOT be renamed without a data migration:
 
-- `Item.eloScore` — persisted in localStorage and exported JSON. UI shows it as "Score".
-- `displayMode: 'rank' | 'elo'` — `'elo'` value is persisted on `ListConfig`. UI labels the option "Score".
-- `SortField: 'rank' | 'elo' | 'added' | 'name'` — `'elo'` value is persisted in `SortMode` strings.
-- `src/lib/elo.ts` and `src/lib/ranking.ts` — internal algorithm names; correct as ELO is the actual rating algorithm. Do not rename.
+- `Item.eloScore`.persisted in localStorage and exported JSON. UI shows it as "Score".
+- `displayMode: 'rank' | 'elo'`.`'elo'` value is persisted on `ListConfig`. UI labels the option "Score".
+- `SortField: 'rank' | 'elo' | 'added' | 'name'`.`'elo'` value is persisted in `SortMode` strings.
+- `src/lib/elo.ts` and `src/lib/ranking.ts`.internal algorithm names; correct as ELO is the actual rating algorithm. Do not rename.
 
 ## UI string discipline
 

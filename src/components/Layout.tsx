@@ -16,7 +16,7 @@ function applyTheme(theme: string) {
   }
 }
 
-// Hard-coded for now — keep in sync with package.json on release.
+// Hard-coded for now.keep in sync with package.json on release.
 // A future build-time replacement (vite `define`) can wire this to env automatically.
 const APP_VERSION = '1.0.0';
 

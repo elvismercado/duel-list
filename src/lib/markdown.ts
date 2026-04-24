@@ -179,7 +179,7 @@ function parseItemSection(section: string): Item[] {
       try {
         json = JSON.parse(jsonStr) as ItemJson;
       } catch {
-        // Invalid JSON — treat as unranked
+        // Invalid JSON.treat as unranked
       }
     }
 

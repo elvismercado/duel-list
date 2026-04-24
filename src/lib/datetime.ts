@@ -7,7 +7,7 @@
 //   23:30 local stays on "today" for the user.
 // - Times displayed to the user are local `HH:MM` (24h).
 // - Numeric epoch ms (`Date.now()`) is used for `lastOpened` and in-memory
-//   `DuelRecord.timestamp` — those are never formatted by this module.
+//   `DuelRecord.timestamp`.those are never formatted by this module.
 
 /** Local-calendar `YYYY-MM-DD`. */
 export function formatLocalDate(d: Date = new Date()): string {
@@ -72,6 +72,6 @@ export function parseTimestampSuffix(raw: string): {
     return { body, tsIso: null, localTime: value.slice(0, 5) };
   }
 
-  // Unknown suffix — strip it but report nothing.
+  // Unknown suffix.strip it but report nothing.
   return { body, tsIso: null, localTime: null };
 }

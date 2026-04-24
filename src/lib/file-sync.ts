@@ -1,6 +1,6 @@
 // ---------------------------------------------------------------------------
 // File System Access API wrappers
-// Desktop Chrome/Edge only — graceful degradation elsewhere
+// Desktop Chrome/Edge only.graceful degradation elsewhere
 // ---------------------------------------------------------------------------
 
 export function isFileSystemAccessSupported(): boolean {

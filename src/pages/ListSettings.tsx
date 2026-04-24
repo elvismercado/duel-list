@@ -91,7 +91,7 @@ export default function ListSettings() {
     <div className="p-4 max-w-lg mx-auto space-y-6">
       <h1 className="text-2xl font-bold">{S.settings.title}</h1>
 
-      {/* Name — read-only display with edit button */}
+      {/* Name.read-only display with edit button */}
       <div className="space-y-2">
         <label className="text-sm font-medium">{S.list.name}</label>
         {editingName ? (
@@ -155,7 +155,7 @@ export default function ListSettings() {
         </Select>
       </div>
 
-      {/* Session Length — number input + preset chips */}
+      {/* Session Length.number input + preset chips */}
       <div className="space-y-2">
         <label className="text-sm font-medium" htmlFor="session-length-input">
           {S.settings.sessionLengthLabel}
@@ -261,7 +261,7 @@ export default function ListSettings() {
 
       <Separator />
 
-      {/* Removed Items — behind a button, opens modal */}
+      {/* Removed Items.behind a button, opens modal */}
       {removedItems.length > 0 && (
         <div className="space-y-2">
           <Button

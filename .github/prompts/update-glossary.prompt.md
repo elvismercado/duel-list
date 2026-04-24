@@ -6,9 +6,9 @@ argument-hint: "What to add or change in the glossary"
 Help me update the Glossary.
 
 **Key files**
-- [src/pages/Glossary.tsx](../../src/pages/Glossary.tsx) — page sections, anchors, layout
-- [src/lib/strings.ts](../../src/lib/strings.ts) — copy lives under `S.glossary.*`
-- [src/components/HelpHint.tsx](../../src/components/HelpHint.tsx) — `?` icon links to `/settings/glossary#<anchor>`
+- [src/pages/Glossary.tsx](../../src/pages/Glossary.tsx).page sections, anchors, layout
+- [src/lib/strings.ts](../../src/lib/strings.ts).copy lives under `S.glossary.*`
+- [src/components/HelpHint.tsx](../../src/components/HelpHint.tsx).`?` icon links to `/settings/glossary#<anchor>`
 
 **Things to keep in mind**
 - New term rows need a stable `id` so `HelpHint` can deep-link (e.g. `id="tie"`).

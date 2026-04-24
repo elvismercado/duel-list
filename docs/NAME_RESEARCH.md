@@ -1,4 +1,4 @@
-# DuelList — Name Research & Selection
+# DuelList.Name Research & Selection
 
 > Date: April 21, 2026
 
@@ -25,39 +25,39 @@
 ### Other Candidates Explored
 
 **Descriptive / Clean:**
-- ListRanker — straightforward, matches repo name, but boring
-- SortOut — "sort it out" double meaning, but vague
+- ListRanker.straightforward, matches repo name, but boring
+- SortOut."sort it out" double meaning, but vague
 
 **Playful / Catchy:**
-- PickOne — describes the interaction, but too generic
-- This or That — immediately understood, but hard to brand
-- Rankaroo — fun, but a bit silly
+- PickOne.describes the interaction, but too generic
+- This or That.immediately understood, but hard to brand
+- Rankaroo.fun, but a bit silly
 
 **Versus / Duel Themed:**
-- Versus — clean, dramatic, but very common word
-- RankDuel — items duel for position, decent but less clever than DuelList
+- Versus.clean, dramatic, but very common word
+- RankDuel.items duel for position, decent but less clever than DuelList
 
 **Swipe / Modern:**
-- RankSwipe — combines ranking + swipe mechanic
-- SwipeRank — same idea, different order
-- TopPick — your top picks emerge naturally
+- RankSwipe.combines ranking + swipe mechanic
+- SwipeRank.same idea, different order
+- TopPick.your top picks emerge naturally
 
 ---
 
 ## Research Results
 
-### RankIt — GitHub Search
+### RankIt.GitHub Search
 - **10 matching repositories found**, including:
-  - `mctaggaj/RankIt-Web-Application` — Front-end web app (CSS, 2 stars)
-  - `backand/rankit` — Demo app (JavaScript, 1 star)
-  - `rakshit-agrawal/rankit` — Android app for crowdsourced ranking of media (Java)
-  - `CostaPedro/rankit-app` — Another rankit app (JavaScript)
-  - `JuvnMillx/RankIt.App` — Java app
-  - `JChappelle5/RankIt-App` — Java app
+  - `mctaggaj/RankIt-Web-Application`.Front-end web app (CSS, 2 stars)
+  - `backand/rankit`.Demo app (JavaScript, 1 star)
+  - `rakshit-agrawal/rankit`.Android app for crowdsourced ranking of media (Java)
+  - `CostaPedro/rankit-app`.Another rankit app (JavaScript)
+  - `JuvnMillx/RankIt.App`.Java app
+  - `JChappelle5/RankIt-App`.Java app
   - Multiple others in Python, TypeScript, Java
 - **Conclusion**: Name is heavily used. Would blend in and cause confusion.
 
-### DuelList — GitHub Search
+### DuelList.GitHub Search
 - **0 matching repositories found** for "duellist rank"
 - **npm**: No package named "duellist"
 - **Conclusion**: Name is completely available and unique.

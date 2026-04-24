@@ -55,7 +55,7 @@ function getActivityBucket(
     return 'never';
   }
   if (lastDuelAt === null || lastDuelAt === undefined) {
-    // Opened but never duelled — surface as 'stale' to nudge first duels.
+    // Opened but never duelled.surface as 'stale' to nudge first duels.
     return 'stale';
   }
   const days = (Date.now() - lastDuelAt) / 86_400_000;

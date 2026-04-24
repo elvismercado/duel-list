@@ -141,6 +141,6 @@ export async function cancelScheduled(): Promise<void> {
     } as GetNotificationOptions & { includeTriggered: boolean });
     for (const n of pending) n.close();
   } catch {
-    // Older browsers may not accept the includeTriggered flag — ignore.
+    // Older browsers may not accept the includeTriggered flag.ignore.
   }
 }

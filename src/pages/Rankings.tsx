@@ -90,7 +90,7 @@ function DirectionIcon({ field, dir, className }: { field: SortField; dir: SortD
   if (field === 'added') {
     return dir === 'desc' ? <ArrowDownNarrowWide className={className} /> : <ArrowUpWideNarrow className={className} />;
   }
-  // rank / elo — numeric
+  // rank / elo.numeric
   return dir === 'desc' ? <ArrowDown01 className={className} /> : <ArrowUp10 className={className} />;
 }
 

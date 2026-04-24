@@ -145,7 +145,7 @@ export interface ReminderCandidate {
   /**
    * Days since the most recent duel for this list. Equals 365 (treated as
    * "very stale") when the list has never been duelled. This is the value
-   * `pickReminderList` scores on — it matches the activity-dot semantics on
+   * `pickReminderList` scores on.it matches the activity-dot semantics on
    * the home page (which also reflect duel freshness, not visit freshness).
    */
   daysSinceLastDuel: number;

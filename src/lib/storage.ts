@@ -86,7 +86,7 @@ export function saveList(config: ListConfig): void {
     id: config.id,
     name: config.name,
     lastOpened: Date.now(),
-    // Preserve the previous duel timestamp on rename/save — only `markDuelRecorded`
+    // Preserve the previous duel timestamp on rename/save.only `markDuelRecorded`
     // should advance it.
     lastDuelAt: previous?.lastDuelAt ?? null,
   };
@@ -306,7 +306,7 @@ export function isQuotaNearLimit(): boolean {
 }
 
 // ---------------------------------------------------------------------------
-// IndexedDB — file handle persistence
+// IndexedDB.file handle persistence
 // ---------------------------------------------------------------------------
 
 function openDB(): Promise<IDBDatabase> {
@@ -370,7 +370,7 @@ export async function deleteFileHandle(listId: string): Promise<void> {
       tx.onerror = () => resolve();
     });
   } catch {
-    // IndexedDB unavailable — silently ignore
+    // IndexedDB unavailable.silently ignore
   }
 }
 
