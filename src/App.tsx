@@ -1,6 +1,7 @@
 import { lazy, Suspense } from 'react';
 import { createBrowserRouter, RouterProvider } from 'react-router';
 import Layout from '@/components/Layout';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 import {
   DefaultSkeleton,
   HomeSkeleton,
@@ -43,5 +44,9 @@ const router = createBrowserRouter([
 ]);
 
 export default function App() {
-  return <RouterProvider router={router} />;
+  return (
+    <ErrorBoundary>
+      <RouterProvider router={router} />
+    </ErrorBoundary>
+  );
 }

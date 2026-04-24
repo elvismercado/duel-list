@@ -11,6 +11,11 @@ export const S = {
       'Storage is almost full. Export your lists to free up space.',
     appSettingsAria: 'App settings',
     goBackAria: 'Go back',
+    errorBoundaryTitle: 'Something went wrong',
+    errorBoundaryDescription:
+      'DuelList hit an unexpected error. Your saved lists are safe — reloading usually fixes it.',
+    errorBoundaryReload: 'Reload',
+    errorBoundaryDetails: 'Show details',
   },
 
   common: {

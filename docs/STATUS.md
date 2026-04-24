@@ -168,3 +168,70 @@ Fixes + UX polish + small features driven by hands-on testing feedback.
 ### Deferred (intentionally out of scope)
 - [ ] Internationalization (i18n) — strings are already centralized in `src/lib/strings.ts`; framework swap pending demand.
 - [ ] Public sample-list catalog / suggestions feed.
+
+## Phase I: Reminders + Glossary + Hero CTAs — COMPLETE
+
+> Last updated: 2026-04-24
+
+Bundles all post-H work into one batch entry. Multiple iterations on Home/Rankings UX, a reminders system, a help/glossary surface, and a terminology lock-in.
+
+### Reminders (Phase 3 #17 — in-app portion)
+- [x] `src/lib/reminders.ts` — eligibility scoring, `pickReminderCandidate`, `pickRandomDuelList` weighted-random helper (favors stale + less-developed lists), quiet-hours math (`inAllowedHours`, minute-of-day).
+- [x] `src/types.ts` — `ReminderSettings` extended with `preferredHour`, `preferredMinute`, `quietHoursStart/End` + `*Minute` for 15-minute granularity.
+- [x] `src/pages/RemindersSettings.tsx` — full settings page; in-app `PreferredTimePicker` (12h/24h aware), preset cadence labels, quiet-hours selects (96 entries, 15-min steps).
+- [x] `src/components/ReminderBanner.tsx` — dismissible banner on Home, Snooze 1d / Skip / Play actions.
+- [x] **Deferred**: OS-level notifications via service worker (Phase 3 #17 part 2).
+
+### Glossary + HelpHint (terminology surface)
+- [x] `src/pages/Glossary.tsx` at `/settings/glossary` — sectioned reference (terminology first, then visual cues). Stable anchor `id`s on every row.
+- [x] `src/components/HelpHint.tsx` — `?` icon link to `/settings/glossary#<anchor>`. Mounted on Rankings (Score/Rank toggle), Duel (session counter), ItemDetailsDialog (Rank/Score tiles).
+- [x] Smooth-scroll-on-mount when URL has a hash.
+
+### Terminology lock-in (UI rename: ELO → Score)
+- [x] `src/lib/strings.ts` — renamed `ranking.elo`→`score`, `eloTooltip`→`scoreTooltip`, `switchToElo`→`switchToScore`, `sortFieldElo`→`sortFieldScore`, `sortEloDesc/Asc`→`sortScoreDesc/Asc`, `sortDirAriaElo*`→`sortDirAriaScore*`, `detailsElo`→`detailsScore`, `duel.eloSuffix`→`scoreSuffix` (returns `"{n} pts"`), `glossary.eloView*`→`scoreView*`. Removed-item meta and ELO-view glossary copy now use "pts" / "score".
+- [x] **Storage names preserved** (no migration): `Item.eloScore`, `displayMode: 'rank' | 'elo'` value, `SortField` `'elo'` value, `src/lib/elo.ts` / `ranking.ts` module names. Caveats codified in `.github/copilot-instructions.md`.
+
+### Hero CTAs + ListCard polish
+- [x] `src/pages/Home.tsx` — gradient hero "Ready for a duel?" / "Random duel" → `pickRandomDuelList` → navigates to `/list/:id/duel`. Hidden when no eligible list.
+- [x] `src/components/ListCard.tsx` — title bumped to `text-lg font-bold`, dot to `h-2.5 w-2.5`, top-right `Swords` quick-duel icon button when `≥2` items.
+- [x] `src/pages/Rankings.tsx` — replaced plain "Start duel" button with matching gradient hero card (Swords badge, title + subtitle).
+
+### Trend arrows on Rankings
+- [x] `src/hooks/useComparison.ts` `initSession` — captures `prevRank`/`prevEloScore` snapshot at session start; only writes when changed.
+- [x] `src/pages/Rankings.tsx` — `TrendBadge` component renders TrendingUp/Down + delta. Fixed-width slot (`w-10`) reserved on every row for alignment, including null/no-change states. Duel-count chip mirrors the same `w-10` reservation.
+- [x] `src/hooks/useList.ts` `restoreItem` — preserves stats; resets `prevRank: 0`, `prevEloScore: i.eloScore` so trend doesn't show stale jump.
+
+### Removed-items section
+- [x] `src/pages/Rankings.tsx` — collapsible "Removed (n)" section. Sort by score desc. Each row shows score + duel count meta. Restore button uses `Undo2` icon.
+- [x] `S.ranking.restoreKeepsStatsHint` (`title` tooltip) clarifies stats are preserved.
+
+### Shared primitives
+- [x] `src/components/RankChip.tsx` — gold/silver/bronze chips for positions 1–3, muted fallback for >3. Used by ListCard, Rankings (rank-view top-3), Duel session-complete podium.
+- [x] `src/components/ItemDetailsDialog.tsx` — stat tiles (Rank, Score, Total, Added, Last duel) + last-duels list + notes. Opened from row dropdown "Details".
+
+### Time format setting (12h/24h)
+- [x] `src/types.ts` — `AppSettings.timeFormat: '12h' | '24h'` (default `'24h'`).
+- [x] `src/lib/datetime.ts` — `formatTimeOfDay(iso, fmt)`, `formatHourMinute(h, m, fmt)`.
+- [x] `src/pages/AppSettings.tsx` — `Select` for time format.
+- [x] Wired into `RemindersSettings.tsx` (preset labels, picker, quiet-hours), `History.tsx` (DuelRow), `ItemDetailsDialog.tsx` (`formatShort`).
+
+### shadcn primitives added
+- [x] `src/components/ui/scroll-area.tsx` — Radix-based; `@radix-ui/react-scroll-area` 1.2.10 installed. Used by Rankings (removed-items, `max-h-72`) and ItemDetailsDialog (last-duels, `max-h-64`).
+- [x] `src/components/ui/skeleton.tsx` — pure Tailwind `animate-pulse` div.
+- [x] `src/components/PageSkeleton.tsx` — `HomeSkeleton`, `RankingsSkeleton`, `DefaultSkeleton`. `aria-busy` + `aria-live`.
+- [x] `src/App.tsx` — `withSuspense(node, fallback)` now takes per-route fallback. Home/Rankings/Duel get bespoke shapes; everything else uses `DefaultSkeleton`. Replaced bare `"Loading…"` text.
+
+### Contributor docs
+- [x] `.github/copilot-instructions.md` — created with Terminology + storage caveats + UI string discipline + code conventions.
+- [x] `.github/prompts/update-features.prompt.md`
+- [x] `.github/prompts/update-glossary.prompt.md`
+- [x] `.github/prompts/update-lists-view.prompt.md`
+- [x] `.github/prompts/update-list-view.prompt.md`
+
+### Verification
+- [x] `tsc --noEmit` clean
+- [x] `vite build` succeeds — `built in 8.07s` on last run; PWA precache ≥40 entries (likely higher with Glossary/Reminders chunks).
+
+### Outstanding (carried from G5, still open)
+- [ ] Real PWA icon artwork (replace placeholder `public/icon-*.png` files)
+- [ ] Add `public/screenshots/home-narrow.png` and `public/screenshots/duel-narrow.png` (720×1280)
