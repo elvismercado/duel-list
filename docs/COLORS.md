@@ -3,7 +3,7 @@ BRAND
   brand-soft         #E6E6FE   Brand-tinted chip fills / hover wash (light only)
   brand-deep         #1B1B6E   Brand-tinted chip fills / hover wash (dark only)
 
-NEUTRALS — LIGHT
+NEUTRALS (LIGHT)
   bg                 #FBFAFD   Page background
   surface            #FFFFFF   Cards, popovers, dialogs
   surface-muted      #F2F0F7   Inset / secondary fills
@@ -12,7 +12,7 @@ NEUTRALS — LIGHT
   text-muted         #5C5872   Secondary text
   text-subtle        #8C879E   Disabled / placeholder
 
-NEUTRALS — DARK
+NEUTRALS (DARK)
   bg                 #13121A   Page background
   surface            #1C1B26   Cards, popovers, dialogs
   surface-muted      #252432   Inset / secondary fills
@@ -38,7 +38,7 @@ OUTCOMES & TREND (colorblind-safe blue/orange; always paired with icon/text)
 
 Logo colorway
   Logo part	      Light theme bg #FBFAFD	  Dark theme bg #13121A
-  Lightning bolt	#5B5BF0 (brand)	        #5B5BF0 (brand) — identical
+  Lightning bolt	#5B5BF0 (brand)	        #5B5BF0 (brand) identical
   Clash / burst	  #E6E6FE (brand-soft)	    #1B1B6E (brand-deep)
   "Duel" text	    #1A1726 (text)	          #F1EFF7 (text)
   "List" text	    #1A1726 (text)	          #F1EFF7 (text)

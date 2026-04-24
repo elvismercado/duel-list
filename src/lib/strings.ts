@@ -94,13 +94,13 @@ export const S = {
     stepAria: (n: number) => `Step ${n}`,
     duelStepTitle: 'The duel',
     duelStepDescription:
-      'Two items appear side by side — pick the winner, call a tie, or skip. After each duel, your list re-ranks itself; the more you do, the more accurate it gets. Prefer one card at a time? Switch to swipe mode in Settings.',
+      'Two items appear side by side. Pick the winner, call a tie, or skip. After each duel, your list re-ranks itself; the more you do, the more accurate it gets. Prefer one card at a time? Switch to swipe mode in Settings.',
     sessionsStepTitle: 'Sessions & history',
     sessionsStepDescription:
       'Knock out 5–10 duels per session. Every duel is saved, so you can browse history or export it as Markdown anytime.',
     loopStepTitle: 'Stay in the loop',
     loopStepDescription:
-      'Pick a cadence and Duel⚡List will nudge you when a list goes stale — quiet hours respected. Tweak the theme from the header, and start new lists fast with built-in templates.',
+      'Pick a cadence and Duel⚡List will nudge you when a list goes stale. Quiet hours respected. Tweak the theme from the header, and start new lists fast with built-in templates.',
     readyStepTitle: 'Ready!',
     readyStepDescription: 'Create a list or try a sample to get started.',
   },
