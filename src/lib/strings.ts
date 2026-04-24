@@ -92,6 +92,9 @@ export const S = {
       'After each duel, your list re-ranks automatically. The more duels you do, the more accurate it gets.',
     sessionsStepTitle: 'Quick Sessions',
     sessionsStepDescription: "Do 5–10 duels a day. It's a habit, not a chore.",
+    remindersStepTitle: 'Gentle Nudges',
+    remindersStepDescription:
+      'Pick a cadence and DuelList will surface a list that’s gone stale. In-app banner, OS notification, or both — quiet hours respected.',
     readyStepTitle: 'Ready!',
     readyStepDescription: 'Create a list or try a sample to get started.',
   },
@@ -522,6 +525,11 @@ export const S = {
         title: 'Templates to start fast',
         body:
           'Pick a starter template (Anime, Pizza Toppings, Movies, Vacation, Snacks, Hobbies) when creating a list to skip the empty-state.',
+      },
+      {
+        title: 'Smart reminders',
+        body:
+          'Choose a cadence (daily, weekly, monthly, custom) and DuelList nudges you about a list that’s gone stale. In-app banner while the app is open, OS notification when it isn’t. Quiet hours and per-list opt-outs are honored.',
       },
     ],
   },

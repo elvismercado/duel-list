@@ -13,6 +13,7 @@ import {
   Download,
   KeyRound,
   Layers,
+  Bell,
   ArrowLeft,
 } from 'lucide-react';
 
@@ -27,6 +28,7 @@ const FEATURE_ICONS: React.ComponentType<{ className?: string }>[] = [
   Smartphone,
   KeyRound,
   Layers,
+  Bell,
 ];
 
 export default function Features() {

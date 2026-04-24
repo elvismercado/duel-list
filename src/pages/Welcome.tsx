@@ -23,6 +23,10 @@ const TOUR_STEPS = [
     description: S.welcome.sessionsStepDescription,
   },
   {
+    heading: S.welcome.remindersStepTitle,
+    description: S.welcome.remindersStepDescription,
+  },
+  {
     heading: S.welcome.readyStepTitle,
     description: S.welcome.readyStepDescription,
   },
