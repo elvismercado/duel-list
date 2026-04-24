@@ -5,7 +5,7 @@
 
 export const S = {
   app: {
-    name: 'DuelList',
+    name: 'Duel⚡List',
     tagline: 'Rank anything.one duel at a time.',
     storageAlmostFull:
       'Storage is almost full. Export your lists to free up space.',
@@ -13,7 +13,7 @@ export const S = {
     goBackAria: 'Go back',
     errorBoundaryTitle: 'Something went wrong',
     errorBoundaryDescription:
-      'DuelList hit an unexpected error. Your saved lists are safe.reloading usually fixes it.',
+      'Duel⚡List hit an unexpected error. Your saved lists are safe.reloading usually fixes it.',
     errorBoundaryReload: 'Reload',
     errorBoundaryDetails: 'Show details',
     footerNavAria: 'Footer navigation',
@@ -83,7 +83,7 @@ export const S = {
   },
 
   welcome: {
-    heading: 'Welcome to DuelList',
+    heading: 'Welcome to Duel⚡List',
     description:
       'Rank your favourites through quick A-vs-B comparisons. Create a list, add items, and start duelling.',
     getStarted: 'Get started',
@@ -101,7 +101,7 @@ export const S = {
     sessionsStepDescription: "Do 5–10 duels a day. It's a habit, not a chore.",
     remindersStepTitle: 'Gentle Nudges',
     remindersStepDescription:
-      'Pick a cadence and DuelList will surface a list that’s gone stale. In-app banner, OS notification, or both.quiet hours respected.',
+      'Pick a cadence and Duel⚡List will surface a list that’s gone stale. In-app banner, OS notification, or both.quiet hours respected.',
     readyStepTitle: 'Ready!',
     readyStepDescription: 'Create a list or try a sample to get started.',
   },
@@ -152,7 +152,7 @@ export const S = {
       'Not linked to a file.tap to link',
     linkFileConfirmTitle: 'Link list to a file?',
     linkFileConfirmMessage:
-      'Pick or create a Markdown file on disk. DuelList will write changes to it as you go, so you keep a portable copy of this list.',
+      'Pick or create a Markdown file on disk. Duel⚡List will write changes to it as you go, so you keep a portable copy of this list.',
     relinkFileConfirmMessage:
       'The previously linked file is no longer accessible. Pick the file again (or a new one) to restore the link.',
     optionsAria: (name: string) => `Options for ${name}`,
@@ -260,7 +260,7 @@ export const S = {
 
   glossary: {
     heading: 'What things mean',
-    intro: 'A reference for the terms, icons, colors, and labels you’ll see around DuelList.',
+    intro: 'A reference for the terms, icons, colors, and labels you’ll see around Duel⚡List.',
     backAria: 'Back to settings',
     openLink: 'What things mean',
     sectionTerminology: 'What we call things',
@@ -278,7 +278,7 @@ export const S = {
     termScoreDesc: 'A number per item that goes up when it wins, down when it loses. Powered by the ELO rating algorithm.',
     termRankLabel: 'Rank',
     termRankDesc: 'An item’s position (#1, #2…) derived from its score.',
-    termBrandLabel: 'DuelList',
+    termBrandLabel: 'Duel⚡List',
     termBrandDesc: 'The app you’re using. Always one word, capital D and L.',
     termReminderLabel: 'Reminder',
     termReminderDesc:
@@ -309,7 +309,7 @@ export const S = {
     fileBrokenLabel: 'Sync broken',
     fileBrokenDesc: 'The linked file can’t be reached. Re-link from list settings to fix.',
     fileNotLinkedLabel: 'Not linked',
-    fileNotLinkedDesc: 'List lives only in DuelList. You can link it to a file from list settings.',
+    fileNotLinkedDesc: 'List lives only in Duel⚡List. You can link it to a file from list settings.',
     rankViewLabel: 'Rank view',
     rankViewDesc: 'Shows ordinal positions (1, 2, 3…).',
     scoreViewLabel: 'Score view',
@@ -442,10 +442,10 @@ export const S = {
     remindersPermissionDenied:
       'Notifications are blocked. Open your browser site settings to allow them, then come back.',
     remindersPermissionDefault:
-      'Allow notifications so DuelList can nudge you when the app is in the background.',
+      'Allow notifications so Duel⚡List can nudge you when the app is in the background.',
     remindersPermissionEnableButton: 'Enable notifications',
     remindersTriggerUnsupportedHelp:
-      'Background scheduling isn’t supported on this browser.reminders will only fire while DuelList is open.',
+      'Background scheduling isn’t supported on this browser.reminders will only fire while Duel⚡List is open.',
     osNotificationTitle: 'Time for a duel?',
     osNotificationBody: (listName: string, days: number) =>
       days <= 0
@@ -461,7 +461,7 @@ export const S = {
       'Sends a test through your selected channel.in-app banner, OS notification, or both.',
     remindersBack: 'Back to settings',
     aboutHeading: 'About',
-    whatsInDuelList: "What's in DuelList",
+    whatsInDuelList: "What's in Duel⚡List",
     replayOnboarding: 'Replay onboarding',
     exportHeading: 'Export',
     storageHeading: 'Storage',
@@ -505,7 +505,7 @@ export const S = {
   features: {
     heading: 'Features',
     intro:
-      "DuelList turns the painful job of ranking a long list into a stream of easy two-way choices. Here's what's in the box.",
+      "Duel⚡List turns the painful job of ranking a long list into a stream of easy two-way choices. Here's what's in the box.",
     goToLists: 'Go to your lists',
     list: [
       {
@@ -561,7 +561,7 @@ export const S = {
       {
         title: 'Smart reminders',
         body:
-          'Choose a cadence (daily, weekly, monthly, custom) and DuelList nudges you about a list that’s gone stale. In-app banner while the app is open, OS notification when it isn’t. Quiet hours and per-list opt-outs are honored.',
+          'Choose a cadence (daily, weekly, monthly, custom) and Duel⚡List nudges you about a list that’s gone stale. In-app banner while the app is open, OS notification when it isn’t. Quiet hours and per-list opt-outs are honored.',
       },
     ],
   },

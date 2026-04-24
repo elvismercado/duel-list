@@ -52,7 +52,7 @@ export default function RemindersSettingsPage() {
     if (osDeliverable) {
       void showLocal({
         title: S.settings.osNotificationTitle,
-        body: S.settings.osNotificationBody('DuelList', 0),
+        body: S.settings.osNotificationBody('Duel⚡List', 0),
         url: '/',
       });
     }
