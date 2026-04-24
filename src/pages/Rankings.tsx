@@ -13,6 +13,8 @@ import { useList } from '@/hooks/useList';
 import { useFileSync } from '@/hooks/useFileSync';
 import { RankChip } from '@/components/RankChip';
 import { HelpHint } from '@/components/HelpHint';
+import emptyRankingsImg from '@/assets/illustrations/empty-rankings.png';
+import noMatchImg from '@/assets/illustrations/no-match.png';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -317,6 +319,12 @@ export default function Rankings() {
 
       {activeItems.length === 0 ? (
         <div className="text-center space-y-3 py-8">
+          <img
+            src={emptyRankingsImg}
+            alt=""
+            aria-hidden="true"
+            className="max-w-[200px] mx-auto opacity-90"
+          />
           <p className="text-muted-foreground">{S.list.noItems}</p>
           <Button onClick={() => setAddOpen(true)}>
             <Plus className="h-4 w-4 mr-2" />
@@ -357,6 +365,12 @@ export default function Rankings() {
           </Button>
           {visibleItems.length === 0 ? (
             <div className="text-center py-8 space-y-2">
+              <img
+                src={noMatchImg}
+                alt=""
+                aria-hidden="true"
+                className="max-w-[160px] mx-auto opacity-90"
+              />
               <p className="text-muted-foreground text-sm">{S.ranking.noMatch(query)}</p>
               <Button variant="outline" size="sm" onClick={() => setQuery('')}>
                 {S.common.clearFilter}

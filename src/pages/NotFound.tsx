@@ -1,11 +1,18 @@
 import { useNavigate } from 'react-router';
 import { S } from '@/lib/strings';
+import notFoundImg from '@/assets/illustrations/not-found.png';
 
 export default function NotFound() {
   const navigate = useNavigate();
 
   return (
     <div className="p-4 max-w-lg mx-auto space-y-4 text-center mt-12">
+      <img
+        src={notFoundImg}
+        alt=""
+        aria-hidden="true"
+        className="max-w-[240px] mx-auto opacity-90"
+      />
       <h1 className="text-2xl font-bold">{S.common.pageNotFound}</h1>
       <p className="text-muted-foreground">
         {S.common.pageNotFoundDescription}

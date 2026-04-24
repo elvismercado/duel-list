@@ -13,6 +13,7 @@ import {
 import { Plus, Settings, FolderOpen, ArrowDownAZ, ArrowUpAZ, ArrowDownNarrowWide, ArrowUpWideNarrow, ArrowUpDown, Swords, Search, X } from 'lucide-react';
 import { ListCard, buildListCardHaystack } from '@/components/ListCard';
 import { ListCreateDialog } from '@/components/ListCreateDialog';
+import emptyHomeImg from '@/assets/illustrations/empty-home.png';
 import { ImportConflictDialog } from '@/components/ImportConflictDialog';
 import { ReminderBanner } from '@/components/ReminderBanner';
 import { isReminderDue, pickReminderList, pickRandomDuelList } from '@/lib/reminders';
@@ -373,6 +374,12 @@ export default function Home() {
 
       {lists.length === 0 ? (
         <div className="text-center space-y-4 py-12">
+          <img
+            src={emptyHomeImg}
+            alt=""
+            aria-hidden="true"
+            className="max-w-[200px] mx-auto opacity-90"
+          />
           <h2 className="text-lg font-semibold">{S.home.emptyTitle}</h2>
           <p className="text-muted-foreground">{S.home.emptyDescription}</p>
           <div className="flex gap-3 justify-center flex-wrap">

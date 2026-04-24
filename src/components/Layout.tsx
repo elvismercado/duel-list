@@ -6,6 +6,7 @@ import { getSettings, isQuotaNearLimit } from '@/lib/storage';
 import { applyTheme } from '@/lib/theme';
 import { HeaderActionsProvider, useHeaderActionsSlot } from '@/components/HeaderActions';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import Wordmark from '@/assets/brand/wordmark.svg?react';
 
 // Hard-coded for now.keep in sync with package.json on release.
 // A future build-time replacement (vite `define`) can wire this to env automatically.
@@ -94,9 +95,10 @@ function LayoutInner() {
         )}
         <button
           onClick={() => navigate('/')}
-          className="font-heading text-lg font-bold tracking-tight"
+          className="flex items-center text-foreground"
+          aria-label={S.app.name}
         >
-          {S.app.name}
+          <Wordmark className="h-6 w-auto" />
         </button>
         <div className="ml-auto flex items-center gap-1">
           <ThemeToggle />

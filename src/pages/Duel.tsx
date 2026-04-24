@@ -13,6 +13,7 @@ import { SwipeMode } from '@/components/SwipeMode';
 import { RankChip } from '@/components/RankChip';
 import { HelpHint } from '@/components/HelpHint';
 import { getSettings } from '@/lib/storage';
+import sessionCompleteImg from '@/assets/illustrations/session-complete.png';
 
 export default function Duel() {
   const { id } = useParams<{ id: string }>();
@@ -111,6 +112,12 @@ function DuelSession({
     return (
       <div className="p-4 max-w-lg mx-auto space-y-6" aria-live="polite">
         <div className="text-center space-y-2">
+          <img
+            src={sessionCompleteImg}
+            alt=""
+            aria-hidden="true"
+            className="max-w-[220px] mx-auto opacity-90"
+          />
           <Trophy className="h-10 w-10 mx-auto text-podium-gold" />
           <h1 className="text-2xl font-bold">{S.duel.sessionComplete}</h1>
           <p className="text-muted-foreground">

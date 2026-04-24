@@ -80,7 +80,6 @@ src/assets/
   brand/
     wordmark.svg
     mark.svg
-    mark-mono.svg
   illustrations/
     empty-home.svg
     empty-rankings.svg

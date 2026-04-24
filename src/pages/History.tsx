@@ -8,6 +8,7 @@ import { formatLocalDate, formatTimeOfDay, parseTimestampSuffix } from '@/lib/da
 import { useExport } from '@/hooks/useExport';
 import { useHeaderActions } from '@/components/HeaderActions';
 import { useFilterShortcut } from '@/hooks/useFilterShortcut';
+import emptyHistoryImg from '@/assets/illustrations/empty-history.png';
 import {
   Download,
   Trophy,
@@ -107,6 +108,12 @@ export default function History() {
 
       {sections.length === 0 ? (
         <div className="text-center py-12 space-y-2">
+          <img
+            src={emptyHistoryImg}
+            alt=""
+            aria-hidden="true"
+            className="max-w-[200px] mx-auto opacity-90"
+          />
           <p className="text-muted-foreground">
             {S.history.emptyDescription}
           </p>
