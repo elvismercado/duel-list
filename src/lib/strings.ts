@@ -218,6 +218,15 @@ export const S = {
     detailsOutcomeWin: 'Won vs',
     detailsOutcomeLoss: 'Lost to',
     detailsOutcomeTie: 'Tied with',
+    hasNotesAria: (name: string) => `${name} has notes`,
+    openDetailsAria: (name: string) => `Open details for ${name}`,
+  },
+
+  itemDetail: {
+    notFound: 'Item not found',
+    backToList: 'Back to list',
+    renameAria: (name: string) => `Rename ${name}`,
+    removeButton: 'Remove item',
   },
 
   list: {

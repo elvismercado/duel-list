@@ -19,6 +19,7 @@ const AppSettings = lazy(() => import('@/pages/AppSettings'));
 const RemindersSettings = lazy(() => import('@/pages/RemindersSettings'));
 const Glossary = lazy(() => import('@/pages/Glossary'));
 const Features = lazy(() => import('@/pages/Features'));
+const ItemDetail = lazy(() => import('@/pages/ItemDetail'));
 const NotFound = lazy(() => import('@/pages/NotFound'));
 
 function withSuspense(node: React.ReactNode, fallback: React.ReactNode = <DefaultSkeleton />) {
@@ -35,6 +36,7 @@ const router = createBrowserRouter([
       { path: '/list/:id/duel', element: withSuspense(<Duel />, <RankingsSkeleton />) },
       { path: '/list/:id/settings', element: withSuspense(<ListSettings />) },
       { path: '/list/:id/history', element: withSuspense(<History />) },
+      { path: '/list/:id/item/:itemId', element: withSuspense(<ItemDetail />) },
       { path: '/settings', element: withSuspense(<AppSettings />) },
       { path: '/settings/reminders', element: withSuspense(<RemindersSettings />) },
       { path: '/settings/glossary', element: withSuspense(<Glossary />) },

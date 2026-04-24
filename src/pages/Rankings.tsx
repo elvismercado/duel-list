@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo, useRef } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router';
 import { S } from '@/lib/strings';
 import {
@@ -20,17 +20,9 @@ import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { AddItemsDialog } from '@/components/AddItemsDialog';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
-import { ItemDetailsDialog } from '@/components/ItemDetailsDialog';
 import { useHeaderActions } from '@/components/HeaderActions';
 import { useFilterShortcut } from '@/hooks/useFilterShortcut';
-import { getHistory } from '@/lib/storage';
 import type { SortMode } from '@/types';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import {
   Select,
   SelectContent,
@@ -41,18 +33,14 @@ import {
 import {
   Plus,
   Settings,
-  MoreVertical,
-  Trash2,
-  Pencil,
-  Info,
   FileCheck,
   FileX,
   FileQuestion,
   History,
   Hash,
   Trophy,
-  Check,
   Swords,
+  StickyNote,
   ArrowDown01,
   ArrowUp10,
   ArrowDownAZ,
@@ -105,18 +93,13 @@ export default function Rankings() {
     (list: import('@/types').ListConfig) => { syncToFile(list); },
     [syncToFile],
   );
-  const { list, save, addItems, renameItem, removeItem, restoreItem, setItemNotes } = useList(id!, onSave);
+  const { list, save, addItems, restoreItem } = useList(id!, onSave);
   const [addOpen, setAddOpen] = useState(false);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [editValue, setEditValue] = useState('');
-  const [removeTarget, setRemoveTarget] = useState<{ id: string; name: string } | null>(null);
-  const [detailsId, setDetailsId] = useState<string | null>(null);
   const [removedExpanded, setRemovedExpanded] = useState(false);
   const [linkConfirmOpen, setLinkConfirmOpen] = useState(false);
   const [query, setQuery] = useState('');
   const filterInputRef = useRef<HTMLInputElement>(null);
   useFilterShortcut(filterInputRef);
-  const historyMd = useMemo(() => (id ? getHistory(id) : ''), [id, detailsId]);
 
   useHeaderActions(
     <>
@@ -179,15 +162,6 @@ export default function Rankings() {
     : activeItems;
   const canDuel = rankedByScore.length >= 2;
   const displayMode: 'rank' | 'elo' = list.displayMode ?? 'rank';
-  const detailsItem = detailsId ? list.items.find((i) => i.id === detailsId) ?? null : null;
-
-  function handleRename(itemId: string) {
-    const trimmed = editValue.trim();
-    if (trimmed) {
-      renameItem(itemId, trimmed);
-    }
-    setEditingId(null);
-  }
 
   function toggleDisplayMode() {
     save({ ...list!, displayMode: displayMode === 'rank' ? 'elo' : 'rank' });
@@ -385,96 +359,52 @@ export default function Rankings() {
                   return (
             <li
               key={item.id}
-              className="flex items-center gap-3 rounded-md border p-3 bg-card"
+              className="flex items-center gap-3 rounded-md border bg-card hover:bg-accent/40 transition-colors"
             >
-              {showChip ? (
-                <span className="w-12 flex justify-end shrink-0">
-                  <RankChip position={currentRank} />
-                </span>
-              ) : (
-                <span
-                  className="text-muted-foreground font-mono text-sm w-12 text-right shrink-0 tabular-nums"
-                  title={displayMode === 'rank' ? S.ranking.rankTooltip : S.ranking.scoreTooltip}
-                >
-                  {displayMode === 'rank' ? `#${currentRank || '?'}` : Math.round(item.eloScore)}
-                </span>
-              )}
-              {editingId === item.id ? (
-                <div className="flex items-center gap-1 flex-1 min-w-0">
-                  <Input
-                    className="flex-1 h-9 bg-background"
-                    value={editValue}
-                    onChange={(e) => setEditValue(e.target.value)}
-                    onBlur={() => handleRename(item.id)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') handleRename(item.id);
-                      if (e.key === 'Escape') setEditingId(null);
-                    }}
-                    aria-label={S.ranking.renameAria(item.name)}
-                    autoFocus
-                  />
-                  <Button
-                    type="button"
-                    size="icon"
-                    variant="ghost"
-                    className="h-9 w-9 shrink-0"
-                    onMouseDown={(e) => e.preventDefault()}
-                    onClick={() => handleRename(item.id)}
-                    aria-label={S.common.confirmRename}
+              <button
+                type="button"
+                onClick={() => navigate(`/list/${id}/item/${item.id}`)}
+                className="flex items-center gap-3 flex-1 min-w-0 p-3 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-md"
+                aria-label={S.ranking.openDetailsAria(item.name)}
+              >
+                {showChip ? (
+                  <span className="w-12 flex justify-end shrink-0">
+                    <RankChip position={currentRank} />
+                  </span>
+                ) : (
+                  <span
+                    className="text-muted-foreground font-mono text-sm w-12 text-right shrink-0 tabular-nums"
+                    title={displayMode === 'rank' ? S.ranking.rankTooltip : S.ranking.scoreTooltip}
                   >
-                    <Check className="h-4 w-4" />
-                  </Button>
-                </div>
-              ) : (
+                    {displayMode === 'rank' ? `#${currentRank || '?'}` : Math.round(item.eloScore)}
+                  </span>
+                )}
                 <span className="flex-1 truncate">{item.name}</span>
-              )}
-              {item.comparisonCount > 0 ? (
-                <span
-                  className="inline-flex items-center justify-end gap-1 w-10 text-xs text-muted-foreground tabular-nums shrink-0"
-                  title={S.ranking.duelsPlayed(item.comparisonCount)}
-                >
-                  <Swords className="h-3.5 w-3.5" aria-hidden="true" />
-                  {item.comparisonCount}
-                </span>
-              ) : (
-                <span className="w-10 shrink-0" aria-hidden="true" />
-              )}
-              <TrendBadge
-                delta={
-                  item.prevRank > 0
-                    ? item.prevRank - (currentRank || item.prevRank)
-                    : null
-                }
-              />
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-7 w-7 min-h-[44px] min-w-[44px]" aria-label={S.ranking.optionsAria(item.name)}>
-                    <MoreVertical className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => setDetailsId(item.id)}>
-                    <Info className="h-4 w-4 mr-2" />
-                    {S.ranking.detailsAction}
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() => {
-                      setEditingId(item.id);
-                      setEditValue(item.name);
-                    }}
+                {item.notes?.trim() && (
+                  <StickyNote
+                    className="h-3.5 w-3.5 text-muted-foreground shrink-0"
+                    aria-label={S.ranking.hasNotesAria(item.name)}
+                  />
+                )}
+                {item.comparisonCount > 0 ? (
+                  <span
+                    className="inline-flex items-center justify-end gap-1 w-10 text-xs text-muted-foreground tabular-nums shrink-0"
+                    title={S.ranking.duelsPlayed(item.comparisonCount)}
                   >
-                    <Pencil className="h-4 w-4 mr-2" />
-                    {S.ranking.renameAction}
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    className="text-destructive"
-                    onClick={() => setRemoveTarget({ id: item.id, name: item.name })}
-                  >
-                    <Trash2 className="h-4 w-4 mr-2" />
-                    {S.ranking.removeAction}
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+                    <Swords className="h-3.5 w-3.5" aria-hidden="true" />
+                    {item.comparisonCount}
+                  </span>
+                ) : (
+                  <span className="w-10 shrink-0" aria-hidden="true" />
+                )}
+                <TrendBadge
+                  delta={
+                    item.prevRank > 0
+                      ? item.prevRank - (currentRank || item.prevRank)
+                      : null
+                  }
+                />
+              </button>
             </li>
             );
           })}
@@ -555,19 +485,6 @@ export default function Rankings() {
       />
 
       <ConfirmDialog
-        open={!!removeTarget}
-        title={S.ranking.removeItemTitle}
-        message={removeTarget ? S.ranking.removeItemMessage(removeTarget.name) : ''}
-        confirmLabel={S.common.remove}
-        danger
-        onConfirm={() => {
-          if (removeTarget) removeItem(removeTarget.id);
-          setRemoveTarget(null);
-        }}
-        onCancel={() => setRemoveTarget(null)}
-      />
-
-      <ConfirmDialog
         open={linkConfirmOpen}
         title={S.ranking.linkFileConfirmTitle}
         message={needsRelink ? S.ranking.relinkFileConfirmMessage : S.ranking.linkFileConfirmMessage}
@@ -577,18 +494,6 @@ export default function Rankings() {
           if (list) void linkFile(list);
         }}
         onCancel={() => setLinkConfirmOpen(false)}
-      />
-
-      <ItemDetailsDialog
-        open={!!detailsItem}
-        onClose={() => setDetailsId(null)}
-        listId={id!}
-        item={detailsItem}
-        rank={detailsItem ? rankById.get(detailsItem.id) ?? 0 : 0}
-        historyMd={historyMd}
-        onSaveNotes={(text) => {
-          if (detailsItem) setItemNotes(detailsItem.id, text);
-        }}
       />
     </div>
   );
