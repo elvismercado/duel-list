@@ -22,6 +22,9 @@ import { RankChip } from '@/components/RankChip';
 import {
   Check,
   ChevronRight,
+  FileCheck,
+  FileQuestion,
+  FileX,
   Pencil,
   Trash2,
   TrendingDown,
@@ -32,7 +35,7 @@ import {
 export default function ItemDetail() {
   const { id, itemId } = useParams<{ id: string; itemId: string }>();
   const navigate = useNavigate();
-  const { supported, syncToFile } = useFileSync(id);
+  const { supported, isSynced, needsRelink, syncToFile } = useFileSync(id);
   const onSave = useCallback(
     (l: import('@/types').ListConfig) => { if (supported) syncToFile(l); },
     [supported, syncToFile],
@@ -124,7 +127,33 @@ export default function ItemDetail() {
   return (
     <div className="p-4 max-w-lg mx-auto space-y-6">
       {/* Parent list label */}
-      <p className="text-sm text-muted-foreground truncate">{list.name}</p>
+      <p className="text-sm text-muted-foreground flex items-center gap-1.5 min-w-0">
+        <span className="truncate">{list.name}</span>
+        {supported && isSynced && (
+          <FileCheck
+            className="h-3.5 w-3.5 shrink-0 text-success"
+            aria-label={S.ranking.fileLinked}
+          >
+            <title>{S.ranking.fileLinkedTooltip}</title>
+          </FileCheck>
+        )}
+        {supported && needsRelink && (
+          <FileX
+            className="h-3.5 w-3.5 shrink-0 text-destructive"
+            aria-label={S.ranking.fileLinkBroken}
+          >
+            <title>{S.ranking.fileLinkBrokenTooltip}</title>
+          </FileX>
+        )}
+        {supported && !isSynced && !needsRelink && (
+          <FileQuestion
+            className="h-3.5 w-3.5 shrink-0 text-muted-foreground"
+            aria-label={S.list.notLinkedShort}
+          >
+            <title>{S.ranking.fileNotLinkedTooltip}</title>
+          </FileQuestion>
+        )}
+      </p>
 
       {/* Title + rename */}
       <div className="flex items-start gap-2 min-w-0">
