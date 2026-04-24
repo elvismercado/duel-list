@@ -3,6 +3,7 @@ import { Link, Outlet, useLocation, useNavigate, useParams } from 'react-router'
 import { ArrowLeft, AlertTriangle } from 'lucide-react';
 import { S } from '@/lib/strings';
 import { getSettings, isQuotaNearLimit } from '@/lib/storage';
+import { HeaderActionsProvider, useHeaderActionsSlot } from '@/components/HeaderActions';
 
 function applyTheme(theme: string) {
   const root = document.documentElement;
@@ -47,11 +48,20 @@ function shouldShowFooter(pathname: string): boolean {
 }
 
 export default function Layout() {
+  return (
+    <HeaderActionsProvider>
+      <LayoutInner />
+    </HeaderActionsProvider>
+  );
+}
+
+function LayoutInner() {
   const navigate = useNavigate();
   const location = useLocation();
   const { id } = useParams<{ id: string }>();
   const backTarget = getBackTarget(location.pathname, id);
   const quotaWarning = isQuotaNearLimit();
+  const headerActions = useHeaderActionsSlot();
 
   // Apply persisted theme on mount + listen for OS changes
   useEffect(() => {
@@ -97,6 +107,9 @@ export default function Layout() {
         >
           {S.app.name}
         </button>
+        {headerActions && (
+          <div className="ml-auto flex items-center gap-1">{headerActions}</div>
+        )}
       </header>
       <main className="flex-1 pb-8" style={{ paddingBottom: 'max(2rem, env(safe-area-inset-bottom))' }}>
         <Outlet />

@@ -373,3 +373,25 @@ export async function deleteFileHandle(listId: string): Promise<void> {
     // IndexedDB unavailable — silently ignore
   }
 }
+
+/**
+ * Returns the set of list IDs that have a persisted file handle (linked or
+ * needs-relink). Excludes ":history" companion handles.
+ */
+export async function listLinkedListIds(): Promise<Set<string>> {
+  try {
+    const db = await openDB();
+    return new Promise((resolve) => {
+      const tx = db.transaction(STORE_FILE_HANDLES, 'readonly');
+      const store = tx.objectStore(STORE_FILE_HANDLES);
+      const req = store.getAllKeys();
+      req.onsuccess = () => {
+        const keys = (req.result ?? []) as string[];
+        resolve(new Set(keys.filter((k) => !k.includes(':'))));
+      };
+      req.onerror = () => resolve(new Set());
+    });
+  } catch {
+    return new Set();
+  }
+}

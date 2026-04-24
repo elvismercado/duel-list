@@ -1,13 +1,13 @@
 import { useMemo, useState } from 'react';
-import { Link, useParams, useNavigate, useSearchParams } from 'react-router';
+import { useParams, useNavigate, useSearchParams } from 'react-router';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { S } from '@/lib/strings';
 import { getList, getHistory, getSettings } from '@/lib/storage';
 import { formatLocalDate, formatTimeOfDay, parseTimestampSuffix } from '@/lib/datetime';
 import { useExport } from '@/hooks/useExport';
+import { useHeaderActions } from '@/components/HeaderActions';
 import {
-  ArrowLeft,
   Download,
   Trophy,
   Search,
@@ -67,6 +67,20 @@ export default function History() {
       .filter((s) => s.entries.length > 0);
   }, [sections, query]);
 
+  useHeaderActions(
+    list && total > 0 ? (
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={() => exportHistory(list.id, list.name)}
+        aria-label={S.history.exportHistoryAria}
+      >
+        <Download className="h-4 w-4 mr-1" />
+        {S.common.export}
+      </Button>
+    ) : null,
+  );
+
   if (!list || !id) {
     return (
       <div className="p-4 max-w-lg mx-auto space-y-4 text-center mt-12">
@@ -83,33 +97,9 @@ export default function History() {
 
   return (
     <div className="p-4 max-w-lg mx-auto space-y-4">
-      <div className="flex items-center gap-2">
-        <Button
-          asChild
-          variant="ghost"
-          size="icon"
-          className="min-h-[44px] min-w-[44px]"
-          aria-label={S.common.backToList}
-        >
-          <Link to={`/list/${id}`}>
-            <ArrowLeft className="h-5 w-5" />
-          </Link>
-        </Button>
-        <div className="min-w-0 flex-1">
-          <h1 className="text-2xl font-bold truncate">{list.name}</h1>
-          <p className="text-xs text-muted-foreground">{S.history.title}</p>
-        </div>
-        {total > 0 && (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => exportHistory(list.id, list.name)}
-            aria-label={S.history.exportHistoryAria}
-          >
-            <Download className="h-4 w-4 mr-1" />
-            {S.common.export}
-          </Button>
-        )}
+      <div>
+        <h1 className="text-2xl font-bold truncate">{list.name}</h1>
+        <p className="text-xs text-muted-foreground">{S.history.title}</p>
       </div>
 
       {sections.length === 0 ? (

@@ -3,7 +3,7 @@ import type { ListEntry } from '@/lib/storage';
 import { getList, getHistory } from '@/lib/storage';
 import { sortItemsByElo } from '@/lib/ranking';
 import { getDuelCountFromHistory } from '@/lib/history';
-import { GripVertical, ArrowUp, ArrowDown, Swords } from 'lucide-react';
+import { GripVertical, ArrowUp, ArrowDown, Swords, FileCheck, FileQuestion } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -17,6 +17,9 @@ interface ListCardProps {
   reorderMode?: boolean;
   onMoveUp?: () => void;
   onMoveDown?: () => void;
+  isLinked?: boolean;
+  /** When true, render a status chip (linked / not linked) in the title row. */
+  showLinkStatus?: boolean;
 }
 
 function formatRelativeTime(ts: number | null): string {
@@ -82,6 +85,8 @@ export function ListCard({
   reorderMode = false,
   onMoveUp,
   onMoveDown,
+  isLinked = false,
+  showLinkStatus = false,
 }: ListCardProps) {
   const list = getList(entry.id);
   const activeItems = list?.items.filter((i) => !i.removed) ?? [];
@@ -165,6 +170,24 @@ export function ListCard({
               title={ACTIVITY_ARIA[activity]}
             />
             <h3 className="text-lg font-bold truncate">{entry.name}</h3>
+            {showLinkStatus && isLinked && (
+              <span
+                className="shrink-0 inline-flex items-center gap-1 rounded-full border border-green-600/30 bg-green-600/10 px-2 py-0.5 text-[10px] font-medium text-green-700 dark:text-green-400"
+                title={S.ranking.fileLinkedTooltip}
+              >
+                <FileCheck className="h-3 w-3" aria-hidden="true" />
+                <span>{S.ranking.fileLinked}</span>
+              </span>
+            )}
+            {showLinkStatus && !isLinked && (
+              <span
+                className="shrink-0 inline-flex items-center gap-1 rounded-full border border-border bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground"
+                title={S.ranking.fileNotLinkedTooltip}
+              >
+                <FileQuestion className="h-3 w-3" aria-hidden="true" />
+                <span>{S.list.notLinkedShort}</span>
+              </span>
+            )}
           </div>
           <div className="flex items-center gap-1 shrink-0">
             <span className="text-xs text-muted-foreground">

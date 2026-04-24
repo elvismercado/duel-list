@@ -147,7 +147,12 @@ export const S = {
     fileLinkBrokenTooltip: 'File link broken — re-link in settings',
     fileNotLinked: 'Not linked to a file',
     fileNotLinkedTooltip:
-      'Not linked to a file — changes are stored locally',
+      'Not linked to a file — tap to link',
+    linkFileConfirmTitle: 'Link list to a file?',
+    linkFileConfirmMessage:
+      'Pick or create a Markdown file on disk. DuelList will write changes to it as you go, so you keep a portable copy of this list.',
+    relinkFileConfirmMessage:
+      'The previously linked file is no longer accessible. Pick the file again (or a new one) to restore the link.',
     optionsAria: (name: string) => `Options for ${name}`,
     renameAria: (name: string) => `Rename ${name}`,
     renameAction: 'Rename',
@@ -222,6 +227,7 @@ export const S = {
     startFromTemplate: 'Start from a template (optional)',
     templateItemsAdded: (n: number) => `${n} items will be added.`,
     neverOpened: 'Never opened',
+    notLinkedShort: 'Not linked',
     justNow: 'Just now',
     minutesAgo: (n: number) => `${n}m ago`,
     hoursAgo: (n: number) => `${n}h ago`,

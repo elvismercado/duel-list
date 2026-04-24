@@ -1,6 +1,6 @@
 import { useState, useRef, useMemo, useEffect } from 'react';
 import { Navigate, useNavigate, useSearchParams } from 'react-router';
-import { getSettings, saveList, getList, getHistory, updateSettings } from '@/lib/storage';
+import { getSettings, saveList, getList, getHistory, updateSettings, listLinkedListIds } from '@/lib/storage';
 import { S } from '@/lib/strings';
 import { Button } from '@/components/ui/button';
 import {
@@ -21,6 +21,7 @@ import { useListRegistry } from '@/hooks/useListRegistry';
 import { useFileSync } from '@/hooks/useFileSync';
 import { saveFileHandle } from '@/lib/storage';
 import { generateShortId } from '@/lib/markdown';
+import { useHeaderActions } from '@/components/HeaderActions';
 import type { ListConfig, HomeSortMode, HomeSortField } from '@/types';
 import {
   DndContext,
@@ -285,15 +286,38 @@ export default function Home() {
     [lists],
   );
 
+  // Linked-file badges on cards. Refresh on mount, when registry changes, and
+  // when the tab regains focus (covers link/unlink done elsewhere).
+  const [linkedIds, setLinkedIds] = useState<Set<string>>(new Set());
+  useEffect(() => {
+    let cancelled = false;
+    void listLinkedListIds().then((ids) => {
+      if (!cancelled) setLinkedIds(ids);
+    });
+    function onFocus() {
+      void listLinkedListIds().then((ids) => setLinkedIds(ids));
+    }
+    window.addEventListener('focus', onFocus);
+    return () => {
+      cancelled = true;
+      window.removeEventListener('focus', onFocus);
+    };
+  }, [lists]);
+
+  useHeaderActions(
+    <Button
+      variant="ghost"
+      size="icon"
+      className="min-h-[44px] min-w-[44px]"
+      onClick={() => navigate('/settings')}
+      aria-label={S.app.appSettingsAria}
+    >
+      <Settings className="h-5 w-5" />
+    </Button>,
+  );
+
   return (
     <div className="p-4 max-w-lg mx-auto space-y-4">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">{S.app.name}</h1>
-        <Button variant="ghost" size="icon" className="min-h-[44px] min-w-[44px]" onClick={() => navigate('/settings')} aria-label={S.app.appSettingsAria}>
-          <Settings className="h-5 w-5" />
-        </Button>
-      </div>
-
       {reminderCandidate && showBanner && (
         <ReminderBanner
           candidate={reminderCandidate}
@@ -412,6 +436,8 @@ export default function Home() {
                     reorderMode={reorderMode && sortOrder === 'custom'}
                     onMoveUp={idx > 0 ? () => moveBy(entry.id, -1) : undefined}
                     onMoveDown={idx < lists.length - 1 ? () => moveBy(entry.id, 1) : undefined}
+                    isLinked={linkedIds.has(entry.id)}
+                    showLinkStatus={supported}
                   />
                 ))}
               </div>

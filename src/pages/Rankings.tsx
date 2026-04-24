@@ -19,6 +19,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { AddItemsDialog } from '@/components/AddItemsDialog';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { ItemDetailsDialog } from '@/components/ItemDetailsDialog';
+import { useHeaderActions } from '@/components/HeaderActions';
 import { getHistory } from '@/lib/storage';
 import type { SortMode } from '@/types';
 import {
@@ -94,7 +95,7 @@ export default function Rankings() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { supported, isSynced, needsRelink, syncToFile } = useFileSync(id);
+  const { supported, isSynced, needsRelink, syncToFile, linkFile } = useFileSync(id);
   const onSave = useCallback(
     (list: import('@/types').ListConfig) => { syncToFile(list); },
     [syncToFile],
@@ -106,7 +107,40 @@ export default function Rankings() {
   const [removeTarget, setRemoveTarget] = useState<{ id: string; name: string } | null>(null);
   const [detailsId, setDetailsId] = useState<string | null>(null);
   const [removedExpanded, setRemovedExpanded] = useState(false);
+  const [linkConfirmOpen, setLinkConfirmOpen] = useState(false);
   const historyMd = useMemo(() => (id ? getHistory(id) : ''), [id, detailsId]);
+
+  useHeaderActions(
+    <>
+      <Button
+        size="icon"
+        variant="ghost"
+        className="min-h-[44px] min-w-[44px]"
+        onClick={() => navigate(`/list/${id}/history`)}
+        aria-label={S.ranking.historyAria}
+      >
+        <History className="h-5 w-5" />
+      </Button>
+      <Button
+        size="icon"
+        variant="ghost"
+        className="min-h-[44px] min-w-[44px]"
+        onClick={() => setAddOpen(true)}
+        aria-label={S.ranking.addItemsAria}
+      >
+        <Plus className="h-5 w-5" />
+      </Button>
+      <Button
+        size="icon"
+        variant="ghost"
+        className="min-h-[44px] min-w-[44px]"
+        onClick={() => navigate(`/list/${id}/settings`)}
+        aria-label={S.ranking.settingsAria}
+      >
+        <Settings className="h-5 w-5" />
+      </Button>
+    </>,
+  );
 
   if (!list) {
     return (
@@ -159,54 +193,41 @@ export default function Rankings() {
 
   return (
     <div className="p-4 max-w-lg mx-auto space-y-4">
-      <div className="flex items-center justify-between gap-2">
-        <div className="flex items-center gap-2 min-w-0">
-          <h1 className="text-2xl font-bold truncate">{list.name}</h1>
-          {supported && isSynced && (
-            <span title={S.ranking.fileLinkedTooltip}>
-              <FileCheck className="h-4 w-4 text-green-600 shrink-0" aria-label={S.ranking.fileLinked} />
-            </span>
-          )}
-          {supported && needsRelink && (
-            <span title={S.ranking.fileLinkBrokenTooltip}>
-              <FileX className="h-4 w-4 text-destructive shrink-0" aria-label={S.ranking.fileLinkBroken} />
-            </span>
-          )}
-          {supported && !isSynced && !needsRelink && (
-            <span title={S.ranking.fileNotLinkedTooltip}>
-              <FileQuestion className="h-4 w-4 text-muted-foreground shrink-0" aria-label={S.ranking.fileNotLinked} />
-            </span>
-          )}
-        </div>
-        <div className="flex gap-1 shrink-0">
-          <Button
-            size="icon"
-            variant="ghost"
-            className="min-h-[44px] min-w-[44px]"
-            onClick={() => navigate(`/list/${id}/history`)}
-            aria-label={S.ranking.historyAria}
+      <div className="flex items-center gap-2 min-w-0">
+        <h1 className="text-2xl font-bold truncate">{list.name}</h1>
+        {supported && isSynced && (
+          <span
+            title={S.ranking.fileLinkedTooltip}
+            className="shrink-0 inline-flex items-center gap-1 rounded-full border border-green-600/30 bg-green-600/10 px-2 py-0.5 text-xs font-medium text-green-700 dark:text-green-400"
           >
-            <History className="h-5 w-5" />
-          </Button>
-          <Button
-            size="icon"
-            variant="ghost"
-            className="min-h-[44px] min-w-[44px]"
-            onClick={() => setAddOpen(true)}
-            aria-label={S.ranking.addItemsAria}
+            <FileCheck className="h-3.5 w-3.5" aria-hidden="true" />
+            <span>{S.ranking.fileLinked}</span>
+          </span>
+        )}
+        {supported && needsRelink && (
+          <button
+            type="button"
+            onClick={() => setLinkConfirmOpen(true)}
+            className="shrink-0 inline-flex items-center gap-1 rounded-full border border-destructive/40 bg-destructive/10 px-2 py-0.5 text-xs font-medium text-destructive hover:bg-destructive/15"
+            title={S.ranking.fileLinkBrokenTooltip}
+            aria-label={S.ranking.fileLinkBroken}
           >
-            <Plus className="h-5 w-5" />
-          </Button>
-          <Button
-            size="icon"
-            variant="ghost"
-            className="min-h-[44px] min-w-[44px]"
-            onClick={() => navigate(`/list/${id}/settings`)}
-            aria-label={S.ranking.settingsAria}
+            <FileX className="h-3.5 w-3.5" aria-hidden="true" />
+            <span>{S.ranking.fileLinkBroken}</span>
+          </button>
+        )}
+        {supported && !isSynced && !needsRelink && (
+          <button
+            type="button"
+            onClick={() => setLinkConfirmOpen(true)}
+            className="shrink-0 inline-flex items-center gap-1 rounded-full border border-border bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground hover:bg-accent hover:text-foreground"
+            title={S.ranking.fileNotLinkedTooltip}
+            aria-label={S.settings.linkFile}
           >
-            <Settings className="h-5 w-5" />
-          </Button>
-        </div>
+            <FileQuestion className="h-3.5 w-3.5" aria-hidden="true" />
+            <span>{S.settings.linkFile}</span>
+          </button>
+        )}
       </div>
 
       {canDuel && (
@@ -467,6 +488,18 @@ export default function Rankings() {
           setRemoveTarget(null);
         }}
         onCancel={() => setRemoveTarget(null)}
+      />
+
+      <ConfirmDialog
+        open={linkConfirmOpen}
+        title={S.ranking.linkFileConfirmTitle}
+        message={needsRelink ? S.ranking.relinkFileConfirmMessage : S.ranking.linkFileConfirmMessage}
+        confirmLabel={S.settings.linkFile}
+        onConfirm={() => {
+          setLinkConfirmOpen(false);
+          if (list) void linkFile(list);
+        }}
+        onCancel={() => setLinkConfirmOpen(false)}
       />
 
       <ItemDetailsDialog
