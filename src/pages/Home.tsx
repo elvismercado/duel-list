@@ -10,8 +10,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Plus, Settings, FolderOpen, ArrowDownAZ, ArrowUpAZ, ArrowDownNarrowWide, ArrowUpWideNarrow, ArrowUpDown, Swords } from 'lucide-react';
-import { ListCard } from '@/components/ListCard';
+import { Plus, Settings, FolderOpen, ArrowDownAZ, ArrowUpAZ, ArrowDownNarrowWide, ArrowUpWideNarrow, ArrowUpDown, Swords, Search, X } from 'lucide-react';
+import { ListCard, buildListCardHaystack } from '@/components/ListCard';
 import { ListCreateDialog } from '@/components/ListCreateDialog';
 import { ImportConflictDialog } from '@/components/ImportConflictDialog';
 import { ReminderBanner } from '@/components/ReminderBanner';
@@ -19,9 +19,11 @@ import { isReminderDue, pickReminderList, pickRandomDuelList } from '@/lib/remin
 import { getPermission, showLocal } from '@/lib/notifications';
 import { useListRegistry } from '@/hooks/useListRegistry';
 import { useFileSync } from '@/hooks/useFileSync';
+import { useFilterShortcut } from '@/hooks/useFilterShortcut';
 import { saveFileHandle } from '@/lib/storage';
 import { generateShortId } from '@/lib/markdown';
 import { useHeaderActions } from '@/components/HeaderActions';
+import { Input } from '@/components/ui/input';
 import type { ListConfig, HomeSortMode, HomeSortField } from '@/types';
 import {
   DndContext,
@@ -93,6 +95,9 @@ export default function Home() {
   } = useListRegistry();
   const [createOpen, setCreateOpen] = useState(false);
   const [reorderMode, setReorderMode] = useState(false);
+  const [query, setQuery] = useState('');
+  const filterInputRef = useRef<HTMLInputElement>(null);
+  useFilterShortcut(filterInputRef);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { supported, openFromFile } = useFileSync(undefined);
   const [conflict, setConflict] = useState<{
@@ -304,6 +309,28 @@ export default function Home() {
     };
   }, [lists]);
 
+  // Haystack per list + filtered view. Recomputed when the registry changes,
+  // when link statuses load, or when the query changes. Filter is excluded
+  // while reorder mode is active so DnD operates on a stable list.
+  const haystacks = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const entry of lists) {
+      map.set(
+        entry.id,
+        buildListCardHaystack(entry, {
+          isLinked: linkedIds.has(entry.id),
+          showLinkStatus: supported,
+        }),
+      );
+    }
+    return map;
+  }, [lists, linkedIds, supported]);
+  const visibleLists = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q || reorderMode) return lists;
+    return lists.filter((entry) => (haystacks.get(entry.id) ?? '').includes(q));
+  }, [lists, query, reorderMode, haystacks]);
+
   useHeaderActions(
     <Button
       variant="ghost"
@@ -428,18 +455,51 @@ export default function Home() {
               strategy={verticalListSortingStrategy}
             >
               <div className="space-y-2">
-                {lists.map((entry, idx) => (
-                  <ListCard
-                    key={entry.id}
-                    entry={entry}
-                    onClick={() => navigate(`/list/${entry.id}`)}
-                    reorderMode={reorderMode && sortOrder === 'custom'}
-                    onMoveUp={idx > 0 ? () => moveBy(entry.id, -1) : undefined}
-                    onMoveDown={idx < lists.length - 1 ? () => moveBy(entry.id, 1) : undefined}
-                    isLinked={linkedIds.has(entry.id)}
-                    showLinkStatus={supported}
-                  />
-                ))}
+                {!reorderMode && (
+                  <div className="relative">
+                    <Search className="h-4 w-4 absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+                    <Input
+                      ref={filterInputRef}
+                      type="search"
+                      placeholder={S.list.filterPlaceholder}
+                      value={query}
+                      onChange={(e) => setQuery(e.target.value)}
+                      className="pl-8 pr-8"
+                      aria-label={S.list.filterAria}
+                    />
+                    {query && (
+                      <button
+                        type="button"
+                        onClick={() => setQuery('')}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                        aria-label={S.common.clearFilter}
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    )}
+                  </div>
+                )}
+                {!reorderMode && query && visibleLists.length === 0 ? (
+                  <div className="text-center py-8 space-y-2">
+                    <p className="text-muted-foreground text-sm">{S.list.noMatch(query)}</p>
+                    <Button variant="outline" size="sm" onClick={() => setQuery('')}>
+                      {S.common.clearFilter}
+                    </Button>
+                  </div>
+                ) : (
+                  visibleLists.map((entry, idx) => (
+                    <ListCard
+                      key={entry.id}
+                      entry={entry}
+                      onClick={() => navigate(`/list/${entry.id}`)}
+                      reorderMode={reorderMode && sortOrder === 'custom'}
+                      onMoveUp={idx > 0 ? () => moveBy(entry.id, -1) : undefined}
+                      onMoveDown={idx < lists.length - 1 ? () => moveBy(entry.id, 1) : undefined}
+                      isLinked={linkedIds.has(entry.id)}
+                      showLinkStatus={supported}
+                    />
+                  ))
+                )}
               </div>
             </SortableContext>
           </DndContext>

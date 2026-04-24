@@ -3,11 +3,10 @@ import type { ListEntry } from '@/lib/storage';
 import { getList, getHistory } from '@/lib/storage';
 import { sortItemsByElo } from '@/lib/ranking';
 import { getDuelCountFromHistory } from '@/lib/history';
-import { GripVertical, ArrowUp, ArrowDown, Swords, FileCheck, FileQuestion } from 'lucide-react';
+import { GripVertical, ArrowUp, ArrowDown, FileCheck, FileQuestion } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { useNavigate } from 'react-router';
 import { S } from '@/lib/strings';
 import { RankChip } from '@/components/RankChip';
 
@@ -79,6 +78,34 @@ const ACTIVITY_ARIA: Record<ActivityBucket, string> = {
   never: S.list.activityNever,
 };
 
+/**
+ * Builds the searchable text for a list card: name + counts + activity label +
+ * link status + last-opened relative phrase. Excludes the names of items inside
+ * the list (filtering on Home is for list-level data only).
+ */
+export function buildListCardHaystack(
+  entry: ListEntry,
+  opts: { isLinked: boolean; showLinkStatus: boolean },
+): string {
+  const list = getList(entry.id);
+  const activeCount = list?.items.filter((i) => !i.removed).length ?? 0;
+  const duels = getDuelCountFromHistory(getHistory(entry.id));
+  const activity = getActivityBucket(entry.lastDuelAt ?? null, entry.lastOpened);
+  const linkLabel = opts.showLinkStatus
+    ? (opts.isLinked ? S.ranking.fileLinked : S.list.notLinkedShort)
+    : '';
+  return [
+    entry.name,
+    S.ranking.itemsCount(activeCount),
+    S.list.duelsCount(duels),
+    formatRelativeTime(entry.lastOpened),
+    ACTIVITY_ARIA[activity],
+    linkLabel,
+  ]
+    .join(' ')
+    .toLowerCase();
+}
+
 export function ListCard({
   entry,
   onClick,
@@ -94,8 +121,6 @@ export function ListCard({
   const topThree = sorted.slice(0, 3);
   const duelCount = getDuelCountFromHistory(getHistory(entry.id));
   const activity = getActivityBucket(entry.lastDuelAt ?? null, entry.lastOpened);
-  const canDuel = activeItems.length >= 2;
-  const navigate = useNavigate();
 
   const sortable = useSortable({ id: entry.id, disabled: !reorderMode });
   const style = reorderMode
@@ -193,21 +218,6 @@ export function ListCard({
             <span className="text-xs text-muted-foreground">
               {formatRelativeTime(entry.lastOpened)}
             </span>
-            {canDuel && (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8"
-                aria-label={S.list.quickDuelAria(entry.name)}
-                title={S.ranking.startDuel}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  navigate(`/list/${entry.id}/duel`);
-                }}
-              >
-                <Swords className="h-4 w-4" />
-              </Button>
-            )}
           </div>
         </div>
         <div className="flex items-center gap-2 text-sm text-muted-foreground">

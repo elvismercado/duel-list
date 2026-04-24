@@ -39,39 +39,33 @@ export function ListCreateDialog({
   const [name, setName] = useState('');
   const [kFactor, setKFactor] = useState('32');
   const [sessionLength, setSessionLength] = useState(10);
-  const [template, setTemplate] = useState<string | null>(null);
 
   function reset() {
     setName('');
     setKFactor('32');
     setSessionLength(10);
-    setTemplate(null);
   }
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     const trimmed = name.trim();
     if (!trimmed) return;
-    let items: string[] | undefined;
-    if (template) {
-      const sample = getSampleList(template);
-      items = sample?.items.map((i) => i.name);
-    }
-    onCreate(trimmed, parseInt(kFactor, 10), sessionLength, items);
+    onCreate(trimmed, parseInt(kFactor, 10), sessionLength);
     reset();
     onClose();
   }
 
-  function pickTemplate(key: string) {
-    if (template === key) {
-      setTemplate(null);
-      return;
-    }
-    setTemplate(key);
-    if (!name.trim()) {
-      const sample = getSampleList(key);
-      if (sample) setName(sample.name);
-    }
+  function handleQuickStart(key: string) {
+    const sample = getSampleList(key);
+    if (!sample) return;
+    onCreate(
+      sample.name,
+      32,
+      10,
+      sample.items.map((i) => i.name),
+    );
+    reset();
+    onClose();
   }
 
   function handleSessionLengthInput(raw: string) {
@@ -87,6 +81,34 @@ export function ListCreateDialog({
           <DialogTitle>{S.home.createList}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2 rounded-md border bg-muted/40 p-3">
+            <div className="space-y-0.5">
+              <p className="text-sm font-medium">{S.list.quickStartHeading}</p>
+              <p className="text-xs text-muted-foreground">{S.list.quickStartDesc}</p>
+            </div>
+            <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-3">
+              {SAMPLE_KEYS.map((key) => {
+                const sample = getSampleList(key);
+                if (!sample) return null;
+                return (
+                  <Button
+                    key={`quick-${key}`}
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    className="h-auto flex-col items-start gap-0.5 px-2 py-1.5 text-left"
+                    onClick={() => handleQuickStart(key)}
+                  >
+                    <span className="text-xs font-medium truncate w-full">{sample.name}</span>
+                    <span className="text-[10px] font-normal text-muted-foreground">
+                      {S.list.templateItemCount(sample.items.length)}
+                    </span>
+                  </Button>
+                );
+              })}
+            </div>
+          </div>
+
           <div className="space-y-2">
             <label className="text-sm font-medium">{S.list.name}</label>
             <Input
@@ -95,34 +117,6 @@ export function ListCreateDialog({
               placeholder={S.list.namePlaceholder}
               autoFocus
             />
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-sm font-medium">
-              {S.list.startFromTemplate}
-            </label>
-            <div className="flex gap-1 flex-wrap">
-              {SAMPLE_KEYS.map((key) => {
-                const sample = getSampleList(key);
-                if (!sample) return null;
-                return (
-                  <Button
-                    key={key}
-                    type="button"
-                    size="sm"
-                    variant={template === key ? 'default' : 'outline'}
-                    onClick={() => pickTemplate(key)}
-                  >
-                    {sample.name}
-                  </Button>
-                );
-              })}
-            </div>
-            {template && (
-              <p className="text-xs text-muted-foreground">
-                {S.list.templateItemsAdded(getSampleList(template)?.items.length ?? 0)}
-              </p>
-            )}
           </div>
 
           <div className="space-y-2">

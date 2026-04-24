@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useRef } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router';
 import { S } from '@/lib/strings';
 import {
@@ -20,6 +20,7 @@ import { AddItemsDialog } from '@/components/AddItemsDialog';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { ItemDetailsDialog } from '@/components/ItemDetailsDialog';
 import { useHeaderActions } from '@/components/HeaderActions';
+import { useFilterShortcut } from '@/hooks/useFilterShortcut';
 import { getHistory } from '@/lib/storage';
 import type { SortMode } from '@/types';
 import {
@@ -62,6 +63,8 @@ import {
   Undo2,
   TrendingUp,
   TrendingDown,
+  Search,
+  X,
 } from 'lucide-react';
 
 const SORT_FIELDS: SortField[] = ['rank', 'elo', 'added', 'name'];
@@ -108,6 +111,9 @@ export default function Rankings() {
   const [detailsId, setDetailsId] = useState<string | null>(null);
   const [removedExpanded, setRemovedExpanded] = useState(false);
   const [linkConfirmOpen, setLinkConfirmOpen] = useState(false);
+  const [query, setQuery] = useState('');
+  const filterInputRef = useRef<HTMLInputElement>(null);
+  useFilterShortcut(filterInputRef);
   const historyMd = useMemo(() => (id ? getHistory(id) : ''), [id, detailsId]);
 
   useHeaderActions(
@@ -165,6 +171,19 @@ export default function Rankings() {
       : list.sortMode ?? 'rank-desc';
   const { field: sortField, dir: sortDir } = splitSortMode(sortMode);
   const activeItems = applyDisplaySort(rankedByScore, sortMode);
+  const trimmedQuery = query.trim().toLowerCase();
+  const visibleItems = trimmedQuery
+    ? activeItems.filter((it) => {
+        const haystack = [
+          it.name,
+          it.notes ?? '',
+          String(Math.round(it.eloScore)),
+        ]
+          .join(' ')
+          .toLowerCase();
+        return haystack.includes(trimmedQuery);
+      })
+    : activeItems;
   const canDuel = rankedByScore.length >= 2;
   const displayMode: 'rank' | 'elo' = list.displayMode ?? 'rank';
   const detailsItem = detailsId ? list.items.find((i) => i.id === detailsId) ?? null : null;
@@ -314,11 +333,42 @@ export default function Rankings() {
           </Button>
         </div>
       ) : (
-        <ul className="space-y-1">
-          {activeItems.map((item) => {
-            const currentRank = rankById.get(item.id) ?? 0;
-            const showChip = displayMode === 'rank' && currentRank >= 1 && currentRank <= 3;
-            return (
+        <>
+          <div className="relative">
+            <Search className="h-4 w-4 absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+            <Input
+              ref={filterInputRef}
+              type="search"
+              placeholder={S.ranking.filterPlaceholder}
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              className="pl-8 pr-8"
+              aria-label={S.ranking.filterAria}
+            />
+            {query && (
+              <button
+                type="button"
+                onClick={() => setQuery('')}
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                aria-label={S.common.clearFilter}
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+          {visibleItems.length === 0 ? (
+            <div className="text-center py-8 space-y-2">
+              <p className="text-muted-foreground text-sm">{S.ranking.noMatch(query)}</p>
+              <Button variant="outline" size="sm" onClick={() => setQuery('')}>
+                {S.common.clearFilter}
+              </Button>
+            </div>
+          ) : (
+            <ul className="space-y-1">
+              {visibleItems.map((item) => {
+                const currentRank = rankById.get(item.id) ?? 0;
+                const showChip = displayMode === 'rank' && currentRank >= 1 && currentRank <= 3;
+                return (
             <li
               key={item.id}
               className="flex items-center gap-3 rounded-md border p-3 bg-card"
@@ -415,6 +465,8 @@ export default function Rankings() {
             );
           })}
         </ul>
+          )}
+        </>
       )}
 
       {removedItems.length > 0 && (

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,6 +7,7 @@ import { getList, getHistory, getSettings } from '@/lib/storage';
 import { formatLocalDate, formatTimeOfDay, parseTimestampSuffix } from '@/lib/datetime';
 import { useExport } from '@/hooks/useExport';
 import { useHeaderActions } from '@/components/HeaderActions';
+import { useFilterShortcut } from '@/hooks/useFilterShortcut';
 import {
   Download,
   Trophy,
@@ -36,6 +37,8 @@ export default function History() {
   const [content] = useState(() => (id ? getHistory(id) : ''));
   const [searchParams, setSearchParams] = useSearchParams();
   const [query, setQueryRaw] = useState(() => searchParams.get('q') ?? '');
+  const filterInputRef = useRef<HTMLInputElement>(null);
+  useFilterShortcut(filterInputRef);
 
   const setQuery = (next: string) => {
     setQueryRaw(next);
@@ -155,6 +158,7 @@ export default function History() {
           <div className="relative">
             <Search className="h-4 w-4 absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
             <Input
+              ref={filterInputRef}
               type="search"
               placeholder={S.history.filterPlaceholder}
               value={query}
