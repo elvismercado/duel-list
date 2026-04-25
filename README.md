@@ -120,6 +120,28 @@ Open <http://localhost:8080>. Override defaults via `.env`:
 
 The nginx config inside the image serves `index.html` and the service worker `sw.js` with `Cache-Control: no-cache` so PWA updates roll out immediately, while content-hashed `/assets/*` are long-cached. SPA deep links (e.g. `/list/abc`) fall back to `index.html`.
 
+### CI / CD
+
+Workflows are duplicated under [.github/workflows/](.github/workflows/) (GitHub) and [.gitea/workflows/](.gitea/workflows/) (Gitea). They share identical syntax.
+
+| Workflow            | Trigger              | Runner          | What it does                                                                |
+| ------------------- | -------------------- | --------------- | --------------------------------------------------------------------------- |
+| `ci.yml`            | push to `main`, PRs  | `ubuntu-latest` | `pnpm install --frozen-lockfile` + `pnpm run build`, plus a `docker build` smoke test |
+| `manual-deploy.yml` | manual dispatch only | `self-hosted`   | Ensures the docker network exists, then `docker compose up -d --build --remove-orphans` on the runner host |
+
+The deploy workflow runs the same `docker compose` command you would run locally — it builds and starts the container directly on the runner host. No registry push, no remote SSH. This requires a self-hosted runner with access to the docker socket.
+
+Optional repository variables override the defaults baked into [docker-compose.yml](docker-compose.yml):
+
+| Variable         | Default       |
+| ---------------- | ------------- |
+| `CONTAINER_NAME` | `duel-list`   |
+| `HTTP_PORT`      | `8080`        |
+| `TZ`             | `Europe/London` |
+| `DOCKER_NETWORK` | `duel-list`   |
+
+Set them under **Settings → Secrets and variables → Actions → Variables** (GitHub) or **Repository → Settings → Actions → Variables** (Gitea).
+
 ## Docs
 
 - [Project Plan](docs/PROJECT_PLAN.md).implementation roadmap and phases

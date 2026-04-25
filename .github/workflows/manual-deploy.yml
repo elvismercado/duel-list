@@ -1,0 +1,33 @@
+name: Deploy
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Ensure network exists
+        env:
+          DOCKER_NETWORK: ${{ vars.DOCKER_NETWORK }}
+        run: docker network create "${DOCKER_NETWORK:-duel-list}" || true
+
+      - name: Deploy
+        env:
+          CONTAINER_NAME: ${{ vars.CONTAINER_NAME }}
+          HTTP_PORT: ${{ vars.HTTP_PORT }}
+          TZ: ${{ vars.TZ }}
+          DOCKER_NETWORK: ${{ vars.DOCKER_NETWORK }}
+        run: docker compose up -d --build --remove-orphans
+
+      - name: Cleanup dangling images
+        run: docker image prune -f
+
+      - name: Health check
+        env:
+          CONTAINER_NAME: ${{ vars.CONTAINER_NAME }}
+        run: |
+          sleep 5
+          docker inspect --format='{{.State.Running}}' "${CONTAINER_NAME:-duel-list}" | grep -q true
