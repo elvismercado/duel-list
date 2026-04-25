@@ -150,6 +150,7 @@ export default function RemindersSettingsPage() {
               <div className="flex items-center gap-2">
                 <Input
                   type="number"
+                  inputMode="numeric"
                   min={1}
                   max={99}
                   value={r.customCount}
@@ -158,6 +159,7 @@ export default function RemindersSettingsPage() {
                     patch({ customCount: n });
                   }}
                   className="w-20"
+                  aria-label={S.settings.remindersCustomCountLabel}
                 />
                 <Select
                   value={r.customUnit}

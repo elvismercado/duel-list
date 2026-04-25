@@ -574,6 +574,9 @@ export const S = {
     fileSyncLost: 'File sync lost.permission denied. Re-link to restore.',
     fileSyncUnsupported: 'File sync requires a Chromium browser (Chrome, Edge, Brave). On this browser, lists are stored locally only.',
     unlinkFile: 'Unlink file',
+    unlinkConfirmTitle: 'Unlink file?',
+    unlinkConfirmMessage:
+      'Your list stays here. The link to the Markdown file will be removed and changes will no longer save to it.',
     linkFile: 'Link to file',
     removedItemsButton: (n: number) => `Removed items (${n})`,
     removedItemsTitle: 'Removed items',

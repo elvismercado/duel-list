@@ -39,6 +39,7 @@ export default function ListSettings() {
   const { list, save, restoreItem, deleteList } = useList(id!, onSave);
   const { exportList, exportHistory } = useExport();
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [unlinkConfirmOpen, setUnlinkConfirmOpen] = useState(false);
   const [removedOpen, setRemovedOpen] = useState(false);
   const [editingName, setEditingName] = useState(false);
 
@@ -243,7 +244,7 @@ export default function ListSettings() {
               <p className="text-sm text-muted-foreground">
                 {S.settings.fileSyncLinked}
               </p>
-              <Button variant="outline" size="sm" onClick={unlinkFile}>
+              <Button variant="outline" size="sm" onClick={() => setUnlinkConfirmOpen(true)}>
                 <Unlink className="h-4 w-4 mr-1" />
                 {S.settings.unlinkFile}
               </Button>
@@ -359,6 +360,19 @@ export default function ListSettings() {
         danger
         onConfirm={handleDelete}
         onCancel={() => setDeleteOpen(false)}
+      />
+
+      <ConfirmDialog
+        open={unlinkConfirmOpen}
+        title={S.settings.unlinkConfirmTitle}
+        message={S.settings.unlinkConfirmMessage}
+        confirmLabel={S.settings.unlinkFile}
+        danger
+        onConfirm={() => {
+          unlinkFile();
+          setUnlinkConfirmOpen(false);
+        }}
+        onCancel={() => setUnlinkConfirmOpen(false)}
       />
 
       <Dialog open={removedOpen} onOpenChange={setRemovedOpen}>

@@ -15,6 +15,7 @@ import {
 } from '@/lib/history';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { HelpHint } from '@/components/HelpHint';
@@ -307,10 +308,10 @@ export default function ItemDetail() {
             notesUpdated={item.notesUpdated}
           />
         </div>
-        <textarea
+        <Textarea
           id="item-notes"
           ref={textareaRef}
-          className="w-full min-h-[100px] max-h-[400px] resize-none overflow-y-auto rounded-md border bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+          className="min-h-[100px] max-h-[400px] resize-none overflow-y-auto"
           value={notesDraft}
           onChange={handleNotesChange}
           onBlur={() => commitNotes(notesDraft)}

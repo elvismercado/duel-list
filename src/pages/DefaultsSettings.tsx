@@ -60,7 +60,7 @@ export default function DefaultsSettingsPage() {
     const count = applyDefaultToAllLists(field, value);
     setConfirm(null);
     if (count === 0) {
-      toast(S.settings.applyNoChange);
+      toast.info(S.settings.applyNoChange);
     } else {
       toast.success(S.settings.applySuccess(count));
     }

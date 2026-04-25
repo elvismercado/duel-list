@@ -18,6 +18,7 @@ import { useState } from 'react';
 import { Link } from 'react-router';
 import type { AppSettings, CustomCadenceUnit, ReminderSettings } from '@/types';
 import { CopyLastErrorButton } from '@/components/ErrorBoundary';
+import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { clearErrorLog, getLastError } from '@/lib/errorLog';
 
 function cadenceShortLabel(r: ReminderSettings): string {
@@ -255,13 +256,18 @@ export default function AppSettingsPage() {
 function DeveloperZone() {
   const [throwNow, setThrowNow] = useState(false);
   const [logTick, setLogTick] = useState(0);
+  const [clearConfirmOpen, setClearConfirmOpen] = useState(false);
   const last = getLastError();
 
   function handleClear() {
     if (!last) return;
-    if (!window.confirm(S.settings.devClearLogConfirm)) return;
+    setClearConfirmOpen(true);
+  }
+
+  function confirmClear() {
     clearErrorLog();
     setLogTick((t) => t + 1);
+    setClearConfirmOpen(false);
   }
 
   return (
@@ -321,6 +327,15 @@ function DeveloperZone() {
           </p>
         </div>
       </div>
+      <ConfirmDialog
+        open={clearConfirmOpen}
+        title={S.settings.devClearLog}
+        message={S.settings.devClearLogConfirm}
+        confirmLabel={S.settings.devClearLog}
+        danger
+        onConfirm={confirmClear}
+        onCancel={() => setClearConfirmOpen(false)}
+      />
     </details>
   );
 }
