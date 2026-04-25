@@ -35,3 +35,11 @@ These persisted names **do NOT match the user-facing terminology** and must NOT 
 - Mobile-first layouts; single-column flow. No splitter / sidebar layouts.
 - Lazy-load sub-pages under `/settings/*` and other deep routes.
 - Local component state ok; cross-page persistence goes through `src/lib/storage.ts` and `src/hooks/use*` hooks.
+
+## Terminal commands
+
+- Always run shell commands from the project root (the workspace folder containing `package.json`). Never `cd` into a sibling repo or any folder above the project.
+- Before running any terminal command, confirm the terminal cwd matches the workspace root. If unsure, prefix the command with a `cd` to the workspace root using shell-appropriate syntax (PowerShell: `Set-Location <root>;`; bash/zsh: `cd <root> &&`).
+- Sibling folders (other repos cloned next to this one — e.g. `homelab`, `docker-templates`) are reference-only. Read files from them with absolute paths; do **not** run builds, installs, or git commands there.
+- Use absolute paths for file tool calls; use workspace-relative paths only inside markdown links shown to the user.
+- Path separators differ between OSes. Use the active terminal's native syntax (`\` on Windows PowerShell, `/` on Linux/macOS); do not assume Windows paths in commands.
