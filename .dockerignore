@@ -1,0 +1,18 @@
+# Build context exclusions. Keeps the image small and the build fast.
+**/node_modules
+**/dist
+.git
+.github
+.vscode
+docs
+coverage
+*.local
+*.log
+pnpm-debug.log*
+.env
+.env.*
+!.env.example
+Dockerfile
+.dockerignore
+docker-compose.yml
+README.md

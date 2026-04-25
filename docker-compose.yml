@@ -1,0 +1,26 @@
+name: ${CONTAINER_NAME:-duel-list}
+
+services:
+  duel-list:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        no_cache: true
+    container_name: ${CONTAINER_NAME:-duel-list}
+    hostname: ${CONTAINER_NAME:-duel-list}
+    restart: always
+    ports:
+      - ${HTTP_PORT:-8080}:80
+    environment:
+      TZ: ${TZ:-Europe/London}
+      NODE_ENV: production
+    networks:
+      - default
+    labels:
+      - "com.service=${CONTAINER_NAME:-duel-list}"
+
+networks:
+  default:
+    external: true
+    name: ${DOCKER_NETWORK:-duel-list}

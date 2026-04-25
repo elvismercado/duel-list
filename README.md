@@ -94,6 +94,32 @@ pnpm install
 pnpm dev
 ```
 
+## Run with Docker
+
+DuelList ships as a static SPA served by nginx. The image build runs the Vite production build inside a `node:22-alpine` stage, then copies `dist/` into an `nginx:1.27-alpine` runtime stage.
+
+```bash
+# 1. Create the external docker network referenced by the compose file
+docker network create duel-list
+
+# 2. Configure environment (port, timezone, etc.)
+cp .env.example .env
+
+# 3. Build and start
+docker compose up -d --build
+```
+
+Open <http://localhost:8080>. Override defaults via `.env`:
+
+| Variable         | Default        | Purpose                                    |
+| ---------------- | -------------- | ------------------------------------------ |
+| `CONTAINER_NAME` | `duel-list`    | Container + project + hostname             |
+| `HTTP_PORT`      | `8080`         | Host port mapped to nginx (container 80)   |
+| `TZ`             | `Europe/London`| Container timezone                         |
+| `DOCKER_NETWORK` | `duel-list`    | External docker network to join            |
+
+The nginx config inside the image serves `index.html` and the service worker `sw.js` with `Cache-Control: no-cache` so PWA updates roll out immediately, while content-hashed `/assets/*` are long-cached. SPA deep links (e.g. `/list/abc`) fall back to `index.html`.
+
 ## Docs
 
 - [Project Plan](docs/PROJECT_PLAN.md).implementation roadmap and phases
