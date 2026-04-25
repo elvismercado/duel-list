@@ -118,16 +118,21 @@ export function useComparison(list: ListConfig, onDuel?: (list: ListConfig) => v
 
       const record = createDuelRecord(itemA, itemB, winner, Date.now());
       const newCount = session.duelCount + 1;
-      const isComplete =
+      const sessionLengthHit =
         list.sessionLength > 0 && newCount >= list.sessionLength;
 
       // Get next pair
       const active = updatedItems.filter((i) => !i.removed);
       const historyStr = getHistory(list.id);
       const recentPairs = parseRecentPairs(historyStr, active.length);
-      const nextPair = isComplete
+      const nextPair = sessionLengthHit
         ? null
         : selectNextPair(active, recentPairs, recentSkips.current);
+
+      // Treat pair-pool exhaustion as session complete too, so users with
+      // small lists are credited with their work instead of dead-ending on
+      // a "no more pairs" screen.
+      const isComplete = sessionLengthHit || nextPair === null;
 
       setSession((prev) => ({
         ...prev,
@@ -158,6 +163,9 @@ export function useComparison(list: ListConfig, onDuel?: (list: ListConfig) => v
     setSession((prev) => ({
       ...prev,
       currentPair: nextPair,
+      // If the pair pool is now exhausted, end the session gracefully
+      // rather than stranding the user on a "no more pairs" screen.
+      isComplete: prev.isComplete || nextPair === null,
     }));
   }, [session, list]);
 

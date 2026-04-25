@@ -9,12 +9,14 @@ import { Progress } from '@/components/ui/progress';
 import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
-import { SkipForward, Equal, ArrowLeft, Undo2, Plus, History as HistoryIcon, X } from 'lucide-react';
+import { SkipForward, Equal, Undo2, Plus, History as HistoryIcon, X, ListOrdered } from 'lucide-react';
 import { SwipeMode } from '@/components/SwipeMode';
 import { RankChip } from '@/components/RankChip';
 import { HelpHint } from '@/components/HelpHint';
 import { getSettings } from '@/lib/storage';
 import { triggerHaptic } from '@/lib/haptics';
+import { sortItemsByElo, getItemRank } from '@/lib/ranking';
+import { avatarBackground, avatarInitial } from '@/lib/avatar';
 import sessionCompleteImg from '@/assets/illustrations/session-complete.png';
 
 export default function Duel() {
@@ -227,7 +229,7 @@ function DuelSession({
             className="flex-1"
             onClick={() => navigate(`/list/${list.id}`)}
           >
-            <ArrowLeft className="h-4 w-4 mr-2" />
+            <ListOrdered className="h-4 w-4 mr-2" />
             {S.duel.rankings}
           </Button>
           <Button
@@ -244,6 +246,7 @@ function DuelSession({
           title={S.duel.newSessionConfirmTitle}
           message={S.duel.newSessionConfirmMessage}
           confirmLabel={S.duel.newSessionConfirmButton}
+          danger
           onConfirm={() => {
             setNewSessionConfirmOpen(false);
             restartSession();
@@ -269,6 +272,15 @@ function DuelSession({
   const duelMode = getSettings().duelMode;
   const showScores = list.showScoresDuringDuels === true;
 
+  // Stable rank lookup so we can ground each card with `#N` when scores are
+  // hidden. Cheap to recompute per pair on small lists.
+  const sortedActive = sortItemsByElo(list.items.filter((i) => !i.removed));
+  const rankA = getItemRank(sortedActive, itemA.id);
+  const rankB = getItemRank(sortedActive, itemB.id);
+
+  const isFinalDuel =
+    list.sessionLength > 0 && duelCount + 1 === list.sessionLength;
+
   if (duelMode === 'swipe') {
     return (
       <SwipeMode
@@ -288,33 +300,42 @@ function DuelSession({
 
   return (
     <div className="p-4 max-w-lg mx-auto space-y-4">
-      <div className="flex items-center justify-between">
-        <h1 className="text-lg font-semibold truncate">{list.name}</h1>
-        <div className="flex items-center gap-2 shrink-0">
-          {canUndo && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={undoLast}
-              aria-label={S.duel.undoAria}
-              className="h-8 px-2"
-            >
-              <Undo2 className="h-4 w-4" />
-              <span className="sr-only">{S.duel.undo}</span>
-            </Button>
-          )}
+      <div className="flex items-center gap-2">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => navigate(`/list/${list.id}`)}
+          className="h-8 px-2 -ml-2 shrink-0"
+        >
+          <X className="h-4 w-4 mr-1" />
+          {S.duel.endShort}
+        </Button>
+        <h1 className="text-base font-semibold truncate flex-1 min-w-0">
+          {list.name}
+        </h1>
+        {canUndo && (
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => navigate(`/list/${list.id}`)}
-            aria-label={S.duel.endSession}
-            className="h-8 px-2"
+            onClick={undoLast}
+            aria-label={S.duel.undoAria}
+            className="h-8 px-2 shrink-0"
           >
-            <X className="h-4 w-4" />
-            <span className="sr-only">{S.duel.endSession}</span>
+            <Undo2 className="h-4 w-4 mr-1" />
+            {S.duel.undo}
           </Button>
-          {list.sessionLength > 0 && (
-            <span className="inline-flex items-center gap-1 text-sm text-muted-foreground tabular-nums">
+        )}
+      </div>
+
+      {list.sessionLength > 0 && (
+        <div className="flex items-center gap-2">
+          <Progress value={progress} className="h-2 flex-1" />
+          {isFinalDuel ? (
+            <span className="inline-flex items-center rounded-full bg-brand-soft text-brand-deep px-2 py-0.5 text-xs font-medium shrink-0">
+              {S.duel.finalDuel}
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-1 text-sm text-muted-foreground tabular-nums shrink-0">
               <span aria-live="polite" aria-atomic="true">
                 {duelCount}/{list.sessionLength}
               </span>
@@ -322,10 +343,6 @@ function DuelSession({
             </span>
           )}
         </div>
-      </div>
-
-      {list.sessionLength > 0 && (
-        <Progress value={progress} className="h-2" />
       )}
 
       <p className="sr-only" aria-live="polite" aria-atomic="true">
@@ -333,53 +350,67 @@ function DuelSession({
       </p>
 
       <div key={`${itemA.id}-${itemB.id}`} className="grid grid-cols-2 gap-3">
-        <Card
-          role="button"
-          tabIndex={0}
-          aria-label={S.duel.pickAria(itemA.name)}
-          className={`cursor-pointer hover:border-primary focus-visible:ring-2 focus-visible:ring-ring transition-all ${
-            lastWinner === itemA.id ? 'animate-winner-grow' : ''
-          }${lastWinner && lastWinner !== 'tie' && lastWinner !== itemA.id ? ' animate-loser-shrink' : ''}`}
-          onClick={() => handlePick(itemA)}
-          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handlePick(itemA); } }}
-        >
-          <CardContent className="p-6 text-center">
-            <p className="font-semibold text-lg">{itemA.name}</p>
-            {showScores && (
-              <p className="text-xs text-muted-foreground mt-1">
-                {S.duel.scoreSuffix(Math.round(itemA.eloScore))}
-              </p>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card
-          role="button"
-          tabIndex={0}
-          aria-label={S.duel.pickAria(itemB.name)}
-          className={`cursor-pointer hover:border-primary focus-visible:ring-2 focus-visible:ring-ring transition-all ${
-            lastWinner === itemB.id ? 'animate-winner-grow' : ''
-          }${lastWinner && lastWinner !== 'tie' && lastWinner !== itemB.id ? ' animate-loser-shrink' : ''}`}
-          onClick={() => handlePick(itemB)}
-          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handlePick(itemB); } }}
-        >
-          <CardContent className="p-6 text-center">
-            <p className="font-semibold text-lg">{itemB.name}</p>
-            {showScores && (
-              <p className="text-xs text-muted-foreground mt-1">
-                {S.duel.scoreSuffix(Math.round(itemB.eloScore))}
-              </p>
-            )}
-          </CardContent>
-        </Card>
+        {[
+          { item: itemA, rank: rankA },
+          { item: itemB, rank: rankB },
+        ].map(({ item, rank }) => {
+          const isWinner = lastWinner === item.id;
+          const isLoser =
+            lastWinner && lastWinner !== 'tie' && lastWinner !== item.id;
+          return (
+            <Card
+              key={item.id}
+              role="button"
+              tabIndex={0}
+              aria-label={S.duel.pickAria(item.name)}
+              style={{ touchAction: 'manipulation' }}
+              className={`cursor-pointer hover:border-primary focus-visible:ring-2 focus-visible:ring-ring transition-all ${
+                isWinner ? 'animate-winner-grow' : ''
+              }${isLoser ? ' animate-loser-shrink' : ''}`}
+              onClick={() => handlePick(item)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  handlePick(item);
+                }
+              }}
+            >
+              <CardContent className="p-6 sm:p-8 text-center flex flex-col items-center gap-2">
+                <span
+                  className="inline-flex h-12 w-12 items-center justify-center rounded-full text-lg font-semibold text-white shadow-sm"
+                  style={{ backgroundColor: avatarBackground(item.id) }}
+                  aria-hidden="true"
+                >
+                  {avatarInitial(item.name)}
+                </span>
+                <p className="font-semibold text-lg leading-tight">{item.name}</p>
+                {showScores ? (
+                  <p className="text-xs text-muted-foreground">
+                    {S.duel.scoreSuffix(Math.round(item.eloScore))}
+                  </p>
+                ) : rank > 0 ? (
+                  <RankChip position={rank} />
+                ) : null}
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
 
-      <div className="flex gap-2 justify-center">
-        <Button variant="outline" size="sm" onClick={() => handlePick(null)}>
+      <div className="flex gap-2">
+        <Button
+          variant="outline"
+          className="flex-1"
+          onClick={() => handlePick(null)}
+        >
           <Equal className="h-4 w-4 mr-1" />
           {S.duel.tie}
         </Button>
-        <Button variant="ghost" size="sm" onClick={handleSkip}>
+        <Button
+          variant="ghost"
+          className="flex-1"
+          onClick={handleSkip}
+        >
           <SkipForward className="h-4 w-4 mr-1" />
           {S.duel.skip}
         </Button>
