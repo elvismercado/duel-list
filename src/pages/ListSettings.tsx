@@ -92,9 +92,9 @@ export default function ListSettings() {
 
   return (
     <div className="p-4 max-w-lg mx-auto space-y-6">
-      <h1 className="text-2xl font-bold">{S.settings.title}</h1>
+      <h1 className="text-2xl font-bold">{S.settings.titleList}</h1>
 
-      {/* Name.read-only display with edit button */}
+      {/* List name (no group heading; sits above first group) */}
       <div className="space-y-2">
         <label className="text-sm font-medium">{S.list.name}</label>
         {editingName ? (
@@ -140,83 +140,98 @@ export default function ListSettings() {
         )}
       </div>
 
-      {/* K-Factor */}
-      <div className="space-y-2">
-        <div className="flex items-center gap-1">
-          <label className="text-sm font-medium">{S.settings.kFactorLabel}</label>
-          <HelpHint anchor="ranking-speed" term={S.glossary.termRankingSpeedLabel} />
-        </div>
-        <Select
-          value={String(list.kFactor)}
-          onValueChange={handleKFactorChange}
-        >
-          <SelectTrigger>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="48" title={S.settings.kFactorTooltipQuick}>{S.settings.kFactorQuick}</SelectItem>
-            <SelectItem value="32" title={S.settings.kFactorTooltipGradual}>{S.settings.kFactorGradual}</SelectItem>
-            <SelectItem value="16" title={S.settings.kFactorTooltipTight}>{S.settings.kFactorTight}</SelectItem>
-          </SelectContent>
-        </Select>
-        <p className="text-xs text-muted-foreground">{S.settings.kFactorHelp}</p>
-      </div>
+      <Separator />
 
-      {/* Session Length — ButtonGroup + optional custom input */}
-      <div className="space-y-2">
-        <div className="flex items-center gap-1">
-          <label className="text-sm font-medium">{S.settings.sessionLengthLabel}</label>
-          <HelpHint anchor="session" term={S.glossary.termSessionLabel} />
-        </div>
-        <ButtonGroup<string>
-          value={
-            list.sessionLength === 0
-              ? '0'
-              : SESSION_PRESETS.includes(list.sessionLength as typeof SESSION_PRESETS[number])
-                ? String(list.sessionLength)
-                : 'custom'
-          }
-          onChange={(v) => {
-            if (v === 'custom') {
-              handleSessionLengthChange('15');
-            } else {
-              handleSessionLengthChange(v);
-            }
-          }}
-          ariaLabel={S.settings.sessionLengthLabel}
-          options={[
-            ...SESSION_PRESETS.map((n) => ({ value: String(n), label: String(n) })),
-            { value: '0', label: S.settings.sessionLengthUnlimited },
-            { value: 'custom', label: S.settings.sessionLengthCustom },
-          ]}
-        />
-        {!SESSION_PRESETS.includes(list.sessionLength as typeof SESSION_PRESETS[number]) && list.sessionLength !== 0 && (
-          <div className="flex gap-2">
-            <Input
-              id="session-length-input"
-              type="number"
-              min={1}
-              max={500}
-              value={list.sessionLength}
-              onChange={(e) => handleSessionLengthChange(e.target.value)}
-              className="w-28"
-            />
-            <span className="text-sm text-muted-foreground self-center">
-              {S.settings.sessionLengthUnit}
-            </span>
+      {/* ==================== Ranking & sessions ==================== */}
+      <section aria-labelledby="group-ranking" className="space-y-4">
+        <h2
+          id="group-ranking"
+          className="text-sm font-semibold text-muted-foreground uppercase tracking-wide"
+        >
+          {S.settings.groupRanking}
+        </h2>
+
+        {/* K-Factor */}
+        <div className="space-y-2">
+          <div className="flex items-center gap-1">
+            <label className="text-sm font-medium">{S.settings.kFactorLabel}</label>
+            <HelpHint anchor="ranking-speed" term={S.glossary.termRankingSpeedLabel} />
           </div>
-        )}
-        <p className="text-xs text-muted-foreground">{S.settings.sessionLengthHelp}</p>
-      </div>
+          <Select
+            value={String(list.kFactor)}
+            onValueChange={handleKFactorChange}
+          >
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="48" title={S.settings.kFactorTooltipQuick}>{S.settings.kFactorQuick}</SelectItem>
+              <SelectItem value="32" title={S.settings.kFactorTooltipGradual}>{S.settings.kFactorGradual}</SelectItem>
+              <SelectItem value="16" title={S.settings.kFactorTooltipTight}>{S.settings.kFactorTight}</SelectItem>
+            </SelectContent>
+          </Select>
+          <p className="text-xs text-muted-foreground">{S.settings.kFactorHelp}</p>
+        </div>
+
+        {/* Session Length */}
+        <div className="space-y-2">
+          <div className="flex items-center gap-1">
+            <label className="text-sm font-medium">{S.settings.sessionLengthLabel}</label>
+            <HelpHint anchor="session" term={S.glossary.termSessionLabel} />
+          </div>
+          <ButtonGroup<string>
+            value={
+              list.sessionLength === 0
+                ? '0'
+                : SESSION_PRESETS.includes(list.sessionLength as typeof SESSION_PRESETS[number])
+                  ? String(list.sessionLength)
+                  : 'custom'
+            }
+            onChange={(v) => {
+              if (v === 'custom') {
+                handleSessionLengthChange('15');
+              } else {
+                handleSessionLengthChange(v);
+              }
+            }}
+            ariaLabel={S.settings.sessionLengthLabel}
+            options={[
+              ...SESSION_PRESETS.map((n) => ({ value: String(n), label: String(n) })),
+              { value: '0', label: S.settings.sessionLengthUnlimited },
+              { value: 'custom', label: S.settings.sessionLengthCustom },
+            ]}
+          />
+          {!SESSION_PRESETS.includes(list.sessionLength as typeof SESSION_PRESETS[number]) && list.sessionLength !== 0 && (
+            <div className="flex gap-2">
+              <Input
+                id="session-length-input"
+                type="number"
+                min={1}
+                max={500}
+                value={list.sessionLength}
+                onChange={(e) => handleSessionLengthChange(e.target.value)}
+                className="w-28"
+              />
+              <span className="text-sm text-muted-foreground self-center">
+                {S.settings.sessionLengthUnit}
+              </span>
+            </div>
+          )}
+          <p className="text-xs text-muted-foreground">{S.settings.sessionLengthHelp}</p>
+        </div>
+      </section>
 
       <Separator />
 
-      {/* File Sync */}
-      <div className="space-y-2">
+      {/* ==================== Sync ==================== */}
+      <section aria-labelledby="group-sync" className="space-y-2">
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-1">
-            <h2 className="text-sm font-semibold text-muted-foreground">
-              {S.settings.fileSyncHeading}
+            <h2
+              id="group-sync"
+              className="text-sm font-semibold text-muted-foreground uppercase tracking-wide"
+            >
+              {S.settings.groupSync}
             </h2>
             <HelpHint anchor="file-link" term={S.glossary.sectionFileLink} />
           </div>
@@ -255,29 +270,19 @@ export default function ListSettings() {
             {S.settings.fileSyncUnsupported}
           </p>
         )}
-      </div>
+      </section>
 
       <Separator />
 
-      {/* Removed Items.behind a button, opens modal */}
-      {removedItems.length > 0 && (
-        <div className="space-y-2">
-          <Button
-            variant="outline"
-            className="w-full justify-start"
-            onClick={() => setRemovedOpen(true)}
-          >
-            <Archive className="h-4 w-4 mr-2" />
-            {S.settings.removedItemsButton(removedItems.length)}
-          </Button>
-        </div>
-      )}
+      {/* ==================== Your data ==================== */}
+      <section aria-labelledby="group-data" className="space-y-3">
+        <h2
+          id="group-data"
+          className="text-sm font-semibold text-muted-foreground uppercase tracking-wide"
+        >
+          {S.settings.groupData}
+        </h2>
 
-      <Separator />
-
-      {/* Export */}
-      <div className="space-y-2">
-        <h2 className="text-sm font-semibold text-muted-foreground">{S.settings.exportHeading}</h2>
         <div className="flex gap-2 flex-wrap">
           <Button
             variant="outline"
@@ -296,13 +301,29 @@ export default function ListSettings() {
             {S.export.historyButton}
           </Button>
         </div>
-      </div>
+
+        {removedItems.length > 0 && (
+          <Button
+            variant="outline"
+            className="w-full justify-start"
+            onClick={() => setRemovedOpen(true)}
+          >
+            <Archive className="h-4 w-4 mr-2" />
+            {S.settings.removedItemsButton(removedItems.length)}
+          </Button>
+        )}
+      </section>
 
       <Separator />
 
-      {/* Danger Zone */}
-      <div className="space-y-2">
-        <h2 className="text-sm font-semibold text-destructive">{S.settings.dangerZone}</h2>
+      {/* ==================== Danger zone ==================== */}
+      <section aria-labelledby="group-danger" className="space-y-2">
+        <h2
+          id="group-danger"
+          className="text-sm font-semibold text-destructive uppercase tracking-wide"
+        >
+          {S.settings.dangerZone}
+        </h2>
         <Button
           variant="destructive"
           onClick={() => setDeleteOpen(true)}
@@ -310,7 +331,7 @@ export default function ListSettings() {
           <Trash2 className="h-4 w-4 mr-2" />
           {S.settings.deleteList}
         </Button>
-      </div>
+      </section>
 
       <ConfirmDialog
         open={deleteOpen}
