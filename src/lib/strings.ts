@@ -131,6 +131,11 @@ export const S = {
     undo: 'Undo last',
     undoAria: 'Undo last duel',
     addItems: 'Add items',
+    endSession: 'End session',
+    viewHistory: 'View history',
+    needTwoItemsWithCount: (have: number, need: number) =>
+      `You have ${have} ${have === 1 ? 'item' : 'items'}. Add ${need} more to start duelling.`,
+    keyboardHintAria: 'Keyboard shortcuts: arrow keys to pick, T for tie, S to skip',
     pairAnnouncement: (round: number, a: string, b: string) =>
       `Round ${round}: ${a} versus ${b}.`,
     newSessionConfirmTitle: 'Start a new session?',

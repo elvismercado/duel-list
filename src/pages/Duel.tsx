@@ -9,7 +9,7 @@ import { Progress } from '@/components/ui/progress';
 import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
-import { SkipForward, Equal, TrendingUp, TrendingDown, ArrowLeft, Undo2, Plus } from 'lucide-react';
+import { SkipForward, Equal, ArrowLeft, Undo2, Plus, History as HistoryIcon, X } from 'lucide-react';
 import { SwipeMode } from '@/components/SwipeMode';
 import { RankChip } from '@/components/RankChip';
 import { HelpHint } from '@/components/HelpHint';
@@ -42,9 +42,12 @@ export default function Duel() {
   const activeItems = list.items.filter((i) => !i.removed);
 
   if (activeItems.length < 2) {
+    const need = 2 - activeItems.length;
     return (
       <div className="p-4 max-w-lg mx-auto space-y-4 text-center mt-12">
-        <p className="text-muted-foreground">{S.duel.needTwoItems}</p>
+        <p className="text-muted-foreground">
+          {S.duel.needTwoItemsWithCount(activeItems.length, need)}
+        </p>
         <div className="flex gap-2 justify-center">
           <Button onClick={() => navigate(`/list/${id}?add=1`)}>
             <Plus className="h-4 w-4 mr-1" />
@@ -168,29 +171,37 @@ function DuelSession({
             <h2 className="text-sm font-semibold text-muted-foreground">
               {S.duel.biggestMovers}
             </h2>
-            {movers.map((m) => (
-              <div
-                key={m.item.id}
-                className="flex items-center gap-3 rounded-md border p-2"
-              >
-                {m.rankChange < 0 ? (
-                  <TrendingUp className="h-4 w-4 text-outcome-win shrink-0" />
-                ) : (
-                  <TrendingDown className="h-4 w-4 text-outcome-loss shrink-0" />
-                )}
-                <span className="flex-1 truncate text-sm">{m.item.name}</span>
-                <span className="text-xs text-muted-foreground">
-                  {m.rankChange < 0 ? `↑${Math.abs(m.rankChange)}` : `↓${m.rankChange}`}
-                </span>
-              </div>
-            ))}
+            {movers.map((m) => {
+              // rankChange < 0 means the item moved UP the ranking
+              // (a lower rank number = higher position).
+              const movedUp = m.rankChange < 0;
+              const magnitude = Math.abs(m.rankChange);
+              return (
+                <div
+                  key={m.item.id}
+                  className="flex items-center gap-3 rounded-md border p-2"
+                >
+                  <span className="flex-1 truncate text-sm">{m.item.name}</span>
+                  <span
+                    className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-xs font-medium tabular-nums ${
+                      movedUp
+                        ? 'bg-outcome-win/15 text-outcome-win'
+                        : 'bg-outcome-loss/15 text-outcome-loss'
+                    }`}
+                  >
+                    <span aria-hidden="true">{movedUp ? '▲' : '▼'}</span>
+                    {magnitude}
+                  </span>
+                </div>
+              );
+            })}
           </div>
         )}
 
         <Separator />
 
-        {canUndo && (
-          <div className="flex justify-center">
+        <div className="flex justify-center gap-2 flex-wrap">
+          {canUndo && (
             <Button
               variant="outline"
               size="sm"
@@ -200,8 +211,16 @@ function DuelSession({
               <Undo2 className="h-4 w-4 mr-1" />
               {S.duel.undo}
             </Button>
-          </div>
-        )}
+          )}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate(`/list/${list.id}/history`)}
+          >
+            <HistoryIcon className="h-4 w-4 mr-1" />
+            {S.duel.viewHistory}
+          </Button>
+        </div>
 
         <div className="flex gap-3">
           <Button
@@ -284,6 +303,16 @@ function DuelSession({
               <span className="sr-only">{S.duel.undo}</span>
             </Button>
           )}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate(`/list/${list.id}`)}
+            aria-label={S.duel.endSession}
+            className="h-8 px-2"
+          >
+            <X className="h-4 w-4" />
+            <span className="sr-only">{S.duel.endSession}</span>
+          </Button>
           {list.sessionLength > 0 && (
             <span className="inline-flex items-center gap-1 text-sm text-muted-foreground tabular-nums">
               <span aria-live="polite" aria-atomic="true">
@@ -356,8 +385,25 @@ function DuelSession({
         </Button>
       </div>
 
-      <p className="text-xs text-center text-muted-foreground">
-        {S.duel.keyboardHint}
+      <p
+        className="text-xs text-center text-muted-foreground flex flex-wrap items-center justify-center gap-x-2 gap-y-1"
+        aria-label={S.duel.keyboardHintAria}
+      >
+        <span className="inline-flex items-center gap-1">
+          <kbd className="px-1.5 py-0.5 text-[10px] font-mono rounded border bg-muted">←</kbd>
+          <kbd className="px-1.5 py-0.5 text-[10px] font-mono rounded border bg-muted">→</kbd>
+          <span>to pick</span>
+        </span>
+        <span aria-hidden="true">·</span>
+        <span className="inline-flex items-center gap-1">
+          <kbd className="px-1.5 py-0.5 text-[10px] font-mono rounded border bg-muted">T</kbd>
+          <span>for tie</span>
+        </span>
+        <span aria-hidden="true">·</span>
+        <span className="inline-flex items-center gap-1">
+          <kbd className="px-1.5 py-0.5 text-[10px] font-mono rounded border bg-muted">S</kbd>
+          <span>to skip</span>
+        </span>
       </p>
     </div>
   );
