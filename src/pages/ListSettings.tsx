@@ -22,6 +22,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Undo2, Download, Trash2, Link, Unlink, Pencil, Check, Archive } from 'lucide-react';
+import { HelpHint } from '@/components/HelpHint';
 
 const SESSION_PRESETS = [5, 10, 20, 50];
 
@@ -139,7 +140,10 @@ export default function ListSettings() {
 
       {/* K-Factor */}
       <div className="space-y-2">
-        <label className="text-sm font-medium">{S.settings.kFactorLabel}</label>
+        <div className="flex items-center gap-1">
+          <label className="text-sm font-medium">{S.settings.kFactorLabel}</label>
+          <HelpHint anchor="ranking-speed" term={S.glossary.termRankingSpeedLabel} />
+        </div>
         <Select
           value={String(list.kFactor)}
           onValueChange={handleKFactorChange}
@@ -148,11 +152,12 @@ export default function ListSettings() {
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="48">{S.settings.kFactorQuick}</SelectItem>
-            <SelectItem value="32">{S.settings.kFactorGradual}</SelectItem>
-            <SelectItem value="16">{S.settings.kFactorTight}</SelectItem>
+            <SelectItem value="48" title={S.settings.kFactorTooltipQuick}>{S.settings.kFactorQuick}</SelectItem>
+            <SelectItem value="32" title={S.settings.kFactorTooltipGradual}>{S.settings.kFactorGradual}</SelectItem>
+            <SelectItem value="16" title={S.settings.kFactorTooltipTight}>{S.settings.kFactorTight}</SelectItem>
           </SelectContent>
         </Select>
+        <p className="text-xs text-muted-foreground">{S.settings.kFactorHelp}</p>
       </div>
 
       {/* Session Length.number input + preset chips */}

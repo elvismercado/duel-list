@@ -95,6 +95,7 @@ export default function GlossaryPage() {
         <TermRow id="skip" label={G.termSkipLabel} desc={G.termSkipDesc} />
         <TermRow id="template" label={G.termTemplateLabel} desc={G.termTemplateDesc} />
         <TermRow id="theme" label={G.termThemeLabel} desc={G.termThemeDesc} />
+        <TermRow id="ranking-speed" label={G.termRankingSpeedLabel} desc={G.termRankingSpeedDesc} />
       </Section>
 
       <Section id="activity" title={G.sectionActivity}>
