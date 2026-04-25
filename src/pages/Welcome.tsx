@@ -23,6 +23,10 @@ const TOUR_STEPS = [
     description: S.welcome.loopStepDescription,
   },
   {
+    heading: S.welcome.templatesStepTitle,
+    description: S.welcome.templatesStepDescription,
+  },
+  {
     heading: S.welcome.readyStepTitle,
     description: S.welcome.readyStepDescription,
   },

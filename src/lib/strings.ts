@@ -103,7 +103,10 @@ export const S = {
       'Set how many duels per session: 5, 10, 20, 50, or unlimited. Every duel is saved, so you can browse history or export it as Markdown anytime.',
     loopStepTitle: 'Stay in the loop',
     loopStepDescription:
-      'Pick a cadence and Duel⚡List will nudge you when a list goes stale. Quiet hours respected. Tweak the theme from the header, and start new lists fast with built-in templates.',
+      'Pick a cadence and Duel⚡List will nudge you when a list goes stale. Quiet hours respected. Tweak the theme from the header anytime.',
+    templatesStepTitle: 'Templates & defaults',
+    templatesStepDescription:
+      'Browse the Templates page for ready-made starter lists, or set your preferred ranking speed and session length once in App Settings and every new list will pick them up.',
     readyStepTitle: 'Ready!',
     readyStepDescription: 'Create a list or try a sample to get started.',
   },
