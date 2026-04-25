@@ -2,6 +2,7 @@ import { useMemo, useRef, useState } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { AutoShrinkText } from '@/components/AutoShrinkText';
 import { S } from '@/lib/strings';
 import { getList, getHistory, getSettings } from '@/lib/storage';
 import { sortItemsByElo } from '@/lib/ranking';
@@ -286,9 +287,12 @@ function StatTile({
   return (
     <div className="rounded-lg border bg-card p-3">
       <div className="text-xs text-muted-foreground">{label}</div>
-      <div className="text-lg font-semibold truncate" title={value}>
-        {value}
-      </div>
+      <AutoShrinkText
+        text={value}
+        maxSize={18}
+        minSize={12}
+        className="font-semibold"
+      />
       {subtitle && (
         <div className="text-xs text-muted-foreground truncate">
           {subtitle}
@@ -412,7 +416,12 @@ function NameChip({
           aria-label={S.history.winnerAria}
         />
       )}
-      <span className="truncate min-w-0 flex-1">{name}</span>
+      <AutoShrinkText
+        text={name}
+        maxSize={14}
+        minSize={10}
+        className="min-w-0 flex-1"
+      />
       {rank !== undefined && (
         <span className="shrink-0 text-[10px] tabular-nums text-muted-foreground">
           #{rank}
