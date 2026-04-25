@@ -690,12 +690,17 @@ export const S = {
       {
         title: 'Templates to start fast',
         body:
-          'Pick a starter template (Anime, Pizza Toppings, Movies, Vacation, Snacks, Hobbies) when creating a list to skip the empty-state.',
+          'Browse a dozen starter templates from the Templates page or pick one when creating a list, so you can skip the empty-state and dive straight into duels.',
       },
       {
         title: 'Smart reminders',
         body:
           'Choose a cadence (daily, weekly, monthly, custom) and Duel⚡List nudges you about a list that’s gone stale. In-app banner while the app is open, OS notification when it isn’t. Quiet hours and per-list opt-outs are honored.',
+      },
+      {
+        title: 'Per-app defaults',
+        body:
+          'Set a default session length and K-factor once in App Settings. New lists pick them up automatically, and a one-tap helper can push the new defaults to every existing list.',
       },
       {
         title: 'Light, dark, or auto',

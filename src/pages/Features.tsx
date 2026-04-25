@@ -14,6 +14,7 @@ import {
   KeyRound,
   Layers,
   Bell,
+  SlidersHorizontal,
   SunMoon,
 } from 'lucide-react';
 
@@ -29,6 +30,7 @@ const FEATURE_ICONS: React.ComponentType<{ className?: string }>[] = [
   KeyRound,
   Layers,
   Bell,
+  SlidersHorizontal,
   SunMoon,
 ];
 
