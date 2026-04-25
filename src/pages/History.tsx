@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,6 +13,7 @@ import { useFilterShortcut } from '@/hooks/useFilterShortcut';
 import emptyHistoryImg from '@/assets/illustrations/empty-history.png';
 import {
   Download,
+  HelpCircle,
   Trophy,
   Search,
   X,
@@ -45,13 +46,32 @@ export default function History() {
   const filterInputRef = useRef<HTMLInputElement>(null);
   useFilterShortcut(filterInputRef);
 
-  const setQuery = (next: string) => {
-    setQueryRaw(next);
-    const params = new URLSearchParams(searchParams);
-    if (next) params.set('q', next);
-    else params.delete('q');
-    setSearchParams(params, { replace: true });
-  };
+  const [debouncedQuery, setDebouncedQuery] = useState(query);
+  const resultsRef = useRef<HTMLDivElement>(null);
+
+  const setQuery = useCallback(
+    (next: string) => {
+      setQueryRaw(next);
+      const params = new URLSearchParams(searchParams);
+      if (next) params.set('q', next);
+      else params.delete('q');
+      setSearchParams(params);
+    },
+    [searchParams, setSearchParams],
+  );
+
+  // Debounce the search query by 200ms
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedQuery(query), 200);
+    return () => clearTimeout(t);
+  }, [query]);
+
+  // Scroll results into view when filter changes
+  useEffect(() => {
+    if (debouncedQuery && resultsRef.current) {
+      resultsRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  }, [debouncedQuery]);
 
   const sections = useMemo(() => parseHistorySections(content), [content]);
   const total = useMemo(
@@ -79,7 +99,7 @@ export default function History() {
   }, [list]);
 
   const filteredSections = useMemo(() => {
-    const q = query.trim().toLowerCase();
+    const q = debouncedQuery.trim().toLowerCase();
     if (!q) return sections;
     return sections
       .map((s) => ({
@@ -90,7 +110,7 @@ export default function History() {
         ),
       }))
       .filter((s) => s.entries.length > 0);
-  }, [sections, query]);
+  }, [sections, debouncedQuery]);
 
   useHeaderActions(
     list && total > 0 ? (
@@ -169,39 +189,54 @@ export default function History() {
                   : undefined
               }
             />
-            {stats.mostOneSided && (
-              <StatTile
-                label={S.history.statMostOneSided}
-                value={`${stats.mostOneSided.a} · ${stats.mostOneSided.b}`}
-                subtitle={S.history.oneSidedRecord(
-                  stats.mostOneSided.winsA,
-                  stats.mostOneSided.winsB,
-                )}
-              />
-            )}
-            {stats.longestStreak && (
-              <StatTile
-                label={S.history.statLongestStreak}
-                value={stats.longestStreak.name}
-                subtitle={S.history.streakWins(stats.longestStreak.count)}
-              />
-            )}
-            {stats.matchupCoverage && (
-              <StatTile
-                label={S.history.statMatchupCoverage}
-                value={S.history.coverageValue(
-                  stats.matchupCoverage.seen,
-                  stats.matchupCoverage.total,
-                )}
-              />
-            )}
-            {stats.mostActiveDay && (
-              <StatTile
-                label={S.history.statMostActiveDay}
-                value={stats.mostActiveDay.date}
-                subtitle={S.history.duelsOnDay(stats.mostActiveDay.count)}
-              />
-            )}
+            <StatTile
+              label={S.history.statMostOneSided}
+              value={
+                stats.mostOneSided
+                  ? `${stats.mostOneSided.a} · ${stats.mostOneSided.b}`
+                  : '—'
+              }
+              subtitle={
+                stats.mostOneSided
+                  ? S.history.oneSidedRecord(
+                      stats.mostOneSided.winsA,
+                      stats.mostOneSided.winsB,
+                    )
+                  : undefined
+              }
+              help={S.history.oneSidedHelp}
+            />
+            <StatTile
+              label={S.history.statLongestStreak}
+              value={stats.longestStreak ? stats.longestStreak.name : '—'}
+              subtitle={
+                stats.longestStreak
+                  ? S.history.streakWins(stats.longestStreak.count)
+                  : undefined
+              }
+              help={S.history.streakHelp}
+            />
+            <StatTile
+              label={S.history.statMatchupCoverage}
+              value={
+                stats.matchupCoverage
+                  ? S.history.coverageValue(
+                      stats.matchupCoverage.seen,
+                      stats.matchupCoverage.total,
+                    )
+                  : '—'
+              }
+              help={S.history.coverageHelp}
+            />
+            <StatTile
+              label={S.history.statMostActiveDay}
+              value={stats.mostActiveDay ? stats.mostActiveDay.date : '—'}
+              subtitle={
+                stats.mostActiveDay
+                  ? S.history.duelsOnDay(stats.mostActiveDay.count)
+                  : undefined
+              }
+            />
           </div>
 
           {daily.some((d) => d.count > 0) && (
@@ -249,15 +284,19 @@ export default function History() {
               </Button>
             </div>
           ) : (
-            <div className="space-y-4">
-              <p className="text-xs text-muted-foreground">
+            <div ref={resultsRef} className="space-y-4">
+              <p
+                className="text-xs text-muted-foreground"
+                aria-live="polite"
+                aria-atomic="true"
+              >
                 {S.history.showingOf(filteredCount, total)}
               </p>
               {filteredSections.map((section) => (
                 <section key={section.date} className="space-y-1">
-                  <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground sticky top-0 bg-background py-1 z-10">
+                  <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground sticky top-0 bg-background py-1 z-10">
                     {section.date}
-                  </h2>
+                  </h3>
                   <ul className="space-y-1">
                     {section.entries.map((entry, idx) => (
                       <li key={idx}>
@@ -279,14 +318,21 @@ function StatTile({
   label,
   value,
   subtitle,
+  help,
 }: {
   label: string;
   value: string;
   subtitle?: string;
+  help?: string;
 }) {
   return (
-    <div className="rounded-lg border bg-card p-3">
-      <div className="text-xs text-muted-foreground">{label}</div>
+    <div className="rounded-lg border bg-card p-3" title={help}>
+      <div className="text-xs text-muted-foreground flex items-center gap-1">
+        {label}
+        {help && (
+          <HelpCircle className="h-3 w-3 shrink-0" aria-hidden="true" />
+        )}
+      </div>
       <AutoShrinkText
         text={value}
         maxSize={18}
@@ -322,6 +368,13 @@ function Sparkline({ data }: { data: { date: string; count: number }[] }) {
         const y = h - barH;
         const opacity =
           d.count === 0 ? 0.15 : 0.35 + (d.count / max) * 0.65;
+        const daysAgo = data.length - 1 - i;
+        const label =
+          daysAgo === 0
+            ? 'Today'
+            : daysAgo === 1
+              ? 'Yesterday'
+              : `${daysAgo}d ago`;
         return (
           <rect
             key={d.date}
@@ -333,7 +386,7 @@ function Sparkline({ data }: { data: { date: string; count: number }[] }) {
             className="fill-primary"
             opacity={opacity}
           >
-            <title>{S.history.sparklineDay(d.date, d.count)}</title>
+            <title>{S.history.sparklineDay(`${label} (${d.date})`, d.count)}</title>
           </rect>
         );
       })}
@@ -470,11 +523,11 @@ function parseHistorySections(md: string): Section[] {
 
 function parseEntry(raw: string): ParsedEntry | null {
   const { body, tsIso, localTime } = parseTimestampSuffix(raw);
-  // Extract IDs from [id] brackets before stripping them
-  const ids = [...body.matchAll(/\[([a-z0-9]{2,8})\]/gi)].map((m) => m[1]!);
+  // Extract IDs from " [id]" brackets (exactly 4 alphanumeric chars preceded by space)
+  const ids = [...body.matchAll(/ \[([a-z0-9]{4})\]/gi)].map((m) => m[1]!);
   const idA = ids[0] ?? null;
   const idB = ids[1] ?? null;
-  const stripped = body.replace(/\s*\[[a-z0-9]{2,8}\]/gi, '').trim();
+  const stripped = body.replace(/ \[[a-z0-9]{4}\]/gi, '').trim();
   // Left won: "A > B"
   const left = /^(.+?)\s*>\s*(.+)$/.exec(stripped);
   if (left) {

@@ -21,9 +21,10 @@ export function useExport() {
     try {
       const history = getHistory(listId);
       if (!history) return;
+      const date = new Date().toISOString().slice(0, 10);
       downloadFile(
         history,
-        `${slugify(listName)}.duellist.md`,
+        `${slugify(listName)}.${date}.duellist.md`,
         'text/markdown',
       );
     } catch {
