@@ -20,6 +20,7 @@ export const S = {
     errorBoundaryCopied: 'Copied',
     footerNavAria: 'Footer navigation',
     footerGlossary: 'Glossary',
+    footerTemplates: 'Templates',
     footerFeatures: 'Features',
     footerSettings: 'Settings',
     footerVersion: (v: string) => `v${v}`,
@@ -604,6 +605,17 @@ export const S = {
       importAsNew: 'Import as new',
       cancel: 'Cancel',
     },
+  },
+
+  templates: {
+    title: 'Templates',
+    subtitle:
+      'Built-in starter lists. Create one with a single tap and start ranking right away.',
+    itemCount: (n: number) => `${n} ${n === 1 ? 'item' : 'items'}`,
+    showItems: 'Show items',
+    hideItems: 'Hide items',
+    createButton: 'Create list',
+    createSuccess: (name: string) => `Created "${name}".`,
   },
 
   features: {

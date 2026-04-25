@@ -19,6 +19,7 @@ function getBackTarget(pathname: string, id?: string): string | null {
   if (pathname === '/settings/reminders') return '/settings';
   if (pathname === '/settings/glossary') return '/settings';
   if (pathname === '/features') return '/';
+  if (pathname === '/templates') return '/';
   if (id) {
     if (pathname.endsWith('/duel')) return `/list/${id}`;
     if (pathname.endsWith('/settings')) return `/list/${id}`;
@@ -115,6 +116,10 @@ function LayoutInner() {
             <nav className="flex items-center gap-3" aria-label={S.app.footerNavAria}>
               <Link to="/settings/glossary" className="hover:text-foreground transition-colors">
                 {S.app.footerGlossary}
+              </Link>
+              <span aria-hidden="true" className="text-muted-foreground/40">·</span>
+              <Link to="/templates" className="hover:text-foreground transition-colors">
+                {S.app.footerTemplates}
               </Link>
               <span aria-hidden="true" className="text-muted-foreground/40">·</span>
               <Link to="/features" className="hover:text-foreground transition-colors">

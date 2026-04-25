@@ -21,6 +21,7 @@ const RemindersSettings = lazy(() => import('@/pages/RemindersSettings'));
 const DefaultsSettings = lazy(() => import('@/pages/DefaultsSettings'));
 const Glossary = lazy(() => import('@/pages/Glossary'));
 const Features = lazy(() => import('@/pages/Features'));
+const Templates = lazy(() => import('@/pages/Templates'));
 const ItemDetail = lazy(() => import('@/pages/ItemDetail'));
 const NotFound = lazy(() => import('@/pages/NotFound'));
 
@@ -45,6 +46,7 @@ const router = createBrowserRouter([
       { path: '/settings/defaults', element: withSuspense(<DefaultsSettings />) },
       { path: '/settings/glossary', element: withSuspense(<Glossary />) },
       { path: '/features', element: withSuspense(<Features />) },
+      { path: '/templates', element: withSuspense(<Templates />) },
       { path: '*', element: withSuspense(<NotFound />) },
     ],
   },
