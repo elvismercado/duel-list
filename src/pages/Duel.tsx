@@ -229,7 +229,7 @@ function DuelSession({
             <span aria-live="polite" aria-atomic="true">
               {duelCount}/{list.sessionLength}
             </span>
-            <HelpHint anchor="session" term="Session" />
+            <HelpHint anchor="session" term={S.glossary.termSessionLabel} />
           </span>
         )}
       </div>

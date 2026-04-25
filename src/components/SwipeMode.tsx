@@ -4,6 +4,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Equal, SkipForward } from 'lucide-react';
 import { S } from '@/lib/strings';
+import { Progress } from '@/components/ui/progress';
 import type { Item } from '@/types';
 
 interface SwipeModeProps {
@@ -120,6 +121,10 @@ export function SwipeMode({
           </span>
         )}
       </div>
+
+      {sessionLength > 0 && (
+        <Progress value={(duelCount / sessionLength) * 100} className="h-2" />
+      )}
 
       <div className="grid grid-cols-2 gap-3">
         <SwipeCard

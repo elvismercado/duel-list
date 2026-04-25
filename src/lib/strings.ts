@@ -99,7 +99,7 @@ export const S = {
       'Two items appear side by side. Pick the winner, call a tie, or skip. After each duel, your list re-ranks itself; the more you do, the more accurate it gets. Prefer one card at a time? Switch to swipe mode in Settings.',
     sessionsStepTitle: 'Sessions & history',
     sessionsStepDescription:
-      'Knock out 5–10 duels per session. Every duel is saved, so you can browse history or export it as Markdown anytime.',
+      'Set how many duels per session: 5, 10, 20, 50, or unlimited. Every duel is saved, so you can browse history or export it as Markdown anytime.',
     loopStepTitle: 'Stay in the loop',
     loopStepDescription:
       'Pick a cadence and Duel⚡List will nudge you when a list goes stale. Quiet hours respected. Tweak the theme from the header, and start new lists fast with built-in templates.',
@@ -315,7 +315,7 @@ export const S = {
     termDuelLabel: 'Duel',
     termDuelDesc: 'One head-to-head comparison between two items.',
     termSessionLabel: 'Session',
-    termSessionDesc: 'A sequence of duels in one sitting. Length is set in app settings.',
+    termSessionDesc: 'A sequence of duels in one sitting. You can set the length in each list\u2019s settings. Pick a preset or go unlimited.',
     termScoreLabel: 'Score',
     termScoreDesc: 'A number per item that goes up when it wins, down when it loses. Higher score means better rank.',
     termRankLabel: 'Rank',

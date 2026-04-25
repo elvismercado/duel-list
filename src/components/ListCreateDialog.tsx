@@ -129,9 +129,9 @@ export function ListCreateDialog({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="48">{S.settings.kFactorQuick}</SelectItem>
-                <SelectItem value="32">{S.settings.kFactorGradual}</SelectItem>
-                <SelectItem value="16">{S.settings.kFactorTight}</SelectItem>
+                <SelectItem value="48" title={S.settings.kFactorTooltipQuick}>{S.settings.kFactorQuick}</SelectItem>
+                <SelectItem value="32" title={S.settings.kFactorTooltipGradual}>{S.settings.kFactorGradual}</SelectItem>
+                <SelectItem value="16" title={S.settings.kFactorTooltipTight}>{S.settings.kFactorTight}</SelectItem>
               </SelectContent>
             </Select>
           </div>
