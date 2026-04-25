@@ -144,8 +144,6 @@ export const S = {
     newSessionConfirmMessage:
       'This clears the current session summary so you can duel again. Your scores and history are kept.',
     newSessionConfirmButton: 'Start new session',
-    noMorePairs: 'No more pairs available',
-    backToRankings: 'Back to rankings',
     keyboardHint: '← / → to pick · T for tie · S to skip',
     swipeUpToPick: 'Swipe up to pick',
     swipeHelpText: 'Swipe up or tap to pick · ← / → keys work too',

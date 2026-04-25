@@ -197,6 +197,12 @@
   to { transform: translateY(0); opacity: 1; }
 }
 
+@keyframes tie-pulse {
+  0% { box-shadow: 0 0 0 0 var(--brand, hsl(var(--primary))); }
+  50% { box-shadow: 0 0 0 6px color-mix(in oklab, var(--brand, hsl(var(--primary))) 25%, transparent); }
+  100% { box-shadow: 0 0 0 0 transparent; }
+}
+
 .animate-winner-grow {
   animation: winner-grow 0.5s ease-out;
 }
@@ -207,4 +213,8 @@
 
 .animate-slide-in-up {
   animation: slide-in-up 0.3s ease-out;
+}
+
+.animate-tie-pulse {
+  animation: tie-pulse 0.5s ease-out;
 }

@@ -1,4 +1,4 @@
-import { useEffect, useCallback, useState } from 'react';
+import { useEffect, useCallback, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router';
 import { S } from '@/lib/strings';
 import { useList } from '@/hooks/useList';
@@ -91,23 +91,32 @@ function DuelSession({
 
   const [lastWinner, setLastWinner] = useState<string | null>(null);
   const [newSessionConfirmOpen, setNewSessionConfirmOpen] = useState(false);
+  // Guards against rapid double-taps recording the same pair twice while
+  // the win/lose animation is still running.
+  const processingRef = useRef(false);
 
   const progress =
     list.sessionLength > 0 ? (duelCount / list.sessionLength) * 100 : 0;
 
   const handlePick = useCallback(
     (winner: import('@/types').Item | null) => {
+      if (processingRef.current) return;
+      processingRef.current = true;
       triggerHaptic(winner ? 15 : 8);
       setLastWinner(winner?.id ?? 'tie');
       const updated = recordDuel(winner);
       if (updated) onReload();
       // Let animation play, then clear for next pair
-      setTimeout(() => setLastWinner(null), 600);
+      setTimeout(() => {
+        setLastWinner(null);
+        processingRef.current = false;
+      }, 600);
     },
     [recordDuel, onReload],
   );
 
   const handleSkip = useCallback(() => {
+    if (processingRef.current) return;
     triggerHaptic(8);
     skipPair();
   }, [skipPair]);
@@ -116,6 +125,8 @@ function DuelSession({
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
       if (isComplete || !currentPair) return;
+      // Don't capture keys while a modal is open behind the dialog.
+      if (newSessionConfirmOpen) return;
       if (e.key === 'ArrowLeft' || e.key === '1') {
         handlePick(currentPair.itemA);
       } else if (e.key === 'ArrowRight' || e.key === '2') {
@@ -128,11 +139,12 @@ function DuelSession({
     }
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [isComplete, currentPair, handlePick, handleSkip]);
+  }, [isComplete, currentPair, handlePick, handleSkip, newSessionConfirmOpen]);
 
   if (isComplete) {
     const movers = biggestMovers();
     const top = topThree();
+    const showTopScores = list.displayMode !== 'rank';
     return (
       <div className="p-4 max-w-lg mx-auto space-y-6" aria-live="polite">
         <div className="text-center space-y-2 animate-slide-in-up">
@@ -160,9 +172,11 @@ function DuelSession({
               >
                 <RankChip position={i + 1} />
                 <span className="flex-1 truncate">{item.name}</span>
-                <span className="text-sm text-muted-foreground tabular-nums">
-                  {Math.round(item.eloScore)}
-                </span>
+                {showTopScores && (
+                  <span className="text-sm text-muted-foreground tabular-nums">
+                    {Math.round(item.eloScore)}
+                  </span>
+                )}
               </div>
             ))}
           </div>
@@ -258,14 +272,11 @@ function DuelSession({
   }
 
   if (!currentPair) {
-    return (
-      <div className="p-4 max-w-lg mx-auto text-center space-y-4 mt-12">
-        <p className="text-muted-foreground">{S.duel.noMorePairs}</p>
-        <Button onClick={() => navigate(`/list/${list.id}`)}>
-          {S.duel.backToRankings}
-        </Button>
-      </div>
-    );
+    // Defensive only: useComparison routes pair-pool exhaustion through
+    // isComplete, so this branch is normally unreachable. Render a thin
+    // fallback so an unexpected null pair still navigates the user out.
+    navigate(`/list/${list.id}`);
+    return null;
   }
 
   const { itemA, itemB } = currentPair;
@@ -357,6 +368,7 @@ function DuelSession({
           const isWinner = lastWinner === item.id;
           const isLoser =
             lastWinner && lastWinner !== 'tie' && lastWinner !== item.id;
+          const isTie = lastWinner === 'tie';
           return (
             <Card
               key={item.id}
@@ -366,7 +378,9 @@ function DuelSession({
               style={{ touchAction: 'manipulation' }}
               className={`cursor-pointer hover:border-primary focus-visible:ring-2 focus-visible:ring-ring transition-all ${
                 isWinner ? 'animate-winner-grow' : ''
-              }${isLoser ? ' animate-loser-shrink' : ''}`}
+              }${isLoser ? ' animate-loser-shrink' : ''}${
+                isTie ? ' animate-tie-pulse' : ''
+              }`}
               onClick={() => handlePick(item)}
               onKeyDown={(e) => {
                 if (e.key === 'Enter' || e.key === ' ') {

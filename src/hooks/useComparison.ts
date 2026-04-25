@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import type { DuelRecord, Item, ListConfig } from '@/types';
 import { calculateEloChange, sortItemsByElo, captureSessionSnapshot, calculateBiggestMovers } from '@/lib/ranking';
 import {
@@ -32,15 +32,13 @@ export function useComparison(list: ListConfig, onDuel?: (list: ListConfig) => v
   const recentSkips = useRef(new Map<string, number>());
   const [lastSnapshot, setLastSnapshot] = useState<UndoSnapshot | null>(null);
 
-  const initSession = useCallback((): SessionState => {
+  // Persist the prev-rank/prev-elo snapshot to storage so the Rankings view
+  // can render trend arrows that survive page reloads. Idempotent: writes
+  // only when values actually change. Kept as an effect (not in useState
+  // initializer) so React StrictMode does not double-write during dev.
+  const persistPrevRankSnapshot = useCallback(() => {
     const active = list.items.filter((i) => !i.removed);
     const { prevElo, prevRank } = captureSessionSnapshot(active);
-    const historyStr = getHistory(list.id);
-    const recentPairs = parseRecentPairs(historyStr, active.length);
-    recentSkips.current = new Map();
-
-    // Persist the snapshot so the Rankings view can render trend arrows
-    // that survive page reloads. Only writes when values actually change.
     let dirty = false;
     const snapshotItems = list.items.map((item) => {
       const r = prevRank.get(item.id);
@@ -53,7 +51,14 @@ export function useComparison(list: ListConfig, onDuel?: (list: ListConfig) => v
     if (dirty) {
       saveList({ ...list, items: snapshotItems });
     }
+  }, [list]);
 
+  const initSession = useCallback((): SessionState => {
+    const active = list.items.filter((i) => !i.removed);
+    const { prevRank } = captureSessionSnapshot(active);
+    const historyStr = getHistory(list.id);
+    const recentPairs = parseRecentPairs(historyStr, active.length);
+    recentSkips.current = new Map();
     const pair = selectNextPair(active, recentPairs, recentSkips.current);
 
     return {
@@ -66,6 +71,13 @@ export function useComparison(list: ListConfig, onDuel?: (list: ListConfig) => v
   }, [list]);
 
   const [session, setSession] = useState<SessionState>(initSession);
+
+  // Snapshot persistence happens once per mount; restartSession re-runs it
+  // explicitly below.
+  useEffect(() => {
+    persistPrevRankSnapshot();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const recordDuel = useCallback(
     (winner: Item | null) => {
@@ -171,8 +183,9 @@ export function useComparison(list: ListConfig, onDuel?: (list: ListConfig) => v
 
   const restartSession = useCallback(() => {
     setLastSnapshot(null);
+    persistPrevRankSnapshot();
     setSession(initSession());
-  }, [initSession]);
+  }, [initSession, persistPrevRankSnapshot]);
 
   const undoLast = useCallback(() => {
     if (!lastSnapshot) return;
