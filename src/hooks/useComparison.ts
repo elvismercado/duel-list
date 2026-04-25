@@ -26,7 +26,6 @@ interface UndoSnapshot {
   itemACountBefore: number;
   itemBCountBefore: number;
   duelRecord: DuelRecord;
-  wasComplete: boolean;
 }
 
 export function useComparison(list: ListConfig, onDuel?: (list: ListConfig) => void) {
@@ -81,7 +80,6 @@ export function useComparison(list: ListConfig, onDuel?: (list: ListConfig) => v
         itemACountBefore: itemA.comparisonCount,
         itemBCountBefore: itemB.comparisonCount,
         duelRecord: createDuelRecord(itemA, itemB, winner, Date.now()),
-        wasComplete: session.isComplete,
       });
 
       // Calculate ELO

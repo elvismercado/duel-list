@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router';
 import { S } from '@/lib/strings';
 import {
@@ -94,6 +94,17 @@ export default function Rankings() {
   );
   const { list, save, addItems, restoreItem } = useList(id!, onSave);
   const [addOpen, setAddOpen] = useState(false);
+  // Open the add-items dialog when arriving with ?add=1 (e.g. from the
+  // duel page's empty state). The param is consumed once on mount.
+  useEffect(() => {
+    if (searchParams.get('add') === '1') {
+      setAddOpen(true);
+      const next = new URLSearchParams(searchParams);
+      next.delete('add');
+      setSearchParams(next, { replace: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const [removedExpanded, setRemovedExpanded] = useState(false);
   const [linkConfirmOpen, setLinkConfirmOpen] = useState(false);
   const [query, setQuery] = useState('');

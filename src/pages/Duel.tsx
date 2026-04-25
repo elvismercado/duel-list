@@ -8,7 +8,8 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { SkipForward, Equal, TrendingUp, TrendingDown, ArrowLeft, Undo2 } from 'lucide-react';
+import { ConfirmDialog } from '@/components/ConfirmDialog';
+import { SkipForward, Equal, TrendingUp, TrendingDown, ArrowLeft, Undo2, Plus } from 'lucide-react';
 import { SwipeMode } from '@/components/SwipeMode';
 import { RankChip } from '@/components/RankChip';
 import { HelpHint } from '@/components/HelpHint';
@@ -44,7 +45,15 @@ export default function Duel() {
     return (
       <div className="p-4 max-w-lg mx-auto space-y-4 text-center mt-12">
         <p className="text-muted-foreground">{S.duel.needTwoItems}</p>
-        <Button onClick={() => navigate(`/list/${id}`)}>{S.common.backToList}</Button>
+        <div className="flex gap-2 justify-center">
+          <Button onClick={() => navigate(`/list/${id}?add=1`)}>
+            <Plus className="h-4 w-4 mr-1" />
+            {S.duel.addItems}
+          </Button>
+          <Button variant="outline" onClick={() => navigate(`/list/${id}`)}>
+            {S.common.backToList}
+          </Button>
+        </div>
       </div>
     );
   }
@@ -76,6 +85,7 @@ function DuelSession({
   } = useComparison(list, onDuel);
 
   const [lastWinner, setLastWinner] = useState<string | null>(null);
+  const [newSessionConfirmOpen, setNewSessionConfirmOpen] = useState(false);
 
   const progress =
     list.sessionLength > 0 ? (duelCount / list.sessionLength) * 100 : 0;
@@ -179,6 +189,20 @@ function DuelSession({
 
         <Separator />
 
+        {canUndo && (
+          <div className="flex justify-center">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={undoLast}
+              aria-label={S.duel.undoAria}
+            >
+              <Undo2 className="h-4 w-4 mr-1" />
+              {S.duel.undo}
+            </Button>
+          </div>
+        )}
+
         <div className="flex gap-3">
           <Button
             className="flex-1"
@@ -190,25 +214,23 @@ function DuelSession({
           <Button
             variant="outline"
             className="flex-1"
-            onClick={restartSession}
+            onClick={() => setNewSessionConfirmOpen(true)}
           >
             {S.duel.newSession}
           </Button>
         </div>
 
-        {canUndo && (
-          <div className="flex justify-center">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={undoLast}
-              aria-label={S.duel.undoAria}
-            >
-              <Undo2 className="h-4 w-4 mr-1" />
-              {S.duel.undo}
-            </Button>
-          </div>
-        )}
+        <ConfirmDialog
+          open={newSessionConfirmOpen}
+          title={S.duel.newSessionConfirmTitle}
+          message={S.duel.newSessionConfirmMessage}
+          confirmLabel={S.duel.newSessionConfirmButton}
+          onConfirm={() => {
+            setNewSessionConfirmOpen(false);
+            restartSession();
+          }}
+          onCancel={() => setNewSessionConfirmOpen(false)}
+        />
       </div>
     );
   }
@@ -276,6 +298,10 @@ function DuelSession({
       {list.sessionLength > 0 && (
         <Progress value={progress} className="h-2" />
       )}
+
+      <p className="sr-only" aria-live="polite" aria-atomic="true">
+        {S.duel.pairAnnouncement(duelCount + 1, itemA.name, itemB.name)}
+      </p>
 
       <div key={`${itemA.id}-${itemB.id}`} className="grid grid-cols-2 gap-3">
         <Card

@@ -130,6 +130,13 @@ export const S = {
     newSession: 'New session',
     undo: 'Undo last',
     undoAria: 'Undo last duel',
+    addItems: 'Add items',
+    pairAnnouncement: (round: number, a: string, b: string) =>
+      `Round ${round}: ${a} versus ${b}.`,
+    newSessionConfirmTitle: 'Start a new session?',
+    newSessionConfirmMessage:
+      'This clears the current session summary so you can duel again. Your scores and history are kept.',
+    newSessionConfirmButton: 'Start new session',
     noMorePairs: 'No more pairs available',
     backToRankings: 'Back to rankings',
     keyboardHint: '← / → to pick · T for tie · S to skip',
