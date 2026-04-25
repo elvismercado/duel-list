@@ -94,9 +94,8 @@ export default function ListSettings() {
     <div className="p-4 max-w-lg mx-auto space-y-6">
       <h1 className="text-2xl font-bold">{S.settings.titleList}</h1>
 
-      {/* List name (no group heading; sits above first group) */}
+      {/* List name (hero row, no group heading) */}
       <div className="space-y-2">
-        <label className="text-sm font-medium">{S.list.name}</label>
         {editingName ? (
           <div className="flex gap-2">
             <Input
@@ -113,6 +112,7 @@ export default function ListSettings() {
                 }
               }}
               autoFocus
+              className="text-2xl font-bold h-auto py-2"
             />
             <Button
               variant="outline"
@@ -125,18 +125,17 @@ export default function ListSettings() {
             </Button>
           </div>
         ) : (
-          <div className="flex items-center gap-2 rounded-md border bg-card px-3 py-2">
-            <span className="flex-1 truncate">{list.name}</span>
+          <>
+            <h2 className="text-3xl font-bold break-words">{list.name}</h2>
             <Button
-              variant="ghost"
-              size="icon"
-              className="h-7 w-7 min-h-[44px] min-w-[44px] shrink-0"
+              variant="outline"
+              size="sm"
               onClick={() => setEditingName(true)}
-              aria-label={S.common.editName}
             >
-              <Pencil className="h-4 w-4" />
+              <Pencil className="h-4 w-4 mr-1" />
+              {S.settings.renameButton}
             </Button>
-          </div>
+          </>
         )}
       </div>
 
@@ -237,6 +236,7 @@ export default function ListSettings() {
           </div>
           <FileLinkStatus status={deriveLinkStatus(supported, isSynced, needsRelink)} />
         </div>
+        <p className="text-xs text-muted-foreground">{S.settings.syncIntro}</p>
         {supported ? (
           isSynced ? (
             <div className="space-y-2">
@@ -275,7 +275,7 @@ export default function ListSettings() {
       <Separator />
 
       {/* ==================== Your data ==================== */}
-      <section aria-labelledby="group-data" className="space-y-3">
+      <section aria-labelledby="group-data" className="space-y-4">
         <h2
           id="group-data"
           className="text-sm font-semibold text-muted-foreground uppercase tracking-wide"
@@ -283,34 +283,52 @@ export default function ListSettings() {
           {S.settings.groupData}
         </h2>
 
-        <div className="flex gap-2 flex-wrap">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => exportList(list)}
-          >
-            <Download className="h-4 w-4 mr-1" />
-            {S.export.listButton}
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => exportHistory(list.id, list.name)}
-          >
-            <Download className="h-4 w-4 mr-1" />
-            {S.export.historyButton}
-          </Button>
+        {/* Export sub-group */}
+        <div className="space-y-2">
+          <h3 className="text-sm font-medium">{S.settings.subheadingExport}</h3>
+          <div className="space-y-2">
+            <Button
+              variant="outline"
+              className="w-full h-auto justify-start py-2 text-left"
+              onClick={() => exportList(list)}
+            >
+              <Download className="h-4 w-4 mr-2 shrink-0" />
+              <span className="flex flex-col items-start gap-0.5 min-w-0">
+                <span className="text-sm font-medium">{S.settings.exportListLabel}</span>
+                <span className="text-xs font-normal text-muted-foreground whitespace-normal">
+                  {S.settings.exportListDesc}
+                </span>
+              </span>
+            </Button>
+            <Button
+              variant="outline"
+              className="w-full h-auto justify-start py-2 text-left"
+              onClick={() => exportHistory(list.id, list.name)}
+            >
+              <Download className="h-4 w-4 mr-2 shrink-0" />
+              <span className="flex flex-col items-start gap-0.5 min-w-0">
+                <span className="text-sm font-medium">{S.settings.exportHistoryLabel}</span>
+                <span className="text-xs font-normal text-muted-foreground whitespace-normal">
+                  {S.settings.exportHistoryDesc}
+                </span>
+              </span>
+            </Button>
+          </div>
         </div>
 
+        {/* Recovery sub-group */}
         {removedItems.length > 0 && (
-          <Button
-            variant="outline"
-            className="w-full justify-start"
-            onClick={() => setRemovedOpen(true)}
-          >
-            <Archive className="h-4 w-4 mr-2" />
-            {S.settings.removedItemsButton(removedItems.length)}
-          </Button>
+          <div className="space-y-2">
+            <h3 className="text-sm font-medium">{S.settings.subheadingRecovery}</h3>
+            <Button
+              variant="outline"
+              className="w-full justify-start"
+              onClick={() => setRemovedOpen(true)}
+            >
+              <Archive className="h-4 w-4 mr-2" />
+              {S.settings.removedItemsButton(removedItems.length)}
+            </Button>
+          </div>
         )}
       </section>
 
