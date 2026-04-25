@@ -4,6 +4,10 @@ on:
   push:
     branches: [main]
   pull_request:
+  schedule:
+    # Mirror syncs every 3 hours; build 10 minutes after each sync.
+    - cron: '10 */3 * * *'
+  workflow_dispatch:
 
 jobs:
   build:
