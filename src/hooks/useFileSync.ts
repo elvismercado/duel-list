@@ -18,6 +18,21 @@ import { S } from '@/lib/strings';
 import { toast } from 'sonner';
 import type { ListConfig } from '@/types';
 
+/** Show a toast with a message tailored to the DOMException type. */
+function fileSyncErrorToast(err: unknown) {
+  if (err instanceof DOMException) {
+    switch (err.name) {
+      case 'NotAllowedError':
+        toast.error(S.toast.filePermissionDenied);
+        return;
+      case 'NotFoundError':
+        toast.error(S.toast.fileNotFound);
+        return;
+    }
+  }
+  toast.error(S.toast.fileGenericError);
+}
+
 interface FileSyncState {
   listHandle: FileSystemFileHandle | null;
   historyHandle: FileSystemFileHandle | null;
@@ -41,27 +56,31 @@ export function useFileSync(listId: string | undefined) {
     initRef.current = true;
 
     (async () => {
-      const handle = await getFileHandle(listId);
-      const histHandle = await getFileHandle(`${listId}:history`);
-      if (!handle) return;
+      try {
+        const handle = await getFileHandle(listId);
+        const histHandle = await getFileHandle(`${listId}:history`);
+        if (!handle) return;
 
-      const granted = await requestPermission(handle);
-      if (!granted) {
+        const granted = await requestPermission(handle);
+        if (!granted) {
+          setState((s) => ({ ...s, needsRelink: true }));
+          return;
+        }
+
+        let histOk = false;
+        if (histHandle) {
+          histOk = await requestPermission(histHandle);
+        }
+
+        setState({
+          listHandle: handle,
+          historyHandle: histOk ? histHandle : null,
+          isSynced: true,
+          needsRelink: false,
+        });
+      } catch {
         setState((s) => ({ ...s, needsRelink: true }));
-        return;
       }
-
-      let histOk = false;
-      if (histHandle) {
-        histOk = await requestPermission(histHandle);
-      }
-
-      setState({
-        listHandle: handle,
-        historyHandle: histOk ? histHandle : null,
-        isSynced: true,
-        needsRelink: false,
-      });
     })();
   }, [supported, listId]);
 
@@ -101,8 +120,8 @@ export function useFileSync(listId: string | undefined) {
           needsRelink: false,
         });
         toast.success(S.toast.fileLinkSuccess);
-      } catch {
-        toast.error(S.toast.fileLinkError);
+      } catch (err) {
+        fileSyncErrorToast(err);
       }
     },
     [supported, listId],
@@ -120,8 +139,8 @@ export function useFileSync(listId: string | undefined) {
         needsRelink: false,
       });
       toast.success(S.toast.fileUnlinkSuccess);
-    } catch {
-      toast.error(S.toast.fileLinkError);
+    } catch (err) {
+      fileSyncErrorToast(err);
     }
   }, [listId]);
 
@@ -131,9 +150,10 @@ export function useFileSync(listId: string | undefined) {
       try {
         const content = serializeMarkdown(list);
         await writeToFileHandle(state.listHandle, content);
-      } catch {
+      } catch (err) {
         // File may have been moved/deleted.mark as needing relink
         setState((s) => ({ ...s, isSynced: false, needsRelink: true }));
+        fileSyncErrorToast(err);
       }
     },
     [state.listHandle],
@@ -161,8 +181,12 @@ export function useFileSync(listId: string | undefined) {
       if (!result) return null;
       const list = parseMarkdown(result.content);
       return { list, handle: result.handle };
-    } catch {
-      toast.error(S.toast.fileLinkError);
+    } catch (err) {
+      if (err instanceof DOMException) {
+        fileSyncErrorToast(err);
+      } else {
+        toast.error(S.toast.fileParseError);
+      }
       return null;
     }
   }, [supported]);

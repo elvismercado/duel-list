@@ -649,8 +649,11 @@ export const S = {
 
   toast: {
     fileLinkSuccess: 'List linked to file.',
-    fileLinkError: 'Could not write to the file. Try linking again or pick a different file.',
     fileUnlinkSuccess: 'File unlinked.',
+    filePermissionDenied: 'Permission denied. Allow file access in your browser and try again.',
+    fileNotFound: 'The file was moved or deleted. Pick a new file to re-link.',
+    fileParseError: 'Could not read the file. Check that it\u2019s valid Markdown.',
+    fileGenericError: 'Something went wrong. Try again.',
     exportError: 'Export failed. Try again.',
   },
 } as const;
