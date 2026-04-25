@@ -218,3 +218,16 @@
 .animate-tie-pulse {
   animation: tie-pulse 0.5s ease-out;
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-winner-grow,
+  .animate-loser-shrink,
+  .animate-slide-in-up,
+  .animate-tie-pulse {
+    animation: none;
+  }
+  .animate-loser-shrink {
+    /* Preserve the dimmed end-state without the scale transition. */
+    opacity: 0.4;
+  }
+}

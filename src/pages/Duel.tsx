@@ -1,4 +1,4 @@
-import { useEffect, useCallback, useState, useRef } from 'react';
+import { useEffect, useCallback, useState, useRef, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router';
 import { S } from '@/lib/strings';
 import { useList } from '@/hooks/useList';
@@ -16,7 +16,7 @@ import { HelpHint } from '@/components/HelpHint';
 import { getSettings } from '@/lib/storage';
 import { triggerHaptic } from '@/lib/haptics';
 import { sortItemsByElo, getItemRank } from '@/lib/ranking';
-import { avatarBackground, avatarInitial } from '@/lib/avatar';
+import { avatarBackground, avatarInitial, isEmojiInitial } from '@/lib/avatar';
 import sessionCompleteImg from '@/assets/illustrations/session-complete.png';
 
 export default function Duel() {
@@ -92,8 +92,10 @@ function DuelSession({
   const [lastWinner, setLastWinner] = useState<string | null>(null);
   const [newSessionConfirmOpen, setNewSessionConfirmOpen] = useState(false);
   // Guards against rapid double-taps recording the same pair twice while
-  // the win/lose animation is still running.
+  // the win/lose animation is still running. Mirrored as state so the
+  // disabled prop on the choice buttons stays in sync.
   const processingRef = useRef(false);
+  const [processing, setProcessing] = useState(false);
 
   const progress =
     list.sessionLength > 0 ? (duelCount / list.sessionLength) * 100 : 0;
@@ -102,6 +104,7 @@ function DuelSession({
     (winner: import('@/types').Item | null) => {
       if (processingRef.current) return;
       processingRef.current = true;
+      setProcessing(true);
       triggerHaptic(winner ? 15 : 8);
       setLastWinner(winner?.id ?? 'tie');
       const updated = recordDuel(winner);
@@ -110,6 +113,7 @@ function DuelSession({
       setTimeout(() => {
         setLastWinner(null);
         processingRef.current = false;
+        setProcessing(false);
       }, 600);
     },
     [recordDuel, onReload],
@@ -140,6 +144,23 @@ function DuelSession({
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [isComplete, currentPair, handlePick, handleSkip, newSessionConfirmOpen]);
+
+  // Stable rank lookup so we can ground each card with `#N` when scores are
+  // hidden. Memoized so dialog open/close doesn't recompute. Declared
+  // before any conditional return so React's hook order stays stable when
+  // the session completes.
+  const sortedActive = useMemo(
+    () => sortItemsByElo(list.items.filter((i) => !i.removed)),
+    [list.items],
+  );
+  const rankA = useMemo(
+    () => (currentPair ? getItemRank(sortedActive, currentPair.itemA.id) : -1),
+    [sortedActive, currentPair],
+  );
+  const rankB = useMemo(
+    () => (currentPair ? getItemRank(sortedActive, currentPair.itemB.id) : -1),
+    [sortedActive, currentPair],
+  );
 
   if (isComplete) {
     const movers = biggestMovers();
@@ -283,12 +304,6 @@ function DuelSession({
   const duelMode = getSettings().duelMode;
   const showScores = list.showScoresDuringDuels === true;
 
-  // Stable rank lookup so we can ground each card with `#N` when scores are
-  // hidden. Cheap to recompute per pair on small lists.
-  const sortedActive = sortItemsByElo(list.items.filter((i) => !i.removed));
-  const rankA = getItemRank(sortedActive, itemA.id);
-  const rankB = getItemRank(sortedActive, itemB.id);
-
   const isFinalDuel =
     list.sessionLength > 0 && duelCount + 1 === list.sessionLength;
 
@@ -358,6 +373,7 @@ function DuelSession({
 
       <p className="sr-only" aria-live="polite" aria-atomic="true">
         {S.duel.pairAnnouncement(duelCount + 1, itemA.name, itemB.name)}
+        {isFinalDuel ? ` ${S.duel.finalDuelAnnouncement}` : ''}
       </p>
 
       <div key={`${itemA.id}-${itemB.id}`} className="grid grid-cols-2 gap-3">
@@ -369,43 +385,45 @@ function DuelSession({
           const isLoser =
             lastWinner && lastWinner !== 'tie' && lastWinner !== item.id;
           const isTie = lastWinner === 'tie';
+          const initial = avatarInitial(item.name);
+          const isEmoji = isEmojiInitial(initial);
           return (
             <Card
               key={item.id}
-              role="button"
-              tabIndex={0}
-              aria-label={S.duel.pickAria(item.name)}
-              style={{ touchAction: 'manipulation' }}
-              className={`cursor-pointer hover:border-primary focus-visible:ring-2 focus-visible:ring-ring transition-all ${
+              asChild
+              className={`cursor-pointer hover:border-primary focus-visible:ring-2 focus-visible:ring-ring transition-all disabled:cursor-default disabled:opacity-100 ${
                 isWinner ? 'animate-winner-grow' : ''
               }${isLoser ? ' animate-loser-shrink' : ''}${
                 isTie ? ' animate-tie-pulse' : ''
               }`}
-              onClick={() => handlePick(item)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault();
-                  handlePick(item);
-                }
-              }}
             >
-              <CardContent className="p-6 sm:p-8 text-center flex flex-col items-center gap-2">
-                <span
-                  className="inline-flex h-12 w-12 items-center justify-center rounded-full text-lg font-semibold text-white shadow-sm"
-                  style={{ backgroundColor: avatarBackground(item.id) }}
-                  aria-hidden="true"
-                >
-                  {avatarInitial(item.name)}
-                </span>
-                <p className="font-semibold text-lg leading-tight">{item.name}</p>
-                {showScores ? (
-                  <p className="text-xs text-muted-foreground">
-                    {S.duel.scoreSuffix(Math.round(item.eloScore))}
-                  </p>
-                ) : rank > 0 ? (
-                  <RankChip position={rank} />
-                ) : null}
-              </CardContent>
+              <button
+                type="button"
+                aria-label={S.duel.pickAria(item.name)}
+                style={{ touchAction: 'manipulation' }}
+                disabled={processing}
+                onClick={() => handlePick(item)}
+              >
+                <CardContent className="p-6 sm:p-8 text-center flex flex-col items-center gap-2">
+                  <span
+                    className={`inline-flex h-12 w-12 items-center justify-center rounded-full text-lg font-semibold shadow-sm ${
+                      isEmoji ? 'bg-muted text-foreground' : 'text-white'
+                    }`}
+                    style={isEmoji ? undefined : { backgroundColor: avatarBackground(item.id) }}
+                    aria-hidden="true"
+                  >
+                    {initial}
+                  </span>
+                  <p className="font-semibold text-lg leading-tight">{item.name}</p>
+                  {showScores ? (
+                    <p className="text-xs text-muted-foreground">
+                      {S.duel.scoreSuffix(Math.round(item.eloScore))}
+                    </p>
+                  ) : rank > 0 ? (
+                    <RankChip position={rank} />
+                  ) : null}
+                </CardContent>
+              </button>
             </Card>
           );
         })}

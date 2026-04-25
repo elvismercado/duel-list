@@ -134,6 +134,7 @@ export const S = {
     endSession: 'End session',
     endShort: 'End',
     finalDuel: 'Final duel',
+    finalDuelAnnouncement: 'Final duel of this session.',
     viewHistory: 'View history',
     needTwoItemsWithCount: (have: number, need: number) =>
       `You have ${have} ${have === 1 ? 'item' : 'items'}. Add ${need} more to start duelling.`,

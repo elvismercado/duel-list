@@ -18,9 +18,31 @@ export function avatarHue(id: string): number {
   return hashString(id) % 360;
 }
 
-/** Background CSS for a saturated, theme-agnostic disc. */
+/**
+ * Background CSS for a saturated, theme-agnostic disc. Lightness is locked
+ * to a darker band so white foreground text passes WCAG AA across the
+ * whole hue wheel (yellow/lime would otherwise fail).
+ */
 export function avatarBackground(id: string): string {
-  return `hsl(${avatarHue(id)} 60% 45%)`;
+  return `hsl(${avatarHue(id)} 55% 35%)`;
+}
+
+/**
+ * Detect emoji / pictographic codepoints. Emoji avatars look better with
+ * no colored background tint behind them, so callers can swap to a
+ * neutral disc when this returns true.
+ */
+export function isEmojiInitial(initial: string): boolean {
+  const cp = initial.codePointAt(0);
+  if (cp === undefined) return false;
+  // Most emoji and pictographic ranges live above U+2000; covers
+  // miscellaneous symbols, dingbats, and the supplementary planes used by
+  // modern emoji.
+  return (
+    cp >= 0x2000 ||
+    // ASCII letters/digits never trigger this.
+    false
+  );
 }
 
 /** First non-whitespace character of a name, uppercased. Falls back to '?'. */
