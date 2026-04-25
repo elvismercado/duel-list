@@ -219,6 +219,23 @@ export default function ListSettings() {
           )}
           <p className="text-xs text-muted-foreground">{S.settings.sessionLengthHelp}</p>
         </div>
+
+        {/* Show scores during duels */}
+        <div className="space-y-2">
+          <div className="flex items-center gap-1">
+            <label className="text-sm font-medium">{S.settings.showScoresDuringDuelsLabel}</label>
+          </div>
+          <ButtonGroup<string>
+            value={list.showScoresDuringDuels === true ? 'show' : 'hide'}
+            onChange={(v) => save({ ...list!, showScoresDuringDuels: v === 'show' })}
+            ariaLabel={S.settings.showScoresDuringDuelsLabel}
+            options={[
+              { value: 'hide', label: S.settings.showScoresHide },
+              { value: 'show', label: S.settings.showScoresShow },
+            ]}
+          />
+          <p className="text-xs text-muted-foreground">{S.settings.showScoresDuringDuelsDesc}</p>
+        </div>
       </section>
 
       <Separator />

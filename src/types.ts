@@ -32,6 +32,8 @@ export interface ListConfig {
   items: Item[];
   /** Display mode for ranked items: rank position (default) or ELO score. */
   displayMode?: 'rank' | 'elo';
+  /** When true, item scores are shown on the duel cards. Default false (hidden). */
+  showScoresDuringDuels?: boolean;
   /** Sort order applied to the rankings list view. */
   sortMode?: SortMode;
 }
@@ -58,6 +60,8 @@ export interface AppSettings {
   defaultKFactor: number;
   /** Default sessionLength (0 = unlimited) applied to newly created or imported lists. */
   defaultSessionLength: number;
+  /** Default value for `ListConfig.showScoresDuringDuels` on newly created lists. */
+  defaultShowScoresDuringDuels: boolean;
 }
 
 export type ReminderCadence =

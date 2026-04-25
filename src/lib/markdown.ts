@@ -18,6 +18,8 @@ export function parseMarkdown(raw: string): ListConfig {
   const settings = getSettings();
   const sessionLength = frontmatter.sessionLength ?? settings.defaultSessionLength;
   const kFactor = frontmatter.kFactor ?? settings.defaultKFactor;
+  const showScoresDuringDuels =
+    frontmatter.showScoresDuringDuels ?? settings.defaultShowScoresDuringDuels;
   const created = frontmatter.created ?? formatLocalDate();
 
   const { active, removed } = parseItems(content);
@@ -32,6 +34,7 @@ export function parseMarkdown(raw: string): ListConfig {
     name,
     sessionLength,
     kFactor,
+    showScoresDuringDuels,
     created,
     items: [...active, ...removed],
     ...(frontmatter.sortMode ? { sortMode: frontmatter.sortMode } : {}),
@@ -84,6 +87,7 @@ interface ParsedFrontmatter {
   name?: string;
   sessionLength?: number;
   kFactor?: number;
+  showScoresDuringDuels?: boolean;
   created?: string;
   sortMode?: SortMode;
 }
@@ -112,6 +116,10 @@ function parseFrontmatter(yaml: string): ParsedFrontmatter {
         : undefined,
     kFactor:
       typeof obj.k_factor === 'number' ? obj.k_factor : undefined,
+    showScoresDuringDuels:
+      typeof obj.show_scores_during_duels === 'boolean'
+        ? obj.show_scores_during_duels
+        : undefined,
     created: typeof obj.created === 'string' ? obj.created : undefined,
     sortMode:
       typeof sortRaw === 'string' && (SORT_MODES as string[]).includes(sortRaw)
@@ -126,6 +134,7 @@ function stringifyFrontmatter(config: ListConfig): string {
     name: config.name,
     session_length: config.sessionLength,
     k_factor: config.kFactor,
+    show_scores_during_duels: config.showScoresDuringDuels === true,
     created: config.created,
   };
   if (config.sortMode) {

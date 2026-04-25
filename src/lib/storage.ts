@@ -128,16 +128,16 @@ export function deleteList(listId: string): void {
  * Returns the number of lists updated.
  */
 export function applyDefaultToAllLists(
-  field: 'kFactor' | 'sessionLength',
-  value: number,
+  field: 'kFactor' | 'sessionLength' | 'showScoresDuringDuels',
+  value: number | boolean,
 ): number {
   const entries = getAllLists();
   let count = 0;
   for (const e of entries) {
     const list = getList(e.id);
     if (!list) continue;
-    if (list[field] === value) continue;
-    list[field] = value;
+    if ((list as unknown as Record<string, unknown>)[field] === value) continue;
+    (list as unknown as Record<string, unknown>)[field] = value;
     localStorage.setItem(listKey(list.id), JSON.stringify(list));
     count++;
   }
@@ -233,6 +233,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   reminders: DEFAULT_REMINDERS,
   defaultKFactor: 32,
   defaultSessionLength: 10,
+  defaultShowScoresDuringDuels: false,
 };
 
 // Migrate legacy homeSortOrder values to the new field+direction shape.

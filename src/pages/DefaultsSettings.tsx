@@ -22,7 +22,7 @@ import { HelpHint } from '@/components/HelpHint';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { SESSION_PRESETS } from '@/lib/constants';
 
-type ConfirmKind = 'kFactor' | 'sessionLength' | null;
+type ConfirmKind = 'kFactor' | 'sessionLength' | 'showScores' | null;
 
 function kFactorLabel(value: number): string {
   if (value === 48) return S.settings.kFactorQuick;
@@ -52,7 +52,23 @@ export default function DefaultsSettingsPage() {
     setSettings(getSettings());
   }
 
-  function handleApply(field: 'kFactor' | 'sessionLength') {
+  function handleShowScoresChange(value: 'show' | 'hide') {
+    updateSettings({ defaultShowScoresDuringDuels: value === 'show' });
+    setSettings(getSettings());
+  }
+
+  function handleApply(field: 'kFactor' | 'sessionLength' | 'showScores') {
+    if (field === 'showScores') {
+      const value = settings.defaultShowScoresDuringDuels;
+      const count = applyDefaultToAllLists('showScoresDuringDuels', value);
+      setConfirm(null);
+      if (count === 0) {
+        toast.info(S.settings.applyNoChange);
+      } else {
+        toast.success(S.settings.applySuccess(count));
+      }
+      return;
+    }
     const value =
       field === 'kFactor'
         ? settings.defaultKFactor
@@ -69,7 +85,9 @@ export default function DefaultsSettingsPage() {
   const confirmTitle =
     confirm === 'kFactor'
       ? S.settings.applyKFactorConfirmTitle
-      : S.settings.applySessionConfirmTitle;
+      : confirm === 'sessionLength'
+        ? S.settings.applySessionConfirmTitle
+        : S.settings.applyShowScoresConfirmTitle;
   const confirmMessage =
     confirm === 'kFactor'
       ? S.settings.applyKFactorConfirmMessage(
@@ -81,7 +99,14 @@ export default function DefaultsSettingsPage() {
             sessionLengthLabel(settings.defaultSessionLength),
             listCount,
           )
-        : '';
+        : confirm === 'showScores'
+          ? S.settings.applyShowScoresConfirmMessage(
+              settings.defaultShowScoresDuringDuels
+                ? S.settings.showScoresShow
+                : S.settings.showScoresHide,
+              listCount,
+            )
+          : '';
 
   return (
     <div className="p-4 max-w-lg mx-auto space-y-6">
@@ -186,6 +211,34 @@ export default function DefaultsSettingsPage() {
             variant="outline"
             size="sm"
             onClick={() => setConfirm('sessionLength')}
+          >
+            {S.settings.applyToAllLists}
+          </Button>
+        )}
+      </div>
+
+      <Separator />
+
+      {/* Default Show scores during duels */}
+      <div className="space-y-2">
+        <div className="flex items-center gap-1">
+          <label className="text-sm font-medium">{S.settings.defaultShowScoresDuringDuelsLabel}</label>
+        </div>
+        <ButtonGroup<string>
+          value={settings.defaultShowScoresDuringDuels ? 'show' : 'hide'}
+          onChange={(v) => handleShowScoresChange(v as 'show' | 'hide')}
+          ariaLabel={S.settings.defaultShowScoresDuringDuelsLabel}
+          options={[
+            { value: 'hide', label: S.settings.showScoresHide },
+            { value: 'show', label: S.settings.showScoresShow },
+          ]}
+        />
+        <p className="text-xs text-muted-foreground">{S.settings.defaultShowScoresDuringDuelsDesc}</p>
+        {listCount > 0 && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setConfirm('showScores')}
           >
             {S.settings.applyToAllLists}
           </Button>

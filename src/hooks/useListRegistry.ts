@@ -109,6 +109,7 @@ export function useListRegistry() {
         name,
         kFactor,
         sessionLength,
+        showScoresDuringDuels: getSettings().defaultShowScoresDuringDuels,
         created: today,
         items,
       };

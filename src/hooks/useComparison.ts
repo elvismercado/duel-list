@@ -1,9 +1,15 @@
 import { useState, useCallback, useRef } from 'react';
 import type { DuelRecord, Item, ListConfig } from '@/types';
 import { calculateEloChange, sortItemsByElo, captureSessionSnapshot, calculateBiggestMovers } from '@/lib/ranking';
-import { appendDuelToHistory, createDuelRecord, parseRecentPairs, createPairKey } from '@/lib/history';
+import {
+  appendDuelToHistory,
+  createDuelRecord,
+  parseRecentPairs,
+  createPairKey,
+  removeLastDuelFromHistory,
+} from '@/lib/history';
 import { selectNextPair } from '@/lib/pairing';
-import { getHistory, saveList } from '@/lib/storage';
+import { getHistory, saveHistory, saveList } from '@/lib/storage';
 
 interface SessionState {
   duelCount: number;
@@ -13,8 +19,19 @@ interface SessionState {
   prevRankMap: Map<string, number>;
 }
 
+interface UndoSnapshot {
+  pair: { itemA: Item; itemB: Item };
+  itemAEloBefore: number;
+  itemBEloBefore: number;
+  itemACountBefore: number;
+  itemBCountBefore: number;
+  duelRecord: DuelRecord;
+  wasComplete: boolean;
+}
+
 export function useComparison(list: ListConfig, onDuel?: (list: ListConfig) => void) {
   const recentSkips = useRef(new Map<string, number>());
+  const [lastSnapshot, setLastSnapshot] = useState<UndoSnapshot | null>(null);
 
   const initSession = useCallback((): SessionState => {
     const active = list.items.filter((i) => !i.removed);
@@ -55,6 +72,17 @@ export function useComparison(list: ListConfig, onDuel?: (list: ListConfig) => v
     (winner: Item | null) => {
       if (!session.currentPair) return;
       const { itemA, itemB } = session.currentPair;
+
+      // Snapshot pre-state for single-step undo.
+      setLastSnapshot({
+        pair: { itemA, itemB },
+        itemAEloBefore: itemA.eloScore,
+        itemBEloBefore: itemB.eloScore,
+        itemACountBefore: itemA.comparisonCount,
+        itemBCountBefore: itemB.comparisonCount,
+        duelRecord: createDuelRecord(itemA, itemB, winner, Date.now()),
+        wasComplete: session.isComplete,
+      });
 
       // Calculate ELO
       const aIsWinner = winner?.id === itemA.id;
@@ -136,8 +164,48 @@ export function useComparison(list: ListConfig, onDuel?: (list: ListConfig) => v
   }, [session, list]);
 
   const restartSession = useCallback(() => {
+    setLastSnapshot(null);
     setSession(initSession());
   }, [initSession]);
+
+  const undoLast = useCallback(() => {
+    if (!lastSnapshot) return;
+    const { pair, itemAEloBefore, itemBEloBefore, itemACountBefore, itemBCountBefore } = lastSnapshot;
+
+    // Restore the two items in the list.
+    const restoredItems = list.items.map((item) => {
+      if (item.id === pair.itemA.id) {
+        return { ...item, eloScore: itemAEloBefore, comparisonCount: itemACountBefore };
+      }
+      if (item.id === pair.itemB.id) {
+        return { ...item, eloScore: itemBEloBefore, comparisonCount: itemBCountBefore };
+      }
+      return item;
+    });
+    const restoredList = { ...list, items: restoredItems };
+    saveList(restoredList);
+
+    // Rewrite history without the last entry.
+    const current = getHistory(list.id);
+    const rolledBack = removeLastDuelFromHistory(current);
+    saveHistory(list.id, rolledBack);
+
+    onDuel?.(restoredList);
+
+    // Rewind session state and restore the original pair.
+    setSession((prev) => ({
+      ...prev,
+      duelCount: Math.max(0, prev.duelCount - 1),
+      duelRecords: prev.duelRecords.slice(0, -1),
+      currentPair: {
+        itemA: restoredItems.find((i) => i.id === pair.itemA.id)!,
+        itemB: restoredItems.find((i) => i.id === pair.itemB.id)!,
+      },
+      isComplete: false,
+    }));
+
+    setLastSnapshot(null);
+  }, [list, onDuel, lastSnapshot]);
 
   const biggestMovers = useCallback(() => {
     const active = list.items.filter((i) => !i.removed);
@@ -156,5 +224,7 @@ export function useComparison(list: ListConfig, onDuel?: (list: ListConfig) => v
     restartSession,
     biggestMovers,
     topThree,
+    undoLast,
+    canUndo: lastSnapshot !== null,
   };
 }

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { motion, useMotionValue, useTransform, type PanInfo } from 'framer-motion';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Equal, SkipForward } from 'lucide-react';
+import { Equal, SkipForward, Undo2 } from 'lucide-react';
 import { S } from '@/lib/strings';
 import { Progress } from '@/components/ui/progress';
 import type { Item } from '@/types';
@@ -12,21 +12,23 @@ interface SwipeModeProps {
   itemB: Item;
   duelCount: number;
   sessionLength: number;
-  showElo: boolean;
+  showScores: boolean;
   onPick: (winner: Item | null) => void;
   onSkip: () => void;
+  canUndo?: boolean;
+  onUndo?: () => void;
 }
 
 const SWIPE_THRESHOLD = 80;
 
 interface SwipeCardProps {
   item: Item;
-  showElo: boolean;
+  showScores: boolean;
   onPick: () => void;
   exiting: boolean;
 }
 
-function SwipeCard({ item, showElo, onPick, exiting }: SwipeCardProps) {
+function SwipeCard({ item, showScores, onPick, exiting }: SwipeCardProps) {
   const x = useMotionValue(0);
   const y = useMotionValue(0);
   const upHint = useTransform(y, [-120, -40, 0], [1, 0.4, 0]);
@@ -67,7 +69,7 @@ function SwipeCard({ item, showElo, onPick, exiting }: SwipeCardProps) {
       >
         <CardContent className="h-full flex flex-col items-center justify-center p-4 text-center relative">
           <p className="font-semibold text-base sm:text-lg">{item.name}</p>
-          {showElo && (
+          {showScores && (
             <p className="text-xs text-muted-foreground mt-1">
               {S.duel.scoreSuffix(Math.round(item.eloScore))}
             </p>
@@ -89,9 +91,11 @@ export function SwipeMode({
   itemB,
   duelCount,
   sessionLength,
-  showElo,
+  showScores,
   onPick,
   onSkip,
+  canUndo,
+  onUndo,
 }: SwipeModeProps) {
   const [exiting, setExiting] = useState<'a' | 'b' | null>(null);
 
@@ -111,15 +115,29 @@ export function SwipeMode({
     <div className="p-4 max-w-lg mx-auto space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-lg font-semibold">{S.duel.swipeUpToPick}</h1>
-        {sessionLength > 0 && (
-          <span
-            className="text-sm text-muted-foreground tabular-nums"
-            aria-live="polite"
-            aria-atomic="true"
-          >
-            {duelCount}/{sessionLength}
-          </span>
-        )}
+        <div className="flex items-center gap-2 shrink-0">
+          {canUndo && onUndo && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onUndo}
+              aria-label={S.duel.undoAria}
+              className="h-8 px-2"
+            >
+              <Undo2 className="h-4 w-4" />
+              <span className="sr-only">{S.duel.undo}</span>
+            </Button>
+          )}
+          {sessionLength > 0 && (
+            <span
+              className="text-sm text-muted-foreground tabular-nums"
+              aria-live="polite"
+              aria-atomic="true"
+            >
+              {duelCount}/{sessionLength}
+            </span>
+          )}
+        </div>
       </div>
 
       {sessionLength > 0 && (
@@ -129,13 +147,13 @@ export function SwipeMode({
       <div className="grid grid-cols-2 gap-3">
         <SwipeCard
           item={itemA}
-          showElo={showElo}
+          showScores={showScores}
           onPick={handlePickA}
           exiting={exiting === 'a'}
         />
         <SwipeCard
           item={itemB}
-          showElo={showElo}
+          showScores={showScores}
           onPick={handlePickB}
           exiting={exiting === 'b'}
         />

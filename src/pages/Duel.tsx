@@ -8,11 +8,12 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { SkipForward, Equal, Trophy, TrendingUp, TrendingDown, ArrowLeft } from 'lucide-react';
+import { SkipForward, Equal, TrendingUp, TrendingDown, ArrowLeft, Undo2 } from 'lucide-react';
 import { SwipeMode } from '@/components/SwipeMode';
 import { RankChip } from '@/components/RankChip';
 import { HelpHint } from '@/components/HelpHint';
 import { getSettings } from '@/lib/storage';
+import { triggerHaptic } from '@/lib/haptics';
 import sessionCompleteImg from '@/assets/illustrations/session-complete.png';
 
 export default function Duel() {
@@ -70,6 +71,8 @@ function DuelSession({
     restartSession,
     biggestMovers,
     topThree,
+    undoLast,
+    canUndo,
   } = useComparison(list, onDuel);
 
   const [lastWinner, setLastWinner] = useState<string | null>(null);
@@ -79,6 +82,7 @@ function DuelSession({
 
   const handlePick = useCallback(
     (winner: import('@/types').Item | null) => {
+      triggerHaptic(winner ? 15 : 8);
       setLastWinner(winner?.id ?? 'tie');
       const updated = recordDuel(winner);
       if (updated) onReload();
@@ -87,6 +91,11 @@ function DuelSession({
     },
     [recordDuel, onReload],
   );
+
+  const handleSkip = useCallback(() => {
+    triggerHaptic(8);
+    skipPair();
+  }, [skipPair]);
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -99,26 +108,25 @@ function DuelSession({
       } else if (e.key === 't' || e.key === 'T') {
         handlePick(null);
       } else if (e.key === 's' || e.key === 'S') {
-        skipPair();
+        handleSkip();
       }
     }
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [isComplete, currentPair, handlePick, skipPair]);
+  }, [isComplete, currentPair, handlePick, handleSkip]);
 
   if (isComplete) {
     const movers = biggestMovers();
     const top = topThree();
     return (
       <div className="p-4 max-w-lg mx-auto space-y-6" aria-live="polite">
-        <div className="text-center space-y-2">
+        <div className="text-center space-y-2 animate-slide-in-up">
           <img
             src={sessionCompleteImg}
             alt=""
             aria-hidden="true"
             className="max-w-[220px] mx-auto opacity-90"
           />
-          <Trophy className="h-10 w-10 mx-auto text-podium-gold" />
           <h1 className="text-2xl font-bold">{S.duel.sessionComplete}</h1>
           <p className="text-muted-foreground">
             {S.duel.duelsCompleted(duelCount)}
@@ -187,6 +195,20 @@ function DuelSession({
             {S.duel.newSession}
           </Button>
         </div>
+
+        {canUndo && (
+          <div className="flex justify-center">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={undoLast}
+              aria-label={S.duel.undoAria}
+            >
+              <Undo2 className="h-4 w-4 mr-1" />
+              {S.duel.undo}
+            </Button>
+          </div>
+        )}
       </div>
     );
   }
@@ -204,6 +226,7 @@ function DuelSession({
 
   const { itemA, itemB } = currentPair;
   const duelMode = getSettings().duelMode;
+  const showScores = list.showScoresDuringDuels === true;
 
   if (duelMode === 'swipe') {
     return (
@@ -213,9 +236,11 @@ function DuelSession({
         itemB={itemB}
         duelCount={duelCount}
         sessionLength={list.sessionLength}
-        showElo={(list.displayMode ?? 'rank') === 'elo'}
+        showScores={list.showScoresDuringDuels === true}
         onPick={handlePick}
-        onSkip={skipPair}
+        onSkip={handleSkip}
+        canUndo={canUndo}
+        onUndo={undoLast}
       />
     );
   }
@@ -224,21 +249,35 @@ function DuelSession({
     <div className="p-4 max-w-lg mx-auto space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-lg font-semibold truncate">{list.name}</h1>
-        {list.sessionLength > 0 && (
-          <span className="inline-flex items-center gap-1 text-sm text-muted-foreground tabular-nums">
-            <span aria-live="polite" aria-atomic="true">
-              {duelCount}/{list.sessionLength}
+        <div className="flex items-center gap-2 shrink-0">
+          {canUndo && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={undoLast}
+              aria-label={S.duel.undoAria}
+              className="h-8 px-2"
+            >
+              <Undo2 className="h-4 w-4" />
+              <span className="sr-only">{S.duel.undo}</span>
+            </Button>
+          )}
+          {list.sessionLength > 0 && (
+            <span className="inline-flex items-center gap-1 text-sm text-muted-foreground tabular-nums">
+              <span aria-live="polite" aria-atomic="true">
+                {duelCount}/{list.sessionLength}
+              </span>
+              <HelpHint anchor="session" term={S.glossary.termSessionLabel} />
             </span>
-            <HelpHint anchor="session" term={S.glossary.termSessionLabel} />
-          </span>
-        )}
+          )}
+        </div>
       </div>
 
       {list.sessionLength > 0 && (
         <Progress value={progress} className="h-2" />
       )}
 
-      <div className="grid grid-cols-2 gap-3">
+      <div key={`${itemA.id}-${itemB.id}`} className="grid grid-cols-2 gap-3">
         <Card
           role="button"
           tabIndex={0}
@@ -251,9 +290,11 @@ function DuelSession({
         >
           <CardContent className="p-6 text-center">
             <p className="font-semibold text-lg">{itemA.name}</p>
-            <p className="text-xs text-muted-foreground mt-1">
-              {S.duel.scoreSuffix(Math.round(itemA.eloScore))}
-            </p>
+            {showScores && (
+              <p className="text-xs text-muted-foreground mt-1">
+                {S.duel.scoreSuffix(Math.round(itemA.eloScore))}
+              </p>
+            )}
           </CardContent>
         </Card>
 
@@ -269,9 +310,11 @@ function DuelSession({
         >
           <CardContent className="p-6 text-center">
             <p className="font-semibold text-lg">{itemB.name}</p>
-            <p className="text-xs text-muted-foreground mt-1">
-              {S.duel.scoreSuffix(Math.round(itemB.eloScore))}
-            </p>
+            {showScores && (
+              <p className="text-xs text-muted-foreground mt-1">
+                {S.duel.scoreSuffix(Math.round(itemB.eloScore))}
+              </p>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -281,7 +324,7 @@ function DuelSession({
           <Equal className="h-4 w-4 mr-1" />
           {S.duel.tie}
         </Button>
-        <Button variant="ghost" size="sm" onClick={skipPair}>
+        <Button variant="ghost" size="sm" onClick={handleSkip}>
           <SkipForward className="h-4 w-4 mr-1" />
           {S.duel.skip}
         </Button>
