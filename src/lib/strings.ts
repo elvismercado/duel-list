@@ -458,6 +458,23 @@ export const S = {
     sessionLengthUnlimited: 'Unlimited',
     sessionLengthCustom: 'Custom',
     sessionLengthHelp: 'How many duels per sitting. Pick a preset or type your own.',
+    defaultsHeading: 'New list defaults',
+    defaultsOpenLink: 'Configure new list defaults',
+    defaultsTitle: 'New list defaults',
+    defaultsSubtitle: 'These values are used when you create a new list or import one without these settings.',
+    defaultsKFactorHelp: 'Default Ranking speed used when creating a new list. You can still change it per list.',
+    defaultsSessionHelp: 'Default Session length used when creating a new list. You can still change it per list.',
+    applyToAllLists: 'Apply to all existing lists',
+    applyKFactorConfirmTitle: 'Update Ranking speed for all lists?',
+    applyKFactorConfirmMessage: (label: string, count: number) =>
+      `Set Ranking speed to ${label} for all ${count} ${count === 1 ? 'list' : 'lists'}. Per-list overrides will be replaced. This cannot be undone.`,
+    applySessionConfirmTitle: 'Update Session length for all lists?',
+    applySessionConfirmMessage: (label: string, count: number) =>
+      `Set Session length to ${label} for all ${count} ${count === 1 ? 'list' : 'lists'}. Per-list overrides will be replaced. This cannot be undone.`,
+    applyConfirmButton: 'Apply to all',
+    applySuccess: (count: number) =>
+      `Updated ${count} ${count === 1 ? 'list' : 'lists'}.`,
+    applyNoChange: 'All lists already use this value.',
     themeLabel: 'Theme',
     themeSystem: 'System',
     themeLight: 'Light',

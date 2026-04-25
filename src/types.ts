@@ -54,6 +54,10 @@ export interface AppSettings {
   duelMode: 'side-by-side' | 'swipe';
   timeFormat: '12h' | '24h';
   reminders: ReminderSettings;
+  /** Default kFactor (16, 32, 48) applied to newly created or imported lists. */
+  defaultKFactor: number;
+  /** Default sessionLength (0 = unlimited) applied to newly created or imported lists. */
+  defaultSessionLength: number;
 }
 
 export type ReminderCadence =

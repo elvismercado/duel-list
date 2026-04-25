@@ -20,6 +20,7 @@ import { SAMPLE_KEYS, getSampleList } from '@/lib/samples';
 import { ButtonGroup } from '@/components/ui/button-group';
 import { HelpHint } from '@/components/HelpHint';
 import { SESSION_PRESETS } from '@/lib/constants';
+import { getSettings } from '@/lib/storage';
 
 interface ListCreateDialogProps {
   open: boolean;
@@ -38,13 +39,14 @@ export function ListCreateDialog({
   onCreate,
 }: ListCreateDialogProps) {
   const [name, setName] = useState('');
-  const [kFactor, setKFactor] = useState('32');
-  const [sessionLength, setSessionLength] = useState(10);
+  const [kFactor, setKFactor] = useState(() => String(getSettings().defaultKFactor));
+  const [sessionLength, setSessionLength] = useState(() => getSettings().defaultSessionLength);
 
   function reset() {
+    const s = getSettings();
     setName('');
-    setKFactor('32');
-    setSessionLength(10);
+    setKFactor(String(s.defaultKFactor));
+    setSessionLength(s.defaultSessionLength);
   }
 
   function handleSubmit(e: React.FormEvent) {
@@ -59,10 +61,11 @@ export function ListCreateDialog({
   function handleQuickStart(key: string) {
     const sample = getSampleList(key);
     if (!sample) return;
+    const s = getSettings();
     onCreate(
       sample.name,
-      32,
-      10,
+      s.defaultKFactor,
+      s.defaultSessionLength,
       sample.items.map((i) => i.name),
     );
     reset();

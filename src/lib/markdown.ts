@@ -1,6 +1,7 @@
 import { parse as yamlParse, stringify as yamlStringify } from 'yaml';
 import type { Item, ListConfig, SortMode } from '@/types';
 import { formatLocalDate } from '@/lib/datetime';
+import { getSettings } from '@/lib/storage';
 
 // ---------------------------------------------------------------------------
 // Public API
@@ -14,8 +15,9 @@ export function parseMarkdown(raw: string): ListConfig {
 
   const name = frontmatter.name ?? heading ?? 'Untitled List';
   const id = frontmatter.id ?? generateShortId();
-  const sessionLength = frontmatter.sessionLength ?? 10;
-  const kFactor = frontmatter.kFactor ?? 32;
+  const settings = getSettings();
+  const sessionLength = frontmatter.sessionLength ?? settings.defaultSessionLength;
+  const kFactor = frontmatter.kFactor ?? settings.defaultKFactor;
   const created = frontmatter.created ?? formatLocalDate();
 
   const { active, removed } = parseItems(content);

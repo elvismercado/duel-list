@@ -18,6 +18,7 @@ const ListSettings = lazy(() => import('@/pages/ListSettings'));
 const History = lazy(() => import('@/pages/History'));
 const AppSettings = lazy(() => import('@/pages/AppSettings'));
 const RemindersSettings = lazy(() => import('@/pages/RemindersSettings'));
+const DefaultsSettings = lazy(() => import('@/pages/DefaultsSettings'));
 const Glossary = lazy(() => import('@/pages/Glossary'));
 const Features = lazy(() => import('@/pages/Features'));
 const ItemDetail = lazy(() => import('@/pages/ItemDetail'));
@@ -41,6 +42,7 @@ const router = createBrowserRouter([
       { path: '/list/:id/item/:itemId', element: withSuspense(<ItemDetail />) },
       { path: '/settings', element: withSuspense(<AppSettings />) },
       { path: '/settings/reminders', element: withSuspense(<RemindersSettings />) },
+      { path: '/settings/defaults', element: withSuspense(<DefaultsSettings />) },
       { path: '/settings/glossary', element: withSuspense(<Glossary />) },
       { path: '/features', element: withSuspense(<Features />) },
       { path: '*', element: withSuspense(<NotFound />) },

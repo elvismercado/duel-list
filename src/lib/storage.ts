@@ -122,6 +122,28 @@ export function deleteList(listId: string): void {
   deleteFileHandle(listId).catch(() => {});
 }
 
+/**
+ * Apply a single field value to every list. Bypasses the registry update so
+ * `lastOpened` is not bumped (which would reorder Home in "Recent" sort).
+ * Returns the number of lists updated.
+ */
+export function applyDefaultToAllLists(
+  field: 'kFactor' | 'sessionLength',
+  value: number,
+): number {
+  const entries = getAllLists();
+  let count = 0;
+  for (const e of entries) {
+    const list = getList(e.id);
+    if (!list) continue;
+    if (list[field] === value) continue;
+    list[field] = value;
+    localStorage.setItem(listKey(list.id), JSON.stringify(list));
+    count++;
+  }
+  return count;
+}
+
 // ---------------------------------------------------------------------------
 // History (raw markdown strings)
 // ---------------------------------------------------------------------------
@@ -209,6 +231,8 @@ const DEFAULT_SETTINGS: AppSettings = {
   duelMode: 'side-by-side',
   timeFormat: '24h',
   reminders: DEFAULT_REMINDERS,
+  defaultKFactor: 32,
+  defaultSessionLength: 10,
 };
 
 // Migrate legacy homeSortOrder values to the new field+direction shape.

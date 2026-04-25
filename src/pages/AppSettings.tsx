@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/select';
 import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
-import { Download, Sparkles, Compass, Bell, HelpCircle } from 'lucide-react';
+import { Download, Sparkles, Compass, Bell, HelpCircle, Sliders } from 'lucide-react';
 import { useState } from 'react';
 import { Link } from 'react-router';
 import type { AppSettings, CustomCadenceUnit, ReminderSettings } from '@/types';
@@ -170,6 +170,23 @@ export default function AppSettingsPage() {
             {S.export.exportAppData}
           </Button>
         </div>
+      </div>
+
+      <Separator />
+
+      {/* New list defaults nav card */}
+      <div className="space-y-2">
+        <h2 className="text-sm font-semibold text-muted-foreground">
+          {S.settings.defaultsHeading}
+        </h2>
+        <Button asChild variant="outline" className="w-full justify-between">
+          <Link to="/settings/defaults">
+            <span className="flex items-center gap-2">
+              <Sliders className="h-4 w-4" />
+              {S.settings.defaultsOpenLink}
+            </span>
+          </Link>
+        </Button>
       </div>
 
       <Separator />
