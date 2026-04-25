@@ -24,6 +24,8 @@ import {
 import { Undo2, Download, Trash2, Link, Unlink, Pencil, Check, Archive } from 'lucide-react';
 import { HelpHint } from '@/components/HelpHint';
 import { ButtonGroup } from '@/components/ui/button-group';
+import { FileLinkStatus } from '@/components/FileLinkStatus';
+import { deriveLinkStatus } from '@/hooks/useFileSync';
 import { SESSION_PRESETS } from '@/lib/constants';
 
 export default function ListSettings() {
@@ -211,11 +213,14 @@ export default function ListSettings() {
 
       {/* File Sync */}
       <div className="space-y-2">
-        <div className="flex items-center gap-1">
-          <h2 className="text-sm font-semibold text-muted-foreground">
-            {S.settings.fileSyncHeading}
-          </h2>
-          <HelpHint anchor="file-link" term={S.glossary.sectionFileLink} />
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1">
+            <h2 className="text-sm font-semibold text-muted-foreground">
+              {S.settings.fileSyncHeading}
+            </h2>
+            <HelpHint anchor="file-link" term={S.glossary.sectionFileLink} />
+          </div>
+          <FileLinkStatus status={deriveLinkStatus(supported, isSynced, needsRelink)} />
         </div>
         {supported ? (
           isSynced ? (
