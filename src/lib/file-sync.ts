@@ -80,6 +80,17 @@ export async function requestPermission(
 }
 
 /**
+ * Check permission without showing a browser dialog.
+ * Returns the raw PermissionState ('granted' | 'denied' | 'prompt').
+ */
+export async function queryPermissionSilently(
+  handle: FileSystemFileHandle,
+  mode: FileSystemPermissionMode = 'readwrite',
+): Promise<PermissionState> {
+  return handle.queryPermission({ mode });
+}
+
+/**
  * Create a companion file handle via save picker.
  * Used to auto-create the `.duellist.md` history file alongside the list file.
  */

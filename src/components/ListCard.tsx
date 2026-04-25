@@ -10,6 +10,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { S } from '@/lib/strings';
 import { RankChip } from '@/components/RankChip';
 import { FileLinkStatus } from '@/components/FileLinkStatus';
+import type { LinkStatus } from '@/hooks/useFileSync';
 
 interface ListCardProps {
   entry: ListEntry;
@@ -17,9 +18,7 @@ interface ListCardProps {
   reorderMode?: boolean;
   onMoveUp?: () => void;
   onMoveDown?: () => void;
-  isLinked?: boolean;
-  /** When true, render a status chip (linked / not linked) in the title row. */
-  showLinkStatus?: boolean;
+  linkStatus?: LinkStatus;
 }
 
 function formatRelativeTime(ts: number | null): string {
@@ -86,15 +85,19 @@ const ACTIVITY_ARIA: Record<ActivityBucket, string> = {
  */
 export function buildListCardHaystack(
   entry: ListEntry,
-  opts: { isLinked: boolean; showLinkStatus: boolean },
+  opts: { linkStatus?: LinkStatus },
 ): string {
   const list = getList(entry.id);
   const activeCount = list?.items.filter((i) => !i.removed).length ?? 0;
   const duels = getDuelCountFromHistory(getHistory(entry.id));
   const activity = getActivityBucket(entry.lastDuelAt ?? null, entry.lastOpened);
-  const linkLabel = opts.showLinkStatus
-    ? (opts.isLinked ? S.ranking.fileLinked : S.list.notLinkedShort)
-    : '';
+  const linkLabel = opts.linkStatus === 'linked'
+    ? S.ranking.fileLinked
+    : opts.linkStatus === 'broken'
+      ? S.ranking.fileLinkBroken
+      : opts.linkStatus === 'unlinked'
+        ? S.list.notLinkedShort
+        : '';
   return [
     entry.name,
     S.ranking.itemsCount(activeCount),
@@ -113,8 +116,7 @@ export function ListCard({
   reorderMode = false,
   onMoveUp,
   onMoveDown,
-  isLinked = false,
-  showLinkStatus = false,
+  linkStatus,
 }: ListCardProps) {
   const list = getList(entry.id);
   const activeItems = list?.items.filter((i) => !i.removed) ?? [];
@@ -196,8 +198,8 @@ export function ListCard({
               title={ACTIVITY_ARIA[activity]}
             />
             <h3 className="text-lg font-bold truncate">{entry.name}</h3>
-            {showLinkStatus && (
-              <FileLinkStatus status={isLinked ? 'linked' : 'unlinked'} />
+            {linkStatus && (
+              <FileLinkStatus status={linkStatus} />
             )}
           </div>
           <div className="flex items-center gap-1 shrink-0">

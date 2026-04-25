@@ -395,3 +395,38 @@ export async function listLinkedListIds(): Promise<Set<string>> {
     return new Set();
   }
 }
+
+/**
+ * Returns a map of list IDs to their link status by silently querying
+ * file handle permissions (no browser dialog).
+ * 'linked' = handle exists and permission is granted.
+ * 'broken' = handle exists but permission is denied or needs prompting.
+ */
+export async function listLinkedListIdsWithStatus(): Promise<Map<string, 'linked' | 'broken'>> {
+  const { queryPermissionSilently } = await import('@/lib/file-sync');
+  const result = new Map<string, 'linked' | 'broken'>();
+  try {
+    const db = await openDB();
+    const entries = await new Promise<Array<{ listId: string; handle: FileSystemFileHandle }>>((resolve) => {
+      const tx = db.transaction(STORE_FILE_HANDLES, 'readonly');
+      const store = tx.objectStore(STORE_FILE_HANDLES);
+      const req = store.getAll();
+      req.onsuccess = () => resolve((req.result ?? []) as Array<{ listId: string; handle: FileSystemFileHandle }>);
+      req.onerror = () => resolve([]);
+    });
+    const listEntries = entries.filter((e) => !e.listId.includes(':'));
+    await Promise.all(
+      listEntries.map(async (e) => {
+        try {
+          const state = await queryPermissionSilently(e.handle);
+          result.set(e.listId, state === 'granted' ? 'linked' : 'broken');
+        } catch {
+          result.set(e.listId, 'broken');
+        }
+      }),
+    );
+  } catch {
+    // DB error — return empty map
+  }
+  return result;
+}

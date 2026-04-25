@@ -528,6 +528,7 @@ export const S = {
     fileSyncHeading: 'File sync',
     fileSyncLinked: 'Linked.changes sync to file automatically.',
     fileSyncLost: 'File sync lost.permission denied. Re-link to restore.',
+    fileSyncUnsupported: 'File sync requires a Chromium browser (Chrome, Edge, Brave). On this browser, lists are stored locally only.',
     unlinkFile: 'Unlink file',
     linkFile: 'Link to file',
     removedItemsButton: (n: number) => `Removed items (${n})`,

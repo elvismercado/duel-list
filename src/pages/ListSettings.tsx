@@ -210,43 +210,47 @@ export default function ListSettings() {
       <Separator />
 
       {/* File Sync */}
-      {supported && (
-        <>
-          <Separator />
-          <div className="space-y-2">
-            <h2 className="text-sm font-semibold text-muted-foreground">
-              {S.settings.fileSyncHeading}
-            </h2>
-            {isSynced ? (
-              <div className="space-y-2">
-                <p className="text-sm text-muted-foreground">
-                  {S.settings.fileSyncLinked}
+      <div className="space-y-2">
+        <div className="flex items-center gap-1">
+          <h2 className="text-sm font-semibold text-muted-foreground">
+            {S.settings.fileSyncHeading}
+          </h2>
+          <HelpHint anchor="file-link" term={S.glossary.sectionFileLink} />
+        </div>
+        {supported ? (
+          isSynced ? (
+            <div className="space-y-2">
+              <p className="text-sm text-muted-foreground">
+                {S.settings.fileSyncLinked}
+              </p>
+              <Button variant="outline" size="sm" onClick={unlinkFile}>
+                <Unlink className="h-4 w-4 mr-1" />
+                {S.settings.unlinkFile}
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {needsRelink && (
+                <p className="text-sm text-destructive">
+                  {S.settings.fileSyncLost}
                 </p>
-                <Button variant="outline" size="sm" onClick={unlinkFile}>
-                  <Unlink className="h-4 w-4 mr-1" />
-                  {S.settings.unlinkFile}
-                </Button>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {needsRelink && (
-                  <p className="text-sm text-destructive">
-                    {S.settings.fileSyncLost}
-                  </p>
-                )}
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => list && linkFile(list)}
-                >
-                  <Link className="h-4 w-4 mr-1" />
-                  {S.settings.linkFile}
-                </Button>
-              </div>
-            )}
-          </div>
-        </>
-      )}
+              )}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => list && linkFile(list)}
+              >
+                <Link className="h-4 w-4 mr-1" />
+                {S.settings.linkFile}
+              </Button>
+            </div>
+          )
+        ) : (
+          <p className="text-sm text-muted-foreground">
+            {S.settings.fileSyncUnsupported}
+          </p>
+        )}
+      </div>
 
       <Separator />
 

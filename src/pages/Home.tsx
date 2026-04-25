@@ -1,6 +1,6 @@
 import { useState, useRef, useMemo, useEffect } from 'react';
 import { Navigate, useNavigate, useSearchParams } from 'react-router';
-import { getSettings, saveList, getList, getHistory, updateSettings, listLinkedListIds } from '@/lib/storage';
+import { getSettings, saveList, getList, getHistory, updateSettings, listLinkedListIdsWithStatus } from '@/lib/storage';
 import { S } from '@/lib/strings';
 import { Button } from '@/components/ui/button';
 import {
@@ -26,6 +26,7 @@ import { generateShortId } from '@/lib/markdown';
 import { useHeaderActions } from '@/components/HeaderActions';
 import { Input } from '@/components/ui/input';
 import type { ListConfig, HomeSortMode, HomeSortField } from '@/types';
+import type { LinkStatus } from '@/hooks/useFileSync';
 import {
   DndContext,
   closestCenter,
@@ -294,14 +295,14 @@ export default function Home() {
 
   // Linked-file badges on cards. Refresh on mount, when registry changes, and
   // when the tab regains focus (covers link/unlink done elsewhere).
-  const [linkedIds, setLinkedIds] = useState<Set<string>>(new Set());
+  const [linkStatuses, setLinkStatuses] = useState<Map<string, 'linked' | 'broken'>>(new Map());
   useEffect(() => {
     let cancelled = false;
-    void listLinkedListIds().then((ids) => {
-      if (!cancelled) setLinkedIds(ids);
+    void listLinkedListIdsWithStatus().then((m) => {
+      if (!cancelled) setLinkStatuses(m);
     });
     function onFocus() {
-      void listLinkedListIds().then((ids) => setLinkedIds(ids));
+      void listLinkedListIdsWithStatus().then((m) => setLinkStatuses(m));
     }
     window.addEventListener('focus', onFocus);
     return () => {
@@ -316,16 +317,16 @@ export default function Home() {
   const haystacks = useMemo(() => {
     const map = new Map<string, string>();
     for (const entry of lists) {
+      const status: LinkStatus | undefined = supported
+        ? (linkStatuses.get(entry.id) ?? 'unlinked')
+        : undefined;
       map.set(
         entry.id,
-        buildListCardHaystack(entry, {
-          isLinked: linkedIds.has(entry.id),
-          showLinkStatus: supported,
-        }),
+        buildListCardHaystack(entry, { linkStatus: status }),
       );
     }
     return map;
-  }, [lists, linkedIds, supported]);
+  }, [lists, linkStatuses, supported]);
   const visibleLists = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q || reorderMode) return lists;
@@ -502,8 +503,7 @@ export default function Home() {
                       reorderMode={reorderMode && sortOrder === 'custom'}
                       onMoveUp={idx > 0 ? () => moveBy(entry.id, -1) : undefined}
                       onMoveDown={idx < lists.length - 1 ? () => moveBy(entry.id, 1) : undefined}
-                      isLinked={linkedIds.has(entry.id)}
-                      showLinkStatus={supported}
+                      linkStatus={supported ? (linkStatuses.get(entry.id) ?? 'unlinked') : undefined}
                     />
                   ))
                 )}
