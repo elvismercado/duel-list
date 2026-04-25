@@ -209,29 +209,6 @@ export default function ListSettings() {
 
       <Separator />
 
-      {/* Export */}
-      <div className="space-y-2">
-        <h2 className="text-sm font-semibold text-muted-foreground">{S.settings.exportHeading}</h2>
-        <div className="flex gap-2 flex-wrap">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => exportList(list)}
-          >
-            <Download className="h-4 w-4 mr-1" />
-            {S.export.listButton}
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => exportHistory(list.id, list.name)}
-          >
-            <Download className="h-4 w-4 mr-1" />
-            {S.export.historyButton}
-          </Button>
-        </div>
-      </div>
-
       {/* File Sync */}
       {supported && (
         <>
@@ -286,6 +263,31 @@ export default function ListSettings() {
           </Button>
         </div>
       )}
+
+      <Separator />
+
+      {/* Export */}
+      <div className="space-y-2">
+        <h2 className="text-sm font-semibold text-muted-foreground">{S.settings.exportHeading}</h2>
+        <div className="flex gap-2 flex-wrap">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => exportList(list)}
+          >
+            <Download className="h-4 w-4 mr-1" />
+            {S.export.listButton}
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => exportHistory(list.id, list.name)}
+          >
+            <Download className="h-4 w-4 mr-1" />
+            {S.export.historyButton}
+          </Button>
+        </div>
+      </div>
 
       <Separator />
 
