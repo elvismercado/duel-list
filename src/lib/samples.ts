@@ -214,6 +214,45 @@ const SAMPLE_DATA: Record<string, { name: string; items: string[] }> = {
       'Stranger Things',
     ],
   },
+  chatbots: {
+    name: 'AI Chatbots',
+    items: [
+      'ChatGPT',
+      'Claude',
+      'Gemini',
+      'Copilot',
+      'Perplexity',
+      'Grok',
+      'Llama',
+      'Mistral',
+      'DeepSeek',
+      'Meta AI',
+      'Pi',
+      'Character.AI',
+      'Qwen',
+    ],
+  },
+  starters: {
+    name: 'Pokémon Starters',
+    items: [
+      'Bulbasaur',
+      'Charmander',
+      'Squirtle',
+      'Chikorita',
+      'Cyndaquil',
+      'Totodile',
+      'Treecko',
+      'Torchic',
+      'Mudkip',
+      'Turtwig',
+      'Chimchar',
+      'Piplup',
+      'Snivy',
+      'Tepig',
+      'Oshawott',
+      'Chespin',
+    ],
+  },
 };
 
 // Deterministic IDs for sample items (4-char each, indexed by item position).
@@ -235,6 +274,8 @@ const SAMPLE_LIST_IDS: Record<string, string> = {
   books: 'sbok',
   boardgames: 'sbgm',
   shows: 'sshw',
+  chatbots: 'scbt',
+  starters: 'spkm',
 };
 
 export function getSampleList(key: string): ListConfig | null {
