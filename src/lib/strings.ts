@@ -109,6 +109,12 @@ export const S = {
       'Browse the Templates page for ready-made starter lists, or set your preferred ranking speed and session length once in App Settings and every new list will pick them up.',
     readyStepTitle: 'Ready!',
     readyStepDescription: 'Create a list or try a sample to get started.',
+    step0Alt: 'Welcome to Duel⚡List',
+    step1Alt: 'Two items face off in a duel',
+    step2Alt: 'A stack of past duels forming a session history',
+    step3Alt: 'A bell with a soft notification ripple',
+    step4Alt: 'Template cards and adjustment sliders',
+    step5Alt: 'Confetti celebrating a finished setup',
   },
 
   duel: {

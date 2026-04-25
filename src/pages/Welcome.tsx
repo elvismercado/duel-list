@@ -9,26 +9,38 @@ const TOUR_STEPS = [
   {
     heading: S.welcome.heading,
     description: S.welcome.description,
+    image: '/welcome/step-0-welcome.svg',
+    alt: S.welcome.step0Alt,
   },
   {
     heading: S.welcome.duelStepTitle,
     description: S.welcome.duelStepDescription,
+    image: '/welcome/step-1-duel.svg',
+    alt: S.welcome.step1Alt,
   },
   {
     heading: S.welcome.sessionsStepTitle,
     description: S.welcome.sessionsStepDescription,
+    image: '/welcome/step-2-sessions.svg',
+    alt: S.welcome.step2Alt,
   },
   {
     heading: S.welcome.loopStepTitle,
     description: S.welcome.loopStepDescription,
+    image: '/welcome/step-3-reminders.svg',
+    alt: S.welcome.step3Alt,
   },
   {
     heading: S.welcome.templatesStepTitle,
     description: S.welcome.templatesStepDescription,
+    image: '/welcome/step-4-templates.svg',
+    alt: S.welcome.step4Alt,
   },
   {
     heading: S.welcome.readyStepTitle,
     description: S.welcome.readyStepDescription,
+    image: '/welcome/step-5-ready.svg',
+    alt: S.welcome.step5Alt,
   },
 ];
 
@@ -54,7 +66,15 @@ export default function Welcome() {
   const isLast = step === TOUR_STEPS.length - 1;
 
   return (
-    <div className="p-4 max-w-md mx-auto text-center mt-12 space-y-6">
+    <div className="p-4 max-w-md mx-auto text-center space-y-6">
+      <div className="aspect-[16/10] w-full overflow-hidden rounded-xl bg-brand-soft dark:bg-accent flex items-center justify-center">
+        <img
+          src={current.image}
+          alt={current.alt}
+          className="h-full w-full object-contain"
+          loading={step === 0 ? 'eager' : 'lazy'}
+        />
+      </div>
       <h1 className="text-3xl font-bold">{current.heading}</h1>
       <p className="text-muted-foreground">{current.description}</p>
 
