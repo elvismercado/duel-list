@@ -445,6 +445,8 @@ export const S = {
     sessionLengthLabel: 'Session length',
     sessionLengthUnit: 'duels',
     sessionLengthUnlimited: 'Unlimited',
+    sessionLengthCustom: 'Custom',
+    sessionLengthHelp: 'How many duels per sitting. Pick a preset or type your own.',
     themeLabel: 'Theme',
     themeSystem: 'System',
     themeLight: 'Light',

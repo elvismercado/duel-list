@@ -23,8 +23,8 @@ import {
 } from '@/components/ui/dialog';
 import { Undo2, Download, Trash2, Link, Unlink, Pencil, Check, Archive } from 'lucide-react';
 import { HelpHint } from '@/components/HelpHint';
-
-const SESSION_PRESETS = [5, 10, 20, 50];
+import { ButtonGroup } from '@/components/ui/button-group';
+import { SESSION_PRESETS } from '@/lib/constants';
 
 export default function ListSettings() {
   const { id } = useParams<{ id: string }>();
@@ -160,44 +160,51 @@ export default function ListSettings() {
         <p className="text-xs text-muted-foreground">{S.settings.kFactorHelp}</p>
       </div>
 
-      {/* Session Length.number input + preset chips */}
+      {/* Session Length — ButtonGroup + optional custom input */}
       <div className="space-y-2">
-        <label className="text-sm font-medium" htmlFor="session-length-input">
-          {S.settings.sessionLengthLabel}
-        </label>
-        <div className="flex gap-2">
-          <Input
-            id="session-length-input"
-            type="number"
-            min={0}
-            max={500}
-            value={list.sessionLength}
-            onChange={(e) => handleSessionLengthChange(e.target.value)}
-            className="w-28"
-          />
-          <span className="text-sm text-muted-foreground self-center">
-            {list.sessionLength === 0 ? S.settings.sessionLengthUnlimited : S.settings.sessionLengthUnit}
-          </span>
+        <div className="flex items-center gap-1">
+          <label className="text-sm font-medium">{S.settings.sessionLengthLabel}</label>
+          <HelpHint anchor="session" term={S.glossary.termSessionLabel} />
         </div>
-        <div className="flex gap-1 flex-wrap">
-          {SESSION_PRESETS.map((n) => (
-            <Button
-              key={n}
-              size="sm"
-              variant={list.sessionLength === n ? 'default' : 'outline'}
-              onClick={() => handleSessionLengthChange(String(n))}
-            >
-              {n}
-            </Button>
-          ))}
-          <Button
-            size="sm"
-            variant={list.sessionLength === 0 ? 'default' : 'outline'}
-            onClick={() => handleSessionLengthChange('0')}
-          >
-            {S.settings.sessionLengthUnlimited}
-          </Button>
-        </div>
+        <ButtonGroup<string>
+          value={
+            list.sessionLength === 0
+              ? '0'
+              : SESSION_PRESETS.includes(list.sessionLength as typeof SESSION_PRESETS[number])
+                ? String(list.sessionLength)
+                : 'custom'
+          }
+          onChange={(v) => {
+            if (v === 'custom') {
+              handleSessionLengthChange('15');
+            } else {
+              handleSessionLengthChange(v);
+            }
+          }}
+          ariaLabel={S.settings.sessionLengthLabel}
+          options={[
+            ...SESSION_PRESETS.map((n) => ({ value: String(n), label: String(n) })),
+            { value: '0', label: S.settings.sessionLengthUnlimited },
+            { value: 'custom', label: S.settings.sessionLengthCustom },
+          ]}
+        />
+        {!SESSION_PRESETS.includes(list.sessionLength as typeof SESSION_PRESETS[number]) && list.sessionLength !== 0 && (
+          <div className="flex gap-2">
+            <Input
+              id="session-length-input"
+              type="number"
+              min={1}
+              max={500}
+              value={list.sessionLength}
+              onChange={(e) => handleSessionLengthChange(e.target.value)}
+              className="w-28"
+            />
+            <span className="text-sm text-muted-foreground self-center">
+              {S.settings.sessionLengthUnit}
+            </span>
+          </div>
+        )}
+        <p className="text-xs text-muted-foreground">{S.settings.sessionLengthHelp}</p>
       </div>
 
       <Separator />

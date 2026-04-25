@@ -17,6 +17,9 @@ import {
 } from '@/components/ui/select';
 import { S } from '@/lib/strings';
 import { SAMPLE_KEYS, getSampleList } from '@/lib/samples';
+import { ButtonGroup } from '@/components/ui/button-group';
+import { HelpHint } from '@/components/HelpHint';
+import { SESSION_PRESETS } from '@/lib/constants';
 
 interface ListCreateDialogProps {
   open: boolean;
@@ -28,8 +31,6 @@ interface ListCreateDialogProps {
     templateItems?: string[],
   ) => void;
 }
-
-const SESSION_PRESETS = [5, 10, 20, 50];
 
 export function ListCreateDialog({
   open,
@@ -136,44 +137,48 @@ export function ListCreateDialog({
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium" htmlFor="create-session-length">
-              {S.settings.sessionLengthLabel}
-            </label>
-            <div className="flex gap-2">
-              <Input
-                id="create-session-length"
-                type="number"
-                min={0}
-                max={500}
-                value={sessionLength}
-                onChange={(e) => handleSessionLengthInput(e.target.value)}
-                className="w-28"
-              />
-              <span className="text-sm text-muted-foreground self-center">
-                {sessionLength === 0 ? S.settings.sessionLengthUnlimited : S.settings.sessionLengthUnit}
-              </span>
+            <div className="flex items-center gap-1">
+              <label className="text-sm font-medium">{S.settings.sessionLengthLabel}</label>
+              <HelpHint anchor="session" term={S.glossary.termSessionLabel} />
             </div>
-            <div className="flex gap-1 flex-wrap">
-              {SESSION_PRESETS.map((n) => (
-                <Button
-                  key={n}
-                  type="button"
-                  size="sm"
-                  variant={sessionLength === n ? 'default' : 'outline'}
-                  onClick={() => setSessionLength(n)}
-                >
-                  {n}
-                </Button>
-              ))}
-              <Button
-                type="button"
-                size="sm"
-                variant={sessionLength === 0 ? 'default' : 'outline'}
-                onClick={() => setSessionLength(0)}
-              >
-                {S.settings.sessionLengthUnlimited}
-              </Button>
-            </div>
+            <ButtonGroup<string>
+              value={
+                sessionLength === 0
+                  ? '0'
+                  : SESSION_PRESETS.includes(sessionLength as typeof SESSION_PRESETS[number])
+                    ? String(sessionLength)
+                    : 'custom'
+              }
+              onChange={(v) => {
+                if (v === 'custom') {
+                  setSessionLength(15);
+                } else {
+                  setSessionLength(parseInt(v, 10));
+                }
+              }}
+              ariaLabel={S.settings.sessionLengthLabel}
+              options={[
+                ...SESSION_PRESETS.map((n) => ({ value: String(n), label: String(n) })),
+                { value: '0', label: S.settings.sessionLengthUnlimited },
+                { value: 'custom', label: S.settings.sessionLengthCustom },
+              ]}
+            />
+            {!SESSION_PRESETS.includes(sessionLength as typeof SESSION_PRESETS[number]) && sessionLength !== 0 && (
+              <div className="flex gap-2">
+                <Input
+                  id="create-session-length"
+                  type="number"
+                  min={1}
+                  max={500}
+                  value={sessionLength}
+                  onChange={(e) => handleSessionLengthInput(e.target.value)}
+                  className="w-28"
+                />
+                <span className="text-sm text-muted-foreground self-center">
+                  {S.settings.sessionLengthUnit}
+                </span>
+              </div>
+            )}
           </div>
 
           <DialogFooter>
