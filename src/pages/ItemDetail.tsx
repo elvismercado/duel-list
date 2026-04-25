@@ -214,11 +214,11 @@ export default function ItemDetail() {
       </div>
 
       {/* Title + rename */}
-      <div className="flex items-start gap-2 min-w-0">
+      <div className="space-y-2 min-w-0">
         {renaming ? (
-          <>
+          <div className="flex items-start gap-2">
             <Input
-              className="flex-1 h-10 text-xl font-bold"
+              className="flex-1 h-auto py-2 text-2xl font-bold"
               value={nameDraft}
               onChange={(e) => setNameDraft(e.target.value)}
               onBlur={commitRename}
@@ -232,29 +232,27 @@ export default function ItemDetail() {
             <Button
               type="button"
               size="icon"
-              variant="ghost"
-              className="h-10 w-10 shrink-0"
+              variant="outline"
+              className="min-h-[44px] min-w-[44px] shrink-0"
               onMouseDown={(e) => e.preventDefault()}
               onClick={commitRename}
               aria-label={S.common.confirmRename}
             >
               <Check className="h-4 w-4" />
             </Button>
-          </>
+          </div>
         ) : (
           <>
-            <h1 className="text-2xl font-bold flex-1 min-w-0 break-words">
-              {item.name}
-            </h1>
+            <h1 className="text-3xl font-bold break-words">{item.name}</h1>
             <Button
               type="button"
-              size="icon"
-              variant="ghost"
-              className="h-10 w-10 shrink-0"
+              variant="outline"
+              size="sm"
               onClick={startRename}
               aria-label={S.itemDetail.renameAria(item.name)}
             >
-              <Pencil className="h-4 w-4" />
+              <Pencil className="h-4 w-4 mr-1" />
+              {S.settings.renameButton}
             </Button>
           </>
         )}
