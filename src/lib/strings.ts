@@ -547,6 +547,11 @@ export const S = {
     remindersTestHelp:
       'Sends a test through your selected channel.in-app banner, OS notification, or both.',
     remindersBack: 'Back to settings',
+    titleApp: 'App settings',
+    groupRanking: 'Ranking & sessions',
+    groupAppearance: 'Appearance',
+    groupData: 'Your data',
+    groupHelp: 'Help & info',
     aboutHeading: 'About',
     whatsInDuelList: "What's in Duel⚡List",
     replayOnboarding: 'Replay onboarding',

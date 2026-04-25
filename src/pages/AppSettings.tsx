@@ -65,74 +65,164 @@ export default function AppSettingsPage() {
 
   return (
     <div className="p-4 max-w-lg mx-auto space-y-6">
-      <h1 className="text-2xl font-bold">{S.settings.title}</h1>
+      <h1 className="text-2xl font-bold">{S.settings.titleApp}</h1>
 
-      {/* Theme */}
-      <div className="space-y-2">
-        <label className="text-sm font-medium">{S.settings.themeLabel}</label>
-        <Select
-          value={settings.theme ?? 'system'}
-          onValueChange={handleThemeChange}
+      {/* ==================== Ranking & sessions ==================== */}
+      <section aria-labelledby="group-ranking" className="space-y-4">
+        <h2
+          id="group-ranking"
+          className="text-sm font-semibold text-muted-foreground uppercase tracking-wide"
         >
-          <SelectTrigger>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="system">{S.settings.themeSystem}</SelectItem>
-            <SelectItem value="light">{S.settings.themeLight}</SelectItem>
-            <SelectItem value="dark">{S.settings.themeDark}</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+          {S.settings.groupRanking}
+        </h2>
 
-      {/* Duel mode */}
-      <div className="space-y-2">
-        <label className="text-sm font-medium">{S.settings.duelModeLabel}</label>
-        <Select
-          value={settings.duelMode ?? 'side-by-side'}
-          onValueChange={handleDuelModeChange}
-        >
-          <SelectTrigger>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="side-by-side">{S.settings.duelModeSideBySide}</SelectItem>
-            <SelectItem value="swipe">{S.settings.duelModeSwipe}</SelectItem>
-          </SelectContent>
-        </Select>
-        <p className="text-xs text-muted-foreground">
-          {S.settings.duelModeHelp}
-        </p>
-      </div>
+        {/* Duel mode */}
+        <div className="space-y-2">
+          <label className="text-sm font-medium">{S.settings.duelModeLabel}</label>
+          <Select
+            value={settings.duelMode ?? 'side-by-side'}
+            onValueChange={handleDuelModeChange}
+          >
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="side-by-side">{S.settings.duelModeSideBySide}</SelectItem>
+              <SelectItem value="swipe">{S.settings.duelModeSwipe}</SelectItem>
+            </SelectContent>
+          </Select>
+          <p className="text-xs text-muted-foreground">{S.settings.duelModeHelp}</p>
+        </div>
 
-      {/* Time format */}
-      <div className="space-y-2">
-        <label className="text-sm font-medium">{S.settings.timeFormatLabel}</label>
-        <Select
-          value={settings.timeFormat ?? '24h'}
-          onValueChange={(v) => {
-            updateSettings({ timeFormat: v as '12h' | '24h' });
-            setSettings(getSettings());
-          }}
-        >
-          <SelectTrigger>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="24h">{S.settings.timeFormat24h}</SelectItem>
-            <SelectItem value="12h">{S.settings.timeFormat12h}</SelectItem>
-          </SelectContent>
-        </Select>
-        <p className="text-xs text-muted-foreground">
-          {S.settings.timeFormatHelp}
-        </p>
-      </div>
+        {/* New list defaults nav card */}
+        <div className="space-y-2">
+          <h3 className="text-sm font-medium">{S.settings.defaultsHeading}</h3>
+          <Button asChild variant="outline" className="w-full justify-between">
+            <Link to="/settings/defaults">
+              <span className="flex items-center gap-2">
+                <Sliders className="h-4 w-4" />
+                {S.settings.defaultsOpenLink}
+              </span>
+            </Link>
+          </Button>
+        </div>
+
+        {/* Reminders nav card */}
+        <div className="space-y-2">
+          <h3 className="text-sm font-medium">{S.settings.remindersHeading}</h3>
+          <Button asChild variant="outline" className="w-full justify-between">
+            <Link to="/settings/reminders">
+              <span className="flex items-center gap-2">
+                <Bell className="h-4 w-4" />
+                {S.settings.remindersOpenLink}
+              </span>
+              <span className="text-xs text-muted-foreground">
+                {settings.reminders.enabled
+                  ? S.settings.remindersStatusActive(
+                      cadenceShortLabel(settings.reminders),
+                      timeShortLabel(settings.reminders, settings.timeFormat ?? '24h'),
+                    )
+                  : S.settings.remindersStatusOff}
+              </span>
+            </Link>
+          </Button>
+        </div>
+      </section>
 
       <Separator />
 
-      {/* About / Features */}
-      <div className="space-y-2">
-        <h2 className="text-sm font-semibold text-muted-foreground">{S.settings.aboutHeading}</h2>
+      {/* ==================== Appearance ==================== */}
+      <section aria-labelledby="group-appearance" className="space-y-4">
+        <h2
+          id="group-appearance"
+          className="text-sm font-semibold text-muted-foreground uppercase tracking-wide"
+        >
+          {S.settings.groupAppearance}
+        </h2>
+
+        {/* Theme */}
+        <div className="space-y-2">
+          <label className="text-sm font-medium">{S.settings.themeLabel}</label>
+          <Select
+            value={settings.theme ?? 'system'}
+            onValueChange={handleThemeChange}
+          >
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="system">{S.settings.themeSystem}</SelectItem>
+              <SelectItem value="light">{S.settings.themeLight}</SelectItem>
+              <SelectItem value="dark">{S.settings.themeDark}</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Time format */}
+        <div className="space-y-2">
+          <label className="text-sm font-medium">{S.settings.timeFormatLabel}</label>
+          <Select
+            value={settings.timeFormat ?? '24h'}
+            onValueChange={(v) => {
+              updateSettings({ timeFormat: v as '12h' | '24h' });
+              setSettings(getSettings());
+            }}
+          >
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="24h">{S.settings.timeFormat24h}</SelectItem>
+              <SelectItem value="12h">{S.settings.timeFormat12h}</SelectItem>
+            </SelectContent>
+          </Select>
+          <p className="text-xs text-muted-foreground">{S.settings.timeFormatHelp}</p>
+        </div>
+      </section>
+
+      <Separator />
+
+      {/* ==================== Your data ==================== */}
+      <section aria-labelledby="group-data" className="space-y-4">
+        <h2
+          id="group-data"
+          className="text-sm font-semibold text-muted-foreground uppercase tracking-wide"
+        >
+          {S.settings.groupData}
+        </h2>
+
+        {/* Export */}
+        <div className="flex gap-2 flex-wrap">
+          <Button variant="outline" size="sm" onClick={exportAll}>
+            <Download className="h-4 w-4 mr-1" />
+            {S.export.exportAll}
+          </Button>
+          <Button variant="outline" size="sm" onClick={exportAppData}>
+            <Download className="h-4 w-4 mr-1" />
+            {S.export.exportAppData}
+          </Button>
+        </div>
+
+        {/* Storage */}
+        <div className="space-y-1">
+          <Progress value={storage.percentage} className="h-2" />
+          <p className="text-xs text-muted-foreground">
+            {S.settings.storageUsage(storage.current / 1024, storage.limit / 1024 / 1024)}
+          </p>
+        </div>
+      </section>
+
+      <Separator />
+
+      {/* ==================== Help & info ==================== */}
+      <section aria-labelledby="group-help" className="space-y-4">
+        <h2
+          id="group-help"
+          className="text-sm font-semibold text-muted-foreground uppercase tracking-wide"
+        >
+          {S.settings.groupHelp}
+        </h2>
+
         <div className="flex gap-2 flex-wrap">
           <Button asChild variant="outline" size="sm">
             <Link to="/features">
@@ -153,79 +243,7 @@ export default function AppSettingsPage() {
             </Link>
           </Button>
         </div>
-      </div>
-
-      <Separator />
-
-      {/* Export */}
-      <div className="space-y-3">
-        <h2 className="text-sm font-semibold text-muted-foreground">{S.settings.exportHeading}</h2>
-        <div className="flex gap-2 flex-wrap">
-          <Button variant="outline" size="sm" onClick={exportAll}>
-            <Download className="h-4 w-4 mr-1" />
-            {S.export.exportAll}
-          </Button>
-          <Button variant="outline" size="sm" onClick={exportAppData}>
-            <Download className="h-4 w-4 mr-1" />
-            {S.export.exportAppData}
-          </Button>
-        </div>
-      </div>
-
-      <Separator />
-
-      {/* New list defaults nav card */}
-      <div className="space-y-2">
-        <h2 className="text-sm font-semibold text-muted-foreground">
-          {S.settings.defaultsHeading}
-        </h2>
-        <Button asChild variant="outline" className="w-full justify-between">
-          <Link to="/settings/defaults">
-            <span className="flex items-center gap-2">
-              <Sliders className="h-4 w-4" />
-              {S.settings.defaultsOpenLink}
-            </span>
-          </Link>
-        </Button>
-      </div>
-
-      <Separator />
-
-      {/* Reminders nav card */}
-      <div className="space-y-2">
-        <h2 className="text-sm font-semibold text-muted-foreground">
-          {S.settings.remindersHeading}
-        </h2>
-        <Button asChild variant="outline" className="w-full justify-between">
-          <Link to="/settings/reminders">
-            <span className="flex items-center gap-2">
-              <Bell className="h-4 w-4" />
-              {S.settings.remindersOpenLink}
-            </span>
-            <span className="text-xs text-muted-foreground">
-              {settings.reminders.enabled
-                ? S.settings.remindersStatusActive(
-                    cadenceShortLabel(settings.reminders),
-                    timeShortLabel(settings.reminders, settings.timeFormat ?? '24h'),
-                  )
-                : S.settings.remindersStatusOff}
-            </span>
-          </Link>
-        </Button>
-      </div>
-
-      <Separator />
-
-      {/* Storage */}
-      <div className="space-y-2">
-        <h2 className="text-sm font-semibold text-muted-foreground">
-          {S.settings.storageHeading}
-        </h2>
-        <Progress value={storage.percentage} className="h-2" />
-        <p className="text-xs text-muted-foreground">
-          {S.settings.storageUsage(storage.current / 1024, storage.limit / 1024 / 1024)}
-        </p>
-      </div>
+      </section>
 
       <Separator />
 
