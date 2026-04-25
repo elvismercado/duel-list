@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { S } from '@/lib/strings';
 import { getList, getHistory, getSettings } from '@/lib/storage';
+import { sortItemsByElo } from '@/lib/ranking';
 import { formatLocalDate, formatTimeOfDay, parseTimestampSuffix } from '@/lib/datetime';
 import { useExport } from '@/hooks/useExport';
 import { useHeaderActions } from '@/components/HeaderActions';
@@ -20,6 +21,8 @@ type ParsedEntry = {
   raw: string;
   a: string;
   b: string;
+  idA: string | null;   // item UUID from [id] bracket, null for legacy entries
+  idB: string | null;
   winner: string | null; // null => tie
   tsIso: string | null;  // full ISO-8601 UTC when present (preferred for sort)
   time: string | null;   // HH:MM (local) for display
@@ -54,8 +57,25 @@ export default function History() {
     () => sections.reduce((sum, s) => sum + s.entries.length, 0),
     [sections],
   );
-  const stats = useMemo(() => computeStats(sections), [sections]);
+  const stats = useMemo(
+    () => computeStats(sections, list?.items.filter((i) => !i.removed).length ?? 0),
+    [sections, list],
+  );
   const daily = useMemo(() => computeDailyCounts(sections, 30), [sections]);
+
+  // Build lookup maps: item ID/name → current rank
+  const rankMap = useMemo(() => {
+    if (!list) return { byId: new Map<string, number>(), byName: new Map<string, number>() };
+    const active = list.items.filter((i) => !i.removed);
+    const sorted = sortItemsByElo(active);
+    const byId = new Map<string, number>();
+    const byName = new Map<string, number>();
+    sorted.forEach((item, i) => {
+      byId.set(item.id, i + 1);
+      byName.set(item.name, i + 1);
+    });
+    return { byId, byName };
+  }, [list]);
 
   const filteredSections = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -148,6 +168,39 @@ export default function History() {
                   : undefined
               }
             />
+            {stats.mostOneSided && (
+              <StatTile
+                label={S.history.statMostOneSided}
+                value={`${stats.mostOneSided.a} · ${stats.mostOneSided.b}`}
+                subtitle={S.history.oneSidedRecord(
+                  stats.mostOneSided.winsA,
+                  stats.mostOneSided.winsB,
+                )}
+              />
+            )}
+            {stats.longestStreak && (
+              <StatTile
+                label={S.history.statLongestStreak}
+                value={stats.longestStreak.name}
+                subtitle={S.history.streakWins(stats.longestStreak.count)}
+              />
+            )}
+            {stats.matchupCoverage && (
+              <StatTile
+                label={S.history.statMatchupCoverage}
+                value={S.history.coverageValue(
+                  stats.matchupCoverage.seen,
+                  stats.matchupCoverage.total,
+                )}
+              />
+            )}
+            {stats.mostActiveDay && (
+              <StatTile
+                label={S.history.statMostActiveDay}
+                value={stats.mostActiveDay.date}
+                subtitle={S.history.duelsOnDay(stats.mostActiveDay.count)}
+              />
+            )}
           </div>
 
           {daily.some((d) => d.count > 0) && (
@@ -207,7 +260,7 @@ export default function History() {
                   <ul className="space-y-1">
                     {section.entries.map((entry, idx) => (
                       <li key={idx}>
-                        <DuelRow entry={entry} />
+                        <DuelRow entry={entry} rankMap={rankMap} />
                       </li>
                     ))}
                   </ul>
@@ -284,14 +337,26 @@ function Sparkline({ data }: { data: { date: string; count: number }[] }) {
   );
 }
 
-function DuelRow({ entry }: { entry: ParsedEntry }) {
+type RankMap = { byId: Map<string, number>; byName: Map<string, number> };
+
+function lookupRank(rankMap: RankMap, id: string | null, name: string): number | undefined {
+  if (id) {
+    const r = rankMap.byId.get(id);
+    if (r !== undefined) return r;
+  }
+  return rankMap.byName.get(name);
+}
+
+function DuelRow({ entry, rankMap }: { entry: ParsedEntry; rankMap: RankMap }) {
   const tie = entry.winner === null;
   const aWon = !tie && entry.winner === entry.a;
   const bWon = !tie && entry.winner === entry.b;
+  const rankA = lookupRank(rankMap, entry.idA, entry.a);
+  const rankB = lookupRank(rankMap, entry.idB, entry.b);
   return (
     <div className="space-y-0.5">
       <div className="flex items-stretch gap-2 text-sm">
-        <NameChip name={entry.a} won={aWon} dimmed={!tie && !aWon} />
+        <NameChip name={entry.a} won={aWon} dimmed={!tie && !aWon} rank={rankA} />
         <div
           className={`shrink-0 self-center text-[10px] font-bold tracking-wider px-1.5 py-0.5 rounded ${
             tie
@@ -302,7 +367,7 @@ function DuelRow({ entry }: { entry: ParsedEntry }) {
         >
           {tie ? S.history.tieBadge : S.history.vsBadge}
         </div>
-        <NameChip name={entry.b} won={bWon} dimmed={!tie && !bWon} alignRight />
+        <NameChip name={entry.b} won={bWon} dimmed={!tie && !bWon} alignRight rank={rankB} />
       </div>
       {entry.time && (
         <div className="text-[10px] text-muted-foreground text-right pr-1 tabular-nums">
@@ -320,11 +385,13 @@ function NameChip({
   won,
   dimmed,
   alignRight,
+  rank,
 }: {
   name: string;
   won: boolean;
   dimmed: boolean;
   alignRight?: boolean;
+  rank?: number;
 }) {
   return (
     <div
@@ -346,6 +413,11 @@ function NameChip({
         />
       )}
       <span className="truncate min-w-0 flex-1">{name}</span>
+      {rank !== undefined && (
+        <span className="shrink-0 text-[10px] tabular-nums text-muted-foreground">
+          #{rank}
+        </span>
+      )}
     </div>
   );
 }
@@ -389,27 +461,31 @@ function parseHistorySections(md: string): Section[] {
 
 function parseEntry(raw: string): ParsedEntry | null {
   const { body, tsIso, localTime } = parseTimestampSuffix(raw);
+  // Extract IDs from [id] brackets before stripping them
+  const ids = [...body.matchAll(/\[([a-z0-9]{2,8})\]/gi)].map((m) => m[1]!);
+  const idA = ids[0] ?? null;
+  const idB = ids[1] ?? null;
   const stripped = body.replace(/\s*\[[a-z0-9]{2,8}\]/gi, '').trim();
   // Left won: "A > B"
   const left = /^(.+?)\s*>\s*(.+)$/.exec(stripped);
   if (left) {
     const a = left[1]!.trim();
     const b = left[2]!.trim();
-    return { raw, a, b, winner: a, tsIso, time: localTime };
+    return { raw, a, b, idA, idB, winner: a, tsIso, time: localTime };
   }
   // Right won: "A < B"
   const right = /^(.+?)\s*<\s*(.+)$/.exec(stripped);
   if (right) {
     const a = right[1]!.trim();
     const b = right[2]!.trim();
-    return { raw, a, b, winner: b, tsIso, time: localTime };
+    return { raw, a, b, idA, idB, winner: b, tsIso, time: localTime };
   }
   // Tie: "A = B"
   const tie = /^(.+?)\s*=\s*(.+)$/.exec(stripped);
   if (tie) {
     const a = tie[1]!.trim();
     const b = tie[2]!.trim();
-    return { raw, a, b, winner: null, tsIso, time: localTime };
+    return { raw, a, b, idA, idB, winner: null, tsIso, time: localTime };
   }
   return null;
 }
@@ -419,13 +495,20 @@ type Stats = {
   ties: number;
   topWinner: { name: string; wins: number } | null;
   biggestRivalry: { a: string; b: string; count: number } | null;
+  mostOneSided: { a: string; b: string; winsA: number; winsB: number } | null;
+  longestStreak: { name: string; count: number } | null;
+  mostActiveDay: { date: string; count: number } | null;
+  matchupCoverage: { seen: number; total: number } | null;
 };
 
-function computeStats(sections: Section[]): Stats {
+function computeStats(sections: Section[], itemCount: number): Stats {
   let total = 0;
   let ties = 0;
   const wins = new Map<string, number>();
-  const rivalries = new Map<string, { a: string; b: string; count: number }>();
+  const rivalries = new Map<
+    string,
+    { a: string; b: string; count: number; winsA: number; winsB: number }
+  >();
   for (const s of sections) {
     for (const e of s.entries) {
       total++;
@@ -439,8 +522,19 @@ function computeStats(sections: Section[]): Stats {
       const y = sorted[1]!;
       const key = `${x}\u0000${y}`;
       const r = rivalries.get(key);
-      if (r) r.count++;
-      else rivalries.set(key, { a: x, b: y, count: 1 });
+      if (r) {
+        r.count++;
+        if (e.winner === x) r.winsA++;
+        else if (e.winner === y) r.winsB++;
+      } else {
+        rivalries.set(key, {
+          a: x,
+          b: y,
+          count: 1,
+          winsA: e.winner === x ? 1 : 0,
+          winsB: e.winner === y ? 1 : 0,
+        });
+      }
     }
   }
   let topWinner: Stats['topWinner'] = null;
@@ -449,10 +543,77 @@ function computeStats(sections: Section[]): Stats {
   }
   let biggestRivalry: Stats['biggestRivalry'] = null;
   for (const r of rivalries.values()) {
-    if (!biggestRivalry || r.count > biggestRivalry.count) biggestRivalry = r;
+    if (!biggestRivalry || r.count > biggestRivalry.count)
+      biggestRivalry = { a: r.a, b: r.b, count: r.count };
   }
   if (biggestRivalry && biggestRivalry.count < 2) biggestRivalry = null;
-  return { total, ties, topWinner, biggestRivalry };
+
+  // Most one-sided matchup (min 2 meetings)
+  let mostOneSided: Stats['mostOneSided'] = null;
+  for (const r of rivalries.values()) {
+    if (r.count < 2) continue;
+    const diff = Math.abs(r.winsA - r.winsB);
+    if (!mostOneSided || diff > Math.abs(mostOneSided.winsA - mostOneSided.winsB)) {
+      mostOneSided = { a: r.a, b: r.b, winsA: r.winsA, winsB: r.winsB };
+    }
+  }
+
+  // Longest win streak (walk chronologically, min 3)
+  let longestStreak: Stats['longestStreak'] = null;
+  {
+    const streaks = new Map<string, number>();
+    // sections are newest-first; entries within each are newest-first
+    // walk in reverse (oldest first) for chronological order
+    for (let si = sections.length - 1; si >= 0; si--) {
+      const s = sections[si]!;
+      for (let ei = s.entries.length - 1; ei >= 0; ei--) {
+        const e = s.entries[ei]!;
+        if (e.winner) {
+          const cur = (streaks.get(e.winner) ?? 0) + 1;
+          streaks.set(e.winner, cur);
+          if (cur >= 3 && (!longestStreak || cur > longestStreak.count)) {
+            longestStreak = { name: e.winner, count: cur };
+          }
+          // Reset opponent streaks for this duel's participants
+          const loser = e.winner === e.a ? e.b : e.a;
+          streaks.set(loser, 0);
+        } else {
+          // Tie resets both
+          streaks.set(e.a, 0);
+          streaks.set(e.b, 0);
+        }
+      }
+    }
+  }
+
+  // Most active day
+  let mostActiveDay: Stats['mostActiveDay'] = null;
+  for (const s of sections) {
+    if (
+      s.entries.length > 0 &&
+      (!mostActiveDay || s.entries.length > mostActiveDay.count)
+    ) {
+      mostActiveDay = { date: s.date, count: s.entries.length };
+    }
+  }
+
+  // Matchup coverage
+  let matchupCoverage: Stats['matchupCoverage'] = null;
+  if (itemCount >= 2) {
+    const totalPossible = (itemCount * (itemCount - 1)) / 2;
+    matchupCoverage = { seen: rivalries.size, total: totalPossible };
+  }
+
+  return {
+    total,
+    ties,
+    topWinner,
+    biggestRivalry,
+    mostOneSided,
+    longestStreak,
+    mostActiveDay,
+    matchupCoverage,
+  };
 }
 
 function computeDailyCounts(
