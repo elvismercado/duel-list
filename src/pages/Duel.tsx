@@ -106,15 +106,18 @@ function DuelSession({
       processingRef.current = true;
       setProcessing(true);
       triggerHaptic(winner ? 15 : 8);
+      // Show the win/lose/tie animation on the cards the user just
+      // clicked, then advance to the next pair after the animation
+      // window. Recording immediately would re-key the grid and unmount
+      // the animated cards before the keyframes could play.
       setLastWinner(winner?.id ?? 'tie');
-      const updated = recordDuel(winner);
-      if (updated) onReload();
-      // Let animation play, then clear for next pair
       setTimeout(() => {
+        const updated = recordDuel(winner);
+        if (updated) onReload();
         setLastWinner(null);
         processingRef.current = false;
         setProcessing(false);
-      }, 600);
+      }, 400);
     },
     [recordDuel, onReload],
   );
@@ -391,7 +394,7 @@ function DuelSession({
             <Card
               key={item.id}
               asChild
-              className={`cursor-pointer hover:border-primary focus-visible:ring-2 focus-visible:ring-ring transition-all disabled:cursor-default disabled:opacity-100 ${
+              className={`cursor-pointer hover:border-primary focus-visible:ring-2 focus-visible:ring-ring transition-colors ${
                 isWinner ? 'animate-winner-grow' : ''
               }${isLoser ? ' animate-loser-shrink' : ''}${
                 isTie ? ' animate-tie-pulse' : ''
@@ -402,6 +405,7 @@ function DuelSession({
                 aria-label={S.duel.pickAria(item.name)}
                 style={{ touchAction: 'manipulation' }}
                 disabled={processing}
+                className="disabled:opacity-100"
                 onClick={() => handlePick(item)}
               >
                 <CardContent className="p-6 sm:p-8 text-center flex flex-col items-center gap-2">
