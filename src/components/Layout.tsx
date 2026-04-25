@@ -17,6 +17,7 @@ function getBackTarget(pathname: string, id?: string): string | null {
   if (pathname === '/welcome') return '/';
   if (pathname === '/settings') return '/';
   if (pathname === '/settings/reminders') return '/settings';
+  if (pathname === '/settings/defaults') return '/settings';
   if (pathname === '/settings/glossary') return '/settings';
   if (pathname === '/features') return '/';
   if (pathname === '/templates') return '/';

@@ -189,7 +189,7 @@ export default function ItemDetail() {
   function handleRemove() {
     removeItem(item!.id);
     setRemoveOpen(false);
-    navigate(-1);
+    navigate(`/list/${id}`);
   }
 
   function handleViewAllDuels() {
