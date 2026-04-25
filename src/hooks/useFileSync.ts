@@ -14,6 +14,8 @@ import {
 import { serializeMarkdown, parseMarkdown } from '@/lib/markdown';
 import { getHistory } from '@/lib/storage';
 import { slugify } from '@/lib/download';
+import { S } from '@/lib/strings';
+import { toast } from 'sonner';
 import type { ListConfig } from '@/types';
 
 interface FileSyncState {
@@ -70,47 +72,57 @@ export function useFileSync(listId: string | undefined) {
       const handle = await pickFileForSave(`${slugify(list.name)}.md`);
       if (!handle) return;
 
-      // Write list to file
-      const content = serializeMarkdown(list);
-      await writeToFileHandle(handle, content);
-      await saveFileHandle(listId, handle);
-
-      // Auto-create history companion file
-      const histName = handle.name.replace(/\.md$/, '.duellist.md');
-      let histHandle: FileSystemFileHandle | null = null;
       try {
-        histHandle = await pickFileForSave(histName);
-        if (histHandle) {
-          const history = getHistory(listId);
-          if (history) {
-            await writeToFileHandle(histHandle, history);
-          }
-          await saveFileHandle(`${listId}:history`, histHandle);
-        }
-      } catch {
-        // History file is optional.continue without it
-      }
+        // Write list to file
+        const content = serializeMarkdown(list);
+        await writeToFileHandle(handle, content);
+        await saveFileHandle(listId, handle);
 
-      setState({
-        listHandle: handle,
-        historyHandle: histHandle,
-        isSynced: true,
-        needsRelink: false,
-      });
+        // Auto-create history companion file
+        const histName = handle.name.replace(/\.md$/, '.duellist.md');
+        let histHandle: FileSystemFileHandle | null = null;
+        try {
+          histHandle = await pickFileForSave(histName);
+          if (histHandle) {
+            const history = getHistory(listId);
+            if (history) {
+              await writeToFileHandle(histHandle, history);
+            }
+            await saveFileHandle(`${listId}:history`, histHandle);
+          }
+        } catch {
+          // History file is optional.continue without it
+        }
+
+        setState({
+          listHandle: handle,
+          historyHandle: histHandle,
+          isSynced: true,
+          needsRelink: false,
+        });
+        toast.success(S.toast.fileLinkSuccess);
+      } catch {
+        toast.error(S.toast.fileLinkError);
+      }
     },
     [supported, listId],
   );
 
   const unlinkFile = useCallback(async () => {
     if (!listId) return;
-    await deleteFileHandle(listId);
-    await deleteFileHandle(`${listId}:history`);
-    setState({
-      listHandle: null,
-      historyHandle: null,
-      isSynced: false,
-      needsRelink: false,
-    });
+    try {
+      await deleteFileHandle(listId);
+      await deleteFileHandle(`${listId}:history`);
+      setState({
+        listHandle: null,
+        historyHandle: null,
+        isSynced: false,
+        needsRelink: false,
+      });
+      toast.success(S.toast.fileUnlinkSuccess);
+    } catch {
+      toast.error(S.toast.fileLinkError);
+    }
   }, [listId]);
 
   const syncToFile = useCallback(
@@ -144,10 +156,15 @@ export function useFileSync(listId: string | undefined) {
     handle: FileSystemFileHandle;
   } | null> => {
     if (!supported) return null;
-    const result = await pickFileForOpen();
-    if (!result) return null;
-    const list = parseMarkdown(result.content);
-    return { list, handle: result.handle };
+    try {
+      const result = await pickFileForOpen();
+      if (!result) return null;
+      const list = parseMarkdown(result.content);
+      return { list, handle: result.handle };
+    } catch {
+      toast.error(S.toast.fileLinkError);
+      return null;
+    }
   }, [supported]);
 
   const linkExistingHandle = useCallback(

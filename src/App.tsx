@@ -2,6 +2,7 @@ import { lazy, Suspense } from 'react';
 import { createBrowserRouter, RouterProvider } from 'react-router';
 import Layout from '@/components/Layout';
 import { ErrorBoundary, RouteErrorElement } from '@/components/ErrorBoundary';
+import { Toaster } from '@/components/ui/sonner';
 import { useReminderScheduler } from '@/hooks/useReminderScheduler';
 import {
   DefaultSkeleton,
@@ -52,6 +53,7 @@ export default function App() {
   return (
     <ErrorBoundary>
       <RouterProvider router={router} />
+      <Toaster />
     </ErrorBoundary>
   );
 }

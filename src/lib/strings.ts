@@ -646,4 +646,11 @@ export const S = {
       },
     ],
   },
+
+  toast: {
+    fileLinkSuccess: 'List linked to file.',
+    fileLinkError: 'Could not write to the file. Try linking again or pick a different file.',
+    fileUnlinkSuccess: 'File unlinked.',
+    exportError: 'Export failed. Try again.',
+  },
 } as const;
