@@ -48,12 +48,14 @@ export type SortMode =
   | 'name-asc'
   | 'name-desc';
 
+export type DuelMode = 'side-by-side' | 'speed-round' | 'bracket';
+
 export interface AppSettings {
   firstRunDone: boolean;
   theme: 'light' | 'dark' | 'system';
   homeSortOrder: HomeSortMode;
   customListOrder: string[];
-  duelMode: 'side-by-side' | 'swipe';
+  duelMode: DuelMode;
   timeFormat: '12h' | '24h';
   reminders: ReminderSettings;
   /** Default kFactor (16, 32, 48) applied to newly created or imported lists. */

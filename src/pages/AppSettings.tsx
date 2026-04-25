@@ -16,10 +16,11 @@ import { Separator } from '@/components/ui/separator';
 import { Download, Sparkles, Compass, Bell, HelpCircle, Sliders } from 'lucide-react';
 import { useState } from 'react';
 import { Link } from 'react-router';
-import type { AppSettings, CustomCadenceUnit, ReminderSettings } from '@/types';
+import type { AppSettings, CustomCadenceUnit, ReminderSettings, DuelMode } from '@/types';
 import { CopyLastErrorButton } from '@/components/ErrorBoundary';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { clearErrorLog, getLastError } from '@/lib/errorLog';
+import { DUEL_MODES } from '@/lib/duelModes';
 
 function cadenceShortLabel(r: ReminderSettings): string {
   switch (r.cadence) {
@@ -60,7 +61,7 @@ export default function AppSettingsPage() {
   }
 
   function handleDuelModeChange(mode: string) {
-    updateSettings({ duelMode: mode as 'side-by-side' | 'swipe' });
+    updateSettings({ duelMode: mode as DuelMode });
     setSettings(getSettings());
   }
 
@@ -88,8 +89,18 @@ export default function AppSettingsPage() {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="side-by-side">{S.settings.duelModeSideBySide}</SelectItem>
-              <SelectItem value="swipe">{S.settings.duelModeSwipe}</SelectItem>
+              {DUEL_MODES.map((mode) => (
+                <SelectItem key={mode.value} value={mode.value}>
+                  <span className="flex items-center gap-2">
+                    <span>{mode.label}</span>
+                    {mode.status === 'coming-soon' && (
+                      <span className="inline-flex items-center rounded-full bg-brand-soft text-brand-deep px-2 py-0.5 text-[10px] font-medium">
+                        {S.settings.duelModeComingSoonBadge}
+                      </span>
+                    )}
+                  </span>
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
           <p className="text-xs text-muted-foreground">{S.settings.duelModeHelp}</p>

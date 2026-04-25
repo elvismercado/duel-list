@@ -1,4 +1,5 @@
 import type { AppSettings, ListConfig } from '@/types';
+import { coerceDuelMode } from '@/lib/duelModes';
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -261,12 +262,14 @@ export function getSettings(): AppSettings {
   const parsed = JSON.parse(raw) as Partial<AppSettings> & {
     homeSortOrder?: unknown;
     reminders?: unknown;
+    duelMode?: unknown;
   };
   return {
     ...DEFAULT_SETTINGS,
     ...parsed,
     homeSortOrder: migrateHomeSort(parsed.homeSortOrder),
     reminders: migrateReminders(parsed.reminders),
+    duelMode: coerceDuelMode(parsed.duelMode),
   };
 }
 

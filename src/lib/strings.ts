@@ -97,7 +97,7 @@ export const S = {
     stepAria: (n: number) => `Step ${n}`,
     duelStepTitle: 'The duel',
     duelStepDescription:
-      'Two items appear side by side. Pick the winner, call a tie, or skip. After each duel, your list re-ranks itself; the more you do, the more accurate it gets. Prefer one card at a time? Switch to swipe mode in Settings.',
+      'Two items appear side by side. Pick the winner, call a tie, or skip. After each duel, your list re-ranks itself; the more you do, the more accurate it gets. More duel modes are on the way.',
     sessionsStepTitle: 'Sessions & history',
     sessionsStepDescription:
       'Set how many duels per session: 5, 10, 20, 50, or unlimited. Every duel is saved, so you can browse history or export it as Markdown anytime.',
@@ -146,8 +146,10 @@ export const S = {
       'This clears the current session summary so you can duel again. Your scores and history are kept.',
     newSessionConfirmButton: 'Start new session',
     keyboardHint: '← / → to pick · T for tie · S to skip',
-    swipeUpToPick: 'Swipe up to pick',
-    swipeHelpText: 'Swipe up or tap to pick · ← / → keys work too',
+    comingSoonTitle: 'This duel mode is coming soon',
+    comingSoonMessage: (modeName: string) =>
+      `${modeName} isn’t ready yet. We saved your preference — you’ll get it the moment it ships.`,
+    startSideBySideInstead: 'Start a side-by-side duel',
     pickAria: (name: string) => `Pick ${name}`,
     pickBadge: 'PICK',
     scoreSuffix: (n: number) => `${n} pts`,
@@ -517,9 +519,11 @@ export const S = {
     themeDark: 'Dark',
     duelModeLabel: 'Duel mode',
     duelModeSideBySide: 'Side-by-side cards',
-    duelModeSwipe: 'Swipe',
+    duelModeSpeedRound: 'Speed round',
+    duelModeBracket: 'Bracket',
+    duelModeComingSoonBadge: 'Coming soon',
     duelModeHelp:
-      'Swipe mode shows both items side by side.drag a card up to pick it.',
+      'Pick how duels are presented. More modes are on the way — try them now and we’ll switch you over the moment they ship.',
     timeFormatLabel: 'Time format',
     timeFormat12h: '12-hour (1:30 PM)',
     timeFormat24h: '24-hour (13:30)',
@@ -715,7 +719,7 @@ export const S = {
       {
         title: 'Touch-friendly PWA',
         body:
-          'Install to your home screen and use offline. Side-by-side and swipe duel modes are tuned for one-handed phone use.',
+          'Install to your home screen and use offline. The duel layout is tuned for one-handed phone use, with more modes on the way.',
       },
       {
         title: 'Local-first, private',

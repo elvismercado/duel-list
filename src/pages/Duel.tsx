@@ -10,13 +10,13 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { SkipForward, Equal, Undo2, Plus, History as HistoryIcon, X, ListOrdered } from 'lucide-react';
-import { SwipeMode } from '@/components/SwipeMode';
 import { RankChip } from '@/components/RankChip';
 import { HelpHint } from '@/components/HelpHint';
 import { getSettings } from '@/lib/storage';
 import { triggerHaptic } from '@/lib/haptics';
 import { sortItemsByElo, getItemRank } from '@/lib/ranking';
 import { avatarBackground, avatarInitial, isEmojiInitial } from '@/lib/avatar';
+import { isAvailableDuelMode, getDuelModeMeta } from '@/lib/duelModes';
 import sessionCompleteImg from '@/assets/illustrations/session-complete.png';
 
 export default function Duel() {
@@ -91,6 +91,9 @@ function DuelSession({
 
   const [lastWinner, setLastWinner] = useState<string | null>(null);
   const [newSessionConfirmOpen, setNewSessionConfirmOpen] = useState(false);
+  // When the user picks a coming-soon mode, the panel offers a session-only
+  // override into side-by-side without overwriting their saved preference.
+  const [forceSideBySide, setForceSideBySide] = useState(false);
   // Guards against rapid double-taps recording the same pair twice while
   // the win/lose animation is still running. Mirrored as state so the
   // disabled prop on the choice buttons stays in sync.
@@ -310,20 +313,36 @@ function DuelSession({
   const isFinalDuel =
     list.sessionLength > 0 && duelCount + 1 === list.sessionLength;
 
-  if (duelMode === 'swipe') {
+  if (!isAvailableDuelMode(duelMode) && !forceSideBySide) {
+    const meta = getDuelModeMeta(duelMode);
     return (
-      <SwipeMode
-        key={`${itemA.id}-${itemB.id}`}
-        itemA={itemA}
-        itemB={itemB}
-        duelCount={duelCount}
-        sessionLength={list.sessionLength}
-        showScores={list.showScoresDuringDuels === true}
-        onPick={handlePick}
-        onSkip={handleSkip}
-        canUndo={canUndo}
-        onUndo={undoLast}
-      />
+      <div className="p-4 max-w-lg mx-auto space-y-4">
+        <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate(`/list/${list.id}`)}
+            className="h-8 px-2 -ml-2 shrink-0"
+          >
+            <X className="h-4 w-4 mr-1" />
+            {S.duel.endShort}
+          </Button>
+          <h1 className="text-base font-semibold truncate flex-1 min-w-0">
+            {list.name}
+          </h1>
+        </div>
+
+        <div className="rounded-lg border bg-card p-6 text-center space-y-4">
+          <meta.icon className="h-10 w-10 mx-auto text-brand-deep" aria-hidden="true" />
+          <h2 className="text-xl font-bold">{S.duel.comingSoonTitle}</h2>
+          <p className="text-sm text-muted-foreground">
+            {S.duel.comingSoonMessage(meta.label)}
+          </p>
+          <Button onClick={() => setForceSideBySide(true)} className="w-full">
+            {S.duel.startSideBySideInstead}
+          </Button>
+        </div>
+      </div>
     );
   }
 
