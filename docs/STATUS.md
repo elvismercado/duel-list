@@ -122,13 +122,13 @@
 - [x] **List name debounce + blur**.ListSettings.tsx uses local `nameValue` state with 500ms debounce auto-save and immediate save on blur.
 - [x] Build verification.`tsc --noEmit` passes, `vite build` succeeds (13 precache entries, sw.js generated).
 
-## Phase G: MVP Completion + Swipe Mode.COMPLETE
+## Phase G: MVP Completion + Duel-mode plumbing.COMPLETE
 
 - [x] **G3 Code-splitting**.`App.tsx` uses `React.lazy` + `<Suspense>` for all 7 page modules. Main chunk dropped from 670 kB to 293 kB (gzip 95 kB). 22 lazy-loaded route/component chunks.
 - [x] **G1 Import-conflict dialog**.`useListRegistry.importList` now returns `{status:'ok'|'conflict'}`; new `importListWithChoice(parsed, 'replace'|'new')`. New `src/components/ImportConflictDialog.tsx` shown when imported file's frontmatter `id` matches an existing list. Wired into both file-input import and File System Access `openFromFile`.
 - [x] **G2 Drag-to-reorder**.When `sortOrder === 'custom'`, Home shows a "Reorder/Done" toggle. `ListCard` renders draggable variant with HTML5 drag-and-drop + GripVertical handle + Up/Down keyboard buttons (a11y). Persists via existing `updateCustomOrder`.
 - [x] **G5 PWA manifest**.Added `screenshots`, `categories: ['productivity', 'utilities', 'lifestyle']`, `lang: 'en'` to manifest. **Note:** real PNG icon artwork and screenshot files in `public/screenshots/` still need to be created/replaced before publishing.current PNG icons are placeholders.
-- [x] **G4 Swipe Mode (Phase 1b)**.Added `framer-motion` 12.38.0. Extended `AppSettings.duelMode: 'side-by-side' | 'swipe'`. New `src/components/SwipeMode.tsx`.stacked motion cards, drag-x with 100px threshold, exit animation, PICK/NOPE hint overlays. Tie/Skip buttons + keyboard shortcuts work in both modes. Selector added to `AppSettings.tsx`.
+- [x] **G4 Duel-mode plumbing**.Originally shipped a `framer-motion`-based `SwipeMode.tsx`; it was retired in May 2026 because the single-card-with-other-as-text layout broke the comparison metaphor. The code now lives in `src/lib/duelModes.ts` as a `DUEL_MODES` registry (`isAvailableDuelMode`, `getDuelModeMeta`, `coerceDuelMode`). Modes registered: **side-by-side** (available), **speed-round** (coming soon), **bracket** (coming soon). The settings picker shows a *Coming soon* badge on planned modes; selecting one persists, and the Duel page shows a coming-soon panel with a session-only "Start a side-by-side duel" fallback. Stale persisted `'swipe'` values are silently coerced to `'side-by-side'`. `framer-motion` removed from deps.
 - [x] Build verification.`tsc --noEmit` clean, `vite build` succeeds, PWA precache 35 entries, sw.js + workbox generated.
 
 ### Outstanding (deferred from G5)
@@ -145,7 +145,7 @@ Fixes + UX polish + small features driven by hands-on testing feedback.
 - [x] **H1.1 Skip not working**.`selectNextPair` no longer early-returns on the recent-skips queue (it would re-serve the just-skipped pair). Skips now apply a score *penalty* (`skipPenalty * 100_000`) and the picked pair is removed from `recentSkips` so penalties don't compound.
 - [x] **H1.2 Drag-and-drop on touch**.Replaced HTML5 native DnD with `@dnd-kit` (`core`, `sortable`, `utilities` 3.2.2). `ListCard` is now sortable via `useSortable`; `Home` wraps its list in `DndContext` + `SortableContext` with `PointerSensor` (5 px), `TouchSensor` (150 ms / 5 px), `KeyboardSensor`. Up/Down buttons retained for a11y.
 - [x] **H1.3 Mobile cutoff**.`index.html` viewport now `viewport-fit=cover`; `Layout` `<main>` adds `padding-bottom: max(2rem, env(safe-area-inset-bottom))`.
-- [x] **H1.4 Swipe mode rewritten**.Old Tinder-stack replaced with side-by-side grid. Each `SwipeCard` is an independent `motion.div` (`useMotionValue` x/y). Swipe up (or any 80 px drag) picks; tap also picks. `showElo` prop respects new `displayMode` field.
+- [x] **H1.4 Swipe mode rewritten**.(Superseded May 2026.) Originally replaced the Tinder-stack with side-by-side `motion.div` cards. Subsequently retired in the duel-mode registry refactor (see Phase G); side-by-side absorbed all duel features (avatars, tie pulse, processing-ref guard, dialog-gated keyboard shortcuts, displayMode-respecting Top 3, reduced-motion fallbacks).
 
 ### UX polish (Wave 2)
 - [x] **H2.1 Merged Open + Import**.Single "Open file…" button that prefers File System Access and falls back to `<input type=file>` when unsupported.
