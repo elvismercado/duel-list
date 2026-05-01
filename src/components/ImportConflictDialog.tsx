@@ -32,9 +32,7 @@ export function ImportConflictDialog({
         <DialogHeader>
           <DialogTitle>{S.import.conflict.title}</DialogTitle>
           <DialogDescription>
-            {S.import.conflict.message
-              .replace('{existing}', existingName)
-              .replace('{incoming}', incomingName)}
+            {S.import.conflict.message(existingName, incomingName)}
           </DialogDescription>
         </DialogHeader>
         <DialogFooter className="gap-2 sm:gap-2 flex-col sm:flex-row">

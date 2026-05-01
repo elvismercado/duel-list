@@ -170,6 +170,28 @@ export default function AppSettingsPage() {
           </Select>
         </div>
 
+        {/* Language */}
+        <div className="space-y-2">
+          <label className="text-sm font-medium">{S.settings.languageLabel}</label>
+          <Select
+            value={settings.locale ?? 'system'}
+            onValueChange={(v) => {
+              updateSettings({ locale: v as AppSettings['locale'] });
+              setSettings(getSettings());
+            }}
+          >
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="system">{S.settings.languageSystem}</SelectItem>
+              <SelectItem value="en">{S.settings.languageEnglish}</SelectItem>
+              <SelectItem value="nl">{S.settings.languageDutch}</SelectItem>
+            </SelectContent>
+          </Select>
+          <p className="text-xs text-muted-foreground">{S.settings.languageHelp}</p>
+        </div>
+
         {/* Time format */}
         <div className="space-y-2">
           <label className="text-sm font-medium">{S.settings.timeFormatLabel}</label>

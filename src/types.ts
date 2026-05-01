@@ -64,6 +64,8 @@ export interface AppSettings {
   defaultSessionLength: number;
   /** Default value for `ListConfig.showScoresDuringDuels` on newly created lists. */
   defaultShowScoresDuringDuels: boolean;
+  /** UI language. `'system'` follows the navigator preference. */
+  locale: 'system' | 'en' | 'nl';
 }
 
 export type ReminderCadence =

@@ -235,6 +235,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   defaultKFactor: 32,
   defaultSessionLength: 10,
   defaultShowScoresDuringDuels: false,
+  locale: 'system',
 };
 
 // Migrate legacy homeSortOrder values to the new field+direction shape.
@@ -264,12 +265,17 @@ export function getSettings(): AppSettings {
     reminders?: unknown;
     duelMode?: unknown;
   };
+  const locale: AppSettings['locale'] =
+    parsed.locale === 'en' || parsed.locale === 'nl' || parsed.locale === 'system'
+      ? parsed.locale
+      : 'system';
   return {
     ...DEFAULT_SETTINGS,
     ...parsed,
     homeSortOrder: migrateHomeSort(parsed.homeSortOrder),
     reminders: migrateReminders(parsed.reminders),
     duelMode: coerceDuelMode(parsed.duelMode),
+    locale,
   };
 }
 
