@@ -101,11 +101,35 @@ export function useReminderScheduler(): void {
     }
     document.addEventListener('visibilitychange', onVisibility);
 
+    // Permission flips (user revokes/grants notifications in browser settings)
+    // don't fire any settings or visibility event. Use the Permissions API to
+    // observe them directly. Guarded.Safari historically rejects the
+    // 'notifications' name and Firefox <86 lacks the API entirely.
+    let permStatus: PermissionStatus | null = null;
+    function onPermissionChange() {
+      debouncedReschedule();
+    }
+    if (typeof navigator !== 'undefined' && 'permissions' in navigator) {
+      navigator.permissions
+        .query({ name: 'notifications' as PermissionName })
+        .then((status) => {
+          if (cancelled) return;
+          permStatus = status;
+          status.addEventListener('change', onPermissionChange);
+        })
+        .catch(() => {
+          // Unsupported / rejected.silently fall back to settings + visibility.
+        });
+    }
+
     return () => {
       cancelled = true;
       if (timer !== null) clearTimeout(timer);
       unsubSettings();
       document.removeEventListener('visibilitychange', onVisibility);
+      if (permStatus) {
+        permStatus.removeEventListener('change', onPermissionChange);
+      }
     };
   }, []);
 }

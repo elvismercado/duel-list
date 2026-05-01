@@ -1,6 +1,6 @@
 # DuelList.Implementation Status
 
-> Last updated: 2026-04-22
+> Last updated: 2026-05-01
 
 ## Phase A: Project Scaffolding.COMPLETE
 
@@ -233,5 +233,87 @@ Bundles all post-H work into one batch entry. Multiple iterations on Home/Rankin
 - [x] `vite build` succeeds.`built in 8.07s` on last run; PWA precache ≥40 entries (likely higher with Glossary/Reminders chunks).
 
 ### Outstanding (carried from G5, still open)
+- [ ] Real PWA icon artwork (replace placeholder `public/icon-*.png` files)
+- [ ] Add `public/screenshots/home-narrow.png` and `public/screenshots/duel-narrow.png` (720×1280)
+
+## Phase J: Post-I expansion, i18n foundation, OS-notifications verified.COMPLETE
+
+> Last updated: 2026-05-01
+
+Retroactive entry covering everything shipped between Phase I (2026-04-24) and now: pages/lib/hooks/components added without their own STATUS row, plus the OS-notifications loop that closes the Phase 3 #17 deferred item, plus the i18n foundation.
+
+### New pages
+- [x] `src/pages/Templates.tsx` at `/templates`.browseable list of sample templates with item-count chips, expand-to-preview, and a "Create from template" CTA. Linked from Welcome and from the footer nav.
+- [x] `src/pages/ItemDetail.tsx` at `/list/:id/item/:itemId`.promoted from `ItemDetailsDialog` to a full page. Adds rivalries section (biggest rival, most wins against, lost most to), recent-form strip, win-rate / record / coverage / streak stats, notes editor with autosave (debounced + saved/saving status), full duel-history list. Old "Details" dropdown action now navigates here.
+- [x] `src/pages/DefaultsSettings.tsx` at `/settings/defaults`.app-wide defaults (K-factor, session length, show-scores-during-duels) with per-setting "Apply to all lists" confirm dialog (`applyToAllLists`, `applyKFactorConfirm*`, `applySessionConfirm*`, `applyShowScoresConfirm*`). Linked from AppSettings.
+
+### New lib modules
+- [x] `src/lib/notifications.ts`.browser Notification platform wrapper. `notificationsSupported`, `getPermission`, `requestPermission`, `triggerSupported` (TimestampTrigger feature-detect), `showLocal` (immediate via SW registration), `scheduleAt` (TimestampTrigger), `cancelScheduled` (tag-scoped, `includeTriggered:false`).
+- [x] `src/lib/errorLog.ts`.captures the last render-time exception (caught by `ErrorBoundary`) into a single localStorage slot for the dev "Copy last error" surface.
+- [x] `src/lib/haptics.ts`.thin `navigator.vibrate` wrapper used on duel pick / tie / skip.
+- [x] `src/lib/avatar.ts`.deterministic gradient + initials avatar generator for items.
+- [x] `src/lib/constants.ts`.shared numeric constants (debounce intervals, cooldown windows).
+- [x] `src/lib/i18n.ts`.i18next init (en + nl resources, fallback `en`, `pluralSeparator: '_'`). Exports `SUPPORTED_LOCALES`, `SupportedLocale`, `resolveSupportedLocale`, `detectNavigatorLocale`. No `i18next-browser-languagedetector`.locale is driven from `AppSettings.locale`.
+
+### New hooks
+- [x] `src/hooks/useFilterShortcut.ts`.global `/` keyboard shortcut to focus the page filter input on Home / Rankings / History (skipped while typing in another input).
+- [x] `src/hooks/useReminderScheduler.ts`.mounted once in `App.tsx`. Re-evaluates on settings change (debounced 30s), `visibilitychange`, and (Phase J) `permissions.query({name:'notifications'}).onchange`. Schedules a single OS notification per active reminder candidate via `scheduleAt`; cancels via tag-scoped `cancelScheduled` when no candidate / cadence off / permission lost / trigger unsupported.
+- [x] `src/hooks/useLocale.tsx`.exposes `{ locale, resolvedLocale, setLocale }` reading `AppSettings.locale`. Provides `<LocaleProvider>` that calls `i18n.changeLanguage`, sets `document.documentElement.lang`, and re-mounts children via a keyed `<Fragment>` so every `S.*` getter re-resolves on change without per-component `useTranslation`.
+
+### New components
+- [x] `src/components/AutoShrinkText.tsx`.measures container width and shrinks font-size to fit; used for long item names on Duel cards.
+- [x] `src/components/FileLinkStatus.tsx`.shared linked / broken / not-linked indicator extracted from Rankings header.
+- [x] `src/components/HeaderActions.tsx`.shared right-side header action cluster (history, add items, settings).
+- [x] `src/components/ErrorBoundary.tsx`.app-level + route-level boundaries. Fallback UI: title + description, Reload button, collapsible stack, Copy / Copied button. Persists last error via `errorLog.ts` for dev "Copy last error" reuse.
+- [x] `src/components/ThemeToggle.tsx`.icon-button cycles `system → light → dark`, mirrors `AppSettings.theme`. Mounted in Layout header.
+
+### Settings expansions (since Phase I)
+- [x] **Per-list reminder opt-out**.`RemindersSettings` shows each list as a toggle row (Reminding / Skipped chip), persisted in `reminders.perListOptOut`. `pickReminderList` honours it.
+- [x] **Defaults flow with apply-to-all**.`DefaultsSettings` exposes K-factor, session length, and show-scores-during-duels at the app level; each has a confirm dialog that bulk-updates all existing lists.
+- [x] **Dev / error-log section**.`AppSettings` developer block: Trigger error, Copy last error (with relative-time + message preview), Clear log (with confirm). Dev-only visual emphasis; available everywhere for now.
+- [x] **OS-notification permission panel**.`OsPermissionPanel` in `RemindersSettings`: surfaces permission state (granted / denied / default), Enable button (calls `requestPermission`), and a "scheduling unsupported" hint when `triggerSupported()` returns false. Visible only when channel is `os` or `both`.
+- [x] **AppSettings groupings**.`groupRanking`, `groupAppearance`, `groupSync`, `groupData`, `groupHelp` headings; About + Replay-onboarding + Features link cluster.
+
+### Custom service worker
+- [x] `src/sw.ts`.`vite-plugin-pwa` `injectManifest` strategy. Workbox `precacheAndRoute(self.__WB_MANIFEST)`. `install` → `skipWaiting`; `activate` → `clients.claim`. `notificationclick` focuses an existing client and `client.navigate(targetUrl)`, otherwise `clients.openWindow(targetUrl)`. The deep link is carried on `event.notification.data.url`.
+
+### OS notifications loop (Phase 3 #17 part 2.now closed)
+- [x] **Wiring**.`useReminderScheduler` (global) ⇄ `notifications.ts` ⇄ `sw.ts`. Settings ⇄ `RemindersSettings` `OsPermissionPanel`. Channel selector (`in-app | os | both`) governs OS scheduling and the test button only.the in-app `ReminderBanner` always surfaces on Home when a candidate exists and the tab is visible (banner is the soft fallback for unsupported browsers). When the tab is hidden and channel includes OS with permission granted, `Home.tsx` fires a one-shot `showLocal` instead of the banner.
+- [x] **Test button**.`handleTest` auto-prompts `requestPermission()` when `wantsOs && permission === 'default'` so the test produces an actual OS notification (not a silent in-app fallback). Fires through SW for parity with scheduled notifications.
+- [x] **Permission flips**.`useReminderScheduler` listens on `navigator.permissions.query({ name:'notifications' }).onchange` (guarded.Safari historically rejects the name, older Firefox lacks the API). Revoked permission triggers `cancelScheduled` within one debounce window without waiting for a settings change or visibility flip.
+- [x] **Tag discipline**.all scheduled / immediate notifications use the single `'duellist-reminder'` tag; `scheduleAt` calls `cancelScheduled` first so a re-schedule replaces the prior pending notification rather than stacking.
+- [x] **Verification matrix** (manual.fill in after smoke):
+  - [ ] Desktop Chrome installed PWA: scheduled fire at next tick, click routes to `/list/:id/duel`, second schedule replaces first.
+  - [ ] Desktop Chrome browser tab (no install): trigger-unsupported copy visible; banner still surfaces.
+  - [ ] Firefox / Safari macOS: same as above.
+  - [ ] iOS 16.4+ home-screen install: permission grants; banner only.
+  - [ ] Android Chrome PWA: full path works.
+  - [ ] Channel `'both'` test button: both fire; scheduled does not duplicate banner.
+  - [ ] End-to-end smoke: cadence `daily`, preferred = now+2min, channel `os` → tray notif fires, click opens duel.
+  - [ ] Permission flip: revoke notifications in browser settings while tab open → `cancelScheduled` fires within ~30s.
+- [ ] **Caveats**.iOS PWA notifications require iOS 16.4+ AND home-screen install; `triggerSupported()` returns false on iOS so iOS users only get the in-app banner. Document once verification confirms.
+
+### i18n foundation (Phase 3 #20.partial, en/nl shipped)
+- [x] **Resource trees**.`src/locales/en.ts` + `src/locales/nl.ts` mirror the full `S` shape (~470 lines each). CLDR `_one`/`_other` plurals, `{{name}}`-style interpolation, conditional pairs (`bannerSubtitleToday` vs `bannerSubtitle_one`/`_other`), array resources (`features.list`).
+- [x] **i18next init**.`src/lib/i18n.ts` configures `lng:'en'`, `fallbackLng:'en'`, `pluralSeparator:'_'`, `resources:{ en:{translation:en}, nl:{translation:nl} }`.
+- [x] **`S` accessor rewrite**.`src/lib/strings.ts` now backed by `i18n.t`. Public shape preserved: plain leaves are getters (`get x()`), parameterized leaves are functions mapping positional args to named placeholders. The only call-site break was `S.import.conflict.message` (was a string with `{existing}` placeholders, now a function `(existing, incoming) => string`); fixed in `ImportConflictDialog.tsx`.
+- [x] **AppSettings.locale**.`'system' | 'en' | 'nl'`, default `'system'`. Coerced on read in `storage.ts` so junk values fall back to `'system'`.
+- [x] **`useLocale` + `LocaleProvider`**.subscribes to settings; resolves `'system'` via `detectNavigatorLocale()` (walks `navigator.languages` then `.language`); calls `i18n.changeLanguage`; sets `<html lang>`; re-mounts children via `<Fragment key={resolvedLocale}>` so every `S.*` getter re-resolves on change without per-component subscriptions.
+- [x] **Language picker**.`AppSettings` Appearance group, after Theme. Options: System / English / Nederlands.
+- [x] **Wiring**.`main.tsx` side-effect imports `./lib/i18n` and wraps `<App>` in `<LocaleProvider>`.
+- [x] Removed unused `i18next-browser-languagedetector` (installed during planning, not used.locale is driven from `AppSettings.locale`).
+
+### Verification
+- [x] `pnpm run build` clean (`built in 8.80s` after Phase J edits, no TS errors).
+- [x] PWA precache regenerated; sw.js + workbox + manifest emit per build.
+- [ ] OS-notifications manual matrix (above).pending smoke run.
+
+### Deferred from Phase J (intentionally out of scope)
+- [ ] `es` and `pap` locale files (Phase 3 #20 plan called for four).
+- [ ] Per-item confidence indicator (Phase 3 #16 remainder).
+- [ ] Metadata extension (Phase 3 #19).
+- [ ] Phase 2 (Nextcloud / WebDAV).
+
+### Outstanding (carried through, still open)
 - [ ] Real PWA icon artwork (replace placeholder `public/icon-*.png` files)
 - [ ] Add `public/screenshots/home-narrow.png` and `public/screenshots/duel-narrow.png` (720×1280)

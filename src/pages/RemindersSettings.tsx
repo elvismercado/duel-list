@@ -46,8 +46,14 @@ export default function RemindersSettingsPage() {
     setSettings(getSettings());
   }
 
-  function handleTest() {
+  async function handleTest() {
     const wantsOs = r.channel === 'os' || r.channel === 'both';
+    // Clicking "Send test" with OS chosen but permission still 'default' is
+    // strong intent.prompt now so the user sees an actual OS notification
+    // instead of silently falling back to the in-app banner.
+    if (wantsOs && getPermission() === 'default') {
+      await requestPermission();
+    }
     const osDeliverable = wantsOs && getPermission() === 'granted';
     if (osDeliverable) {
       void showLocal({
@@ -98,7 +104,7 @@ export default function RemindersSettingsPage() {
       <p className="text-sm text-muted-foreground">{S.settings.remindersHelp}</p>
 
       <div>
-        <Button variant="outline" onClick={handleTest}>
+        <Button variant="outline" onClick={() => void handleTest()}>
           <Bell className="h-4 w-4 mr-1" />
           {S.settings.remindersTestButton}
         </Button>
